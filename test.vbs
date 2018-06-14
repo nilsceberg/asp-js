@@ -33,7 +33,7 @@ function startFW(echo)
 end function
 
 function startSET()
-	echo startFW(2) * 2, 5
+	echo (startFW(2) * 2), 5
 end function
 
 function recurse()

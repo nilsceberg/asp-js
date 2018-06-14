@@ -36,7 +36,9 @@ export class Parser {
 				break;
 			}
 			else if (this.isIdentifier(token)) {
-				const variable = this.expression();
+				// TODO: might have to change this to allow for weird set
+				// syntax
+				const variable = this.variable();
 
 				if (this.tokens.peek().content === "=") {
 					block.statements.push(this.assignment(variable));
