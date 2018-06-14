@@ -121,12 +121,16 @@ export class Parser {
 				this.tokens.next();
 			}
 			else {
-				const identifier = this.identifier();
-				token = this.tokens.peek();
+				let expression = this.expression();
 
-				if (token.content === "=") {
-					block.statements.push(this.assignment(identifier));
+				// If this is a variable, check to see if we're actually on
+				// an assignment
+				if ((expression instanceof ast.Variable)
+					&& this.tokens.peek().content === "=") {
+					expression = this.assignment(expression.name);
 				}
+
+				block.statements.push(expression);
 			}
 		}
 
@@ -171,9 +175,9 @@ export class Parser {
 		return new ast.Dim(name);
 	}
 
-	private assignment(identifier: Bucket): ast.Assignment {
+	private assignment(identifier: string): ast.Assignment {
 		this.tokens.next(); // consume operator
-		return new ast.Assignment(identifier.content, this.expression());
+		return new ast.Assignment(identifier, this.expression());
 	}
 
 	private expression(): ast.Expression {
@@ -202,14 +206,14 @@ export class Parser {
 			this.expect(")");
 			return expr;
 		}
-		else if (/[0-9]+/.test(token.content)) {
+		else if (this.isInteger(token)) {
 			return new ast.Integer(Number(token.content));
 		}
 		else if (this.isIdentifier(token)) {
 			return new ast.Variable(token.content);
 		}
 		else {
-			this.error(token, `cannot parse '${token.content}'`);
+			this.error(token, `unexpected token '${token.content}'`);
 		}
 	}
 
