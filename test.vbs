@@ -6,7 +6,7 @@ class Myclass
 	dim hejsan
 
 	function test()
-		wscript.echo hejsan
+		wscript.echo 999
 	end function
 end class
 
@@ -22,12 +22,11 @@ sub echo(thing, b)
 	Wscript.Echo b
 end sub
 
-echo = 141
-
 function startFW(echo)
 	dim first : first = 4
 	startFW = first * (echo + offByOne)
-	echo 88, 1
+	' you can't do this thing here
+	'echo 88, 1
 end function
 
 function startSET()

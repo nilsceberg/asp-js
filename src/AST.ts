@@ -1,11 +1,5 @@
 import { Bucket } from "./Stream";
 
-export namespace namespaces {
-	export const Var = Symbol("Var");
-	export const Func = Symbol("Func");
-	export const Class = Symbol("Class");
-};
-
 export namespace ast {
 	export class Node {
 		constructor(bucket: Bucket) {
@@ -31,15 +25,15 @@ export namespace ast {
 	}
 
 	export class Function extends Statement {
-		constructor(bucket: Bucket, name: string, args: string[], block: Block) {
+		constructor(bucket: Bucket, name: Variable, args: Variable[], block: Block) {
 			super(bucket);
 			this.name = name;
 			this.args = args;
 			this.block = block;
 		}
 
-		name: string;
-		args: string[];
+		name: Variable;
+		args: Variable[];
 		block: Block;
 	}
 
@@ -66,13 +60,13 @@ export namespace ast {
 	}
 
 	export class Assignment extends Statement {
-		constructor(bucket: Bucket, variable: string[], expr: Expression) {
+		constructor(bucket: Bucket, leftHand: Expression, expr: Expression) {
 			super(bucket);
-			this.variable = variable;
+			this.variable = leftHand;
 			this.expr = expr;
 		}
 
-		variable: string[];
+		variable: Expression;
 		expr: Expression;
 	}
 
@@ -114,13 +108,11 @@ export namespace ast {
 	}
 
 	export class Variable extends Expression {
-		constructor(bucket: Bucket, name: string[], ns: symbol) {
+		constructor(bucket: Bucket, name: string[]) {
 			super(bucket);
 			this.name = name;
-			this.ns = ns;
 		}
 
-		ns: symbol;
 		name: string[];
 	}
 

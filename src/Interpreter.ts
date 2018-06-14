@@ -1,4 +1,4 @@
-import { ast, namespaces } from "./AST";
+import { ast } from "./AST";
 import * as util from "util";
 
 function error(node: ast.Node, message: string) {
@@ -6,9 +6,18 @@ function error(node: ast.Node, message: string) {
 	throw new Error(`runtime error in ${bucket.filename} at line ${bucket.line}, column ${bucket.position}: ${message}`);
 }
 
-interface Objekt {
-	members: { [identifier: string]: any };
-	methods: { [identifier: string]: Function | ast.Function };
+type Objekt = { [identifier: string]: Box };
+
+export class Box {
+	constructor(value: any = null) {
+		this.value = value;
+	}
+
+	copy(): Box {
+		return new Box(this.value);
+	}
+
+	value: any;
 }
 
 export class Stack {
@@ -28,19 +37,36 @@ export class Stack {
 		return this.resolve(identifier) !== undefined;
 	}
 
-	get(variable: ast.Variable): any {
-		const value = this.resolve(variable.name[0]);
-		if (value === undefined) {
-			error(variable, `undefined variable '${variable.name}'`);
+	get(variable: ast.Variable): Box {
+		let box = this.resolve(variable.name[0]);
+		if (box === undefined) {
+			error(variable, `undefined variable '${variable.name[0]}'`);
 		}
-		return value;
+
+		for (let i=1; i<variable.name.length; ++i) {
+			box = box.value[variable.name[i]];
+			if (box === undefined) {
+				error(variable, `object '${variable.name.slice(0, i).join(".")}' has no member '${variable.name[i]}'`);
+			}
+		}
+
+		return box;
 	}
 
-	set(identifier: string, value: any): void {
-		this.array[this.array.length - 1][identifier] = value;
+	define(identifier: string): void {
+		this.array[this.array.length - 1][identifier] = new Box();
 	}
 
-	private resolve(identifier: string): any {
+	/*set(identifier: string[], value: any): void {
+		if (identifier.length === 1) {
+			this.resolve(identifier[0]) = value;
+		}
+		else {
+
+		}
+	}*/
+
+	private resolve(identifier: string): Box {
 		const frame = this.array.slice(-1)[0];
 		if (frame[identifier] !== undefined) {
 			return frame[identifier];
@@ -54,7 +80,7 @@ export class Stack {
 		return undefined;
 	}
 
-	private array: { [identifier: string]: any }[];
+	private array: { [identifier: string]: Box }[];
 }
 
 export interface Context {
@@ -64,7 +90,7 @@ export interface Context {
 }
 
 export class Interpreter {
-	constructor(functions: { [identifier: string]: Function } = {}) {
+	constructor(functions: { [identifier: string]: Box } = {}) {
 		this.context = {
 			stack: new Stack(functions),
 			classes: {},
@@ -100,16 +126,23 @@ export class Interpreter {
 
 	private defineFunction(f: ast.Function): void {
 		console.log("defining function", f);
-		this.context.stack.set(f.name, f);
+		if (this.context.stack.isDefined(f.name.name[0])) {
+			error(f, `redefining name '${f.name}'`);
+		}
+
+		this.context.stack.define(f.name.name[0]);
+		this.context.stack.get(f.name).value = f;
 	}
 
 	private assign(assignment: ast.Assignment): void {
 		console.log("assigning", util.inspect(assignment, { depth: null, colors: true }));
 		// TODO dot notation
-		if (!this.context.stack.isDefined(assignment.variable[0])) {
-			error(assignment, `assignment: undefined variable '${assignment.variable}'`);
+		const box = this.evaluateRef(assignment.variable); //this.context.stack.get(assignment.variable);
+		if (box instanceof Box) {
+			box.value = this.evaluate(assignment.expr);
 		}
-		this.context.stack.set(assignment.variable[0], this.evaluate(assignment.expr));
+		else {
+			error(assignment, "not an l-value"); }
 	}
 
 	private dim(dim: ast.Dim): void {
@@ -117,17 +150,12 @@ export class Interpreter {
 		if (this.context.stack.isDefined(dim.name)) {
 			error(dim, `dim: variable '${dim.name}' is already defined`);
 		}
-		this.context.stack.set(dim.name, null);
+		this.context.stack.define(dim.name);
 	}
 
-	private evaluate(expr: ast.Expression): any {
+	private evaluateRef(expr: ast.Expression): any {
 		if (expr instanceof ast.Variable) {
-			// TODO dot notation
-			const value = this.context.stack.get(expr);
-			if (value === undefined) {
-				error(expr, `undefined variable '${expr.name}'`);
-			}
-			return value;
+			return this.context.stack.get(expr);
 		}
 		else if (expr instanceof ast.Integer) {
 			return expr.i;
@@ -146,22 +174,29 @@ export class Interpreter {
 		}
 	}
 
+	private evaluate(expr: ast.Expression): any {
+		const maybeBox = this.evaluateRef(expr);
+		if (maybeBox instanceof Box) {
+			return maybeBox.value;
+		}
+		else {
+			return maybeBox;
+		}
+	}
+
 	private new(n: ast.New): any {
 		const klass = this.context.classes[n.klass];
 		if (klass === undefined) {
 			error(n, `undefined class '${n.klass}'`);
 		}
 
-		const obj: Objekt = {
-			members: {},
-			methods: {},
-		};
+		const obj: Objekt = {}
 
 		for (let dim of klass.dims) {
-			obj.members[dim.name] = null;
+			obj[dim.name] = new Box();
 		}
 		for (let method of klass.methods) {
-			obj.methods[method.name] = method;
+			obj[method.name.name[0]] = new Box(method);
 		}
 
 		return obj;
@@ -179,9 +214,17 @@ export class Interpreter {
 		// TODO should function name be variable instead? :O
 		const functionName = (<ast.Variable>call.f).name;
 		const func = this.evaluate(call.f);
+		//		console.log(util.inspect(this.context.stack, {
+		//			depth: 3,
+		//			colors: true
+		//		}));
 
-		if (func === undefined || !(func instanceof Function || func instanceof ast.Function)) {
-			error(call, `unknown function '${functionName}'`);
+		if (func === undefined) {
+			error(call, `function '${functionName}' not defined`);
+		}
+
+		if (!(func instanceof Function || func instanceof ast.Function)) {
+			error(call, `type mismatch ('${functionName}' is not a function)`);
 		}
 
 		const args = call.args.map((arg, i) => this.evaluate(arg));
@@ -196,10 +239,11 @@ export class Interpreter {
 				error(call, `'${functionName}' expected ${func.args.length} arguments but got ${args.length}`);
 			}
 
-			this.context.stack.set(functionName.slice(-1)[0], null);
+			this.context.stack.define(functionName.slice(-1)[0]);
 
 			args.map((arg, i) => {
-				this.context.stack.set(func.args[i], arg);
+				this.context.stack.define(func.args[i].name[0]);
+				this.context.stack.get(func.args[i]).value = arg;
 			});
 
 			this.runBlock(func.block);

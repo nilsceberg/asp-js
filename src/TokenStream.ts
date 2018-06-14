@@ -94,7 +94,7 @@ export class TokenStream implements Stream {
 	}
 
 	private isIdentifier(bucket: Bucket): boolean {
-		return bucket.content !== null && /[a-zA-Z0-9._]/.test(bucket.content);
+		return bucket.content !== null && /[a-zA-Z0-9_]/.test(bucket.content);
 	}
 
 	private isInteger(bucket: Bucket): boolean {

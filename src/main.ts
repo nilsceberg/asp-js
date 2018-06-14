@@ -1,7 +1,7 @@
 import { InputStream } from "./InputStream";
 import { TokenStream } from "./TokenStream";
 import { Parser } from "./Parser";
-import { Interpreter, Context } from "./Interpreter";
+import { Interpreter, Context, Box } from "./Interpreter";
 
 import * as util from "util";
 
@@ -22,9 +22,14 @@ console.log(util.inspect(program, {
 }));
 
 const interpreter = new Interpreter({
-	"wscript.echo": (context: Context, thing: any) => {
+	"print": new Box((context: Context, thing: any) => {
 		console.log(thing);
-	}
+	}),
+	"wscript": new Box({
+		"echo": new Box((context: Context, thing: any) => {
+			console.log(thing);
+		})
+	})
 });
 interpreter.run(program);
 

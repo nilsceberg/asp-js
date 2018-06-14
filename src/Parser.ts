@@ -1,6 +1,6 @@
 import { Bucket } from "./Stream";
 import { TokenStream } from "./TokenStream";
-import { ast, namespaces } from "./AST";
+import { ast } from "./AST";
 
 export class Parser {
 	constructor(tokens: TokenStream) {
@@ -36,10 +36,10 @@ export class Parser {
 				break;
 			}
 			else if (this.isIdentifier(token)) {
-				const variable = this.variable();
+				const variable = this.expression();
 
 				if (this.tokens.peek().content === "=") {
-					block.statements.push(this.assignment(variable.name));
+					block.statements.push(this.assignment(variable));
 				}
 				else {
 					block.statements.push(this.callStatement(variable));
@@ -59,14 +59,14 @@ export class Parser {
 	private function(func: boolean = true): ast.Function {
 		const keyword = this.tokens.next(); // consume keyword
 
-		const name = this.require().content;
+		const name = this.require();
 
 		this.expect("(");
 		const args = this.argList();
 		this.expect(")");
 		this.expect(":");
 
-		const f = new ast.Function(keyword, name, args, this.block());
+		const f = new ast.Function(keyword, new ast.Variable(name, [name.content]), args, this.block());
 
 		this.expect("end");
 		this.expect(func ? "function" : "sub");
@@ -103,10 +103,11 @@ export class Parser {
 		return k;
 	}
 
-	private argList(): string[] {
-		let variables = [];
+	private argList(): ast.Variable[] {
+		let variables: ast.Variable[] = [];
 		while (this.tokens.peek().content !== ")") {
-			variables.push(this.require().content);
+			const token = this.require();
+			variables.push(new ast.Variable(token, [token.content]));
 
 			if (this.tokens.peek().content === ")") {
 				break;
@@ -124,9 +125,9 @@ export class Parser {
 		return new ast.Dim(keyword, name);
 	}
 
-	private assignment(identifier: string[]): ast.Assignment {
+	private assignment(leftHand: ast.Expression): ast.Assignment {
 		const operator = this.tokens.next(); // consume operator
-		return new ast.Assignment(operator, identifier, this.expression());
+		return new ast.Assignment(operator, leftHand, this.expression());
 	}
 
 	private expression(): ast.Expression {
@@ -183,7 +184,7 @@ export class Parser {
 	}
 
 	private variable(): ast.Variable {
-		const variable = new ast.Variable(this.tokens.peek(), [this.tokens.next().content], namespaces.Var);
+		const variable = new ast.Variable(this.tokens.peek(), [this.tokens.next().content]);
 		while (this.tokens.peek().content === ".") {
 			this.tokens.next();
 			variable.name.push(this.identifier().content);
@@ -243,7 +244,7 @@ export class Parser {
 	}
 
 	private isIdentifier(token: Bucket): boolean {
-		return /[a-zA-Z_][a-zA-Z0-9._]*/.test(token.content);
+		return /[a-zA-Z_][a-zA-Z0-9_]*/.test(token.content);
 	}
 
 	private isInteger(token: Bucket): boolean {
