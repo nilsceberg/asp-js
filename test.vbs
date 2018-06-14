@@ -4,12 +4,11 @@ dim offByOne : offByOne = 3
 
 function startFW(mul)
 	dim first : first = 4
-	dim offByOne : offByOne = 0
 	startFW = first * (mul + offByOne)
 end function
 
 sub echo(thing, b)
-'	Wscript.Echo thing
+	Wscript.Echo thing
 '	Wscript.Echo b
 end sub
 

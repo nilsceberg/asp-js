@@ -306,7 +306,7 @@ export class Parser {
 	}
 
 	private isIdentifier(token: Bucket): boolean {
-		return /[a-zA-Z_][a-zA-Z0-9_]*/.test(token.content);
+		return /[a-zA-Z_][a-zA-Z0-9._]*/.test(token.content);
 	}
 
 	private isInteger(token: Bucket): boolean {

@@ -1,7 +1,7 @@
 import { InputStream } from "./InputStream";
 import { TokenStream } from "./TokenStream";
 import { Parser, ast } from "./Parser";
-import { Interpreter } from "./Interpreter";
+import { Interpreter, Context } from "./Interpreter";
 
 import * as util from "util";
 
@@ -21,7 +21,11 @@ console.log(util.inspect(program, {
 	colors: true,
 }));
 
-const interpreter = new Interpreter();
+const interpreter = new Interpreter({
+	"wscript.echo": (context: Context, thing: any) => {
+		console.log(thing);
+	}
+});
 interpreter.run(program);
 
 

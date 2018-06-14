@@ -54,15 +54,15 @@ export class Stack {
 
 export interface Context {
 	stack: Stack
-	functions: { [identifier: string]: ast.Function }
+	functions: { [identifier: string]: ast.Function | Function }
 	explicit: boolean
 }
 
 export class Interpreter {
-	constructor() {
+	constructor(functions: { [identifier: string]: Function } = {}) {
 		this.context = {
 			stack: new Stack(),
-			functions: {},
+			functions: functions,
 			explicit: true,
 		};
 	}
@@ -144,21 +144,35 @@ export class Interpreter {
 			error(call, `unknown function '${functionName}'`);
 		}
 
+		const args = call.args.map((arg, i) => this.evaluate(arg));
+
 		this.context.stack.push();
-		this.context.stack.set(functionName.slice(-1)[0], null);
 
-		call.args.map((arg, i) => {
-			this.context.stack.set(func.args[i], this.evaluate(arg));
-		});
+		let returnValue;
+		if (func instanceof ast.Function) {
+			console.log("CALL", functionName);
 
-		console.log("CALL", functionName);
-		this.runBlock(func.block);
+			if (args.length !== func.args.length) {
+				error(call, `'${functionName}' expected ${func.args.length} arguments but got ${args.length}`);
+			}
 
-		const returnValue = this.context.stack.get(<ast.Variable>call.f);
+			this.context.stack.set(functionName.slice(-1)[0], null);
+
+			args.map((arg, i) => {
+				this.context.stack.set(func.args[i], arg);
+			});
+
+			this.runBlock(func.block);
+
+			returnValue = this.context.stack.get(<ast.Variable>call.f);
+		}
+		else if (func instanceof Function) {
+			console.log("CALL (JavaScript)", functionName);
+			returnValue = func(this.context, ...args);
+		}
+
 		console.log("RETURN", returnValue);
-
 		this.context.stack.pop();
-
 		return returnValue;
 	}
 
