@@ -14,16 +14,18 @@ export namespace ast {
 	};
 
 	export class Function {
-		constructor(name: string, block: Block) {
+		constructor(name: string, args: string[], block: Block) {
 			this.name = name;
+			this.args = args;
 			this.block = block;
 		}
 
 		name: string;
+		args: string[];
 		block: Block;
 	};
 
-	export class Variable {
+	export class Dim {
 		constructor(name: string) {
 			this.name = name;
 		}
@@ -64,14 +66,33 @@ export class Parser {
 	private function(): ast.Function {
 		this.tokens.next(); // consume keyword
 
-		const f = new ast.Function(
-			this.require().content,
-			this.block());
+		const name = this.require().content;
+
+		this.expect("(");
+		const args = this.argList();
+		this.expect(")");
+
+		const f = new ast.Function(name, args, this.block());
 
 		this.expect("end");
 		this.expect("function");
 
 		return f;
+	}
+
+	private argList(): string[] {
+		let variables = [];
+		while (this.tokens.peek().content !== ")") {
+			variables.push(this.require().content);
+
+			if (this.tokens.peek().content === ")") {
+				break;
+			}
+			else {
+				this.expect(",");
+			}
+		}
+		return variables;
 	}
 
 	private require(): Bucket {

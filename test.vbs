@@ -1,10 +1,10 @@
-function startFW()
+function startFW(mul)
 	dim first : first = 4
-	startFW = first * 5
+	startFW = first * mul
 end function
 
 function startSET()
-	Wscript.Echo startFW()
+	Wscript.Echo startFW(5)
 end function
 
 startSET
