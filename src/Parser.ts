@@ -13,8 +13,9 @@ export namespace ast {
 	export class Statement {
 	};
 
-	export class Function {
+	export class Function extends Statement {
 		constructor(name: string, args: string[], block: Block) {
+			super();
 			this.name = name;
 			this.args = args;
 			this.block = block;
@@ -25,8 +26,44 @@ export namespace ast {
 		block: Block;
 	};
 
-	export class Dim {
+	export class Dim extends Statement {
 		constructor(name: string) {
+			super();
+			this.name = name;
+		}
+
+		name: string;
+	};
+
+	export class Assignment extends Statement {
+		constructor(variable: string, expr: Expression) {
+			super();
+			this.variable = variable;
+			this.expr = expr;
+		}
+
+		variable: string;
+		expr: Expression;
+	};
+
+	export class Expression {
+	};
+
+	export class Literal extends Expression {
+	}
+
+	export class Integer extends Literal {
+		constructor(i: number) {
+			super();
+			this.i = i;
+		}
+
+		i: number;
+	}
+
+	export class Variable extends Expression {
+		constructor(name: string) {
+			super();
 			this.name = name;
 		}
 
@@ -52,11 +89,22 @@ export class Parser {
 			if (token.content === "function") {
 				block.statements.push(this.function());
 			}
+			else if (token.content === "dim") {
+				block.statements.push(this.dim());
+			}
 			else if (token.content === "end") {
 				break;
 			}
-			else {
+			else if (token.content === ":") {
 				this.tokens.next();
+			}
+			else {
+				const identifier = this.identifier();
+				token = this.tokens.peek();
+
+				if (token.content === "=") {
+					block.statements.push(this.assignment(identifier));
+				}
 			}
 		}
 
@@ -95,6 +143,31 @@ export class Parser {
 		return variables;
 	}
 
+	private dim(): ast.Dim {
+		this.tokens.next(); // consume keyword
+		const name = this.require().content;
+		return new ast.Dim(name);
+	}
+
+	private assignment(identifier: Bucket): ast.Assignment {
+		this.tokens.next(); // consume operator
+		return new ast.Assignment(identifier.content, this.expression());
+	}
+
+	private expression(): ast.Expression {
+		const token = this.require();
+
+		if (/[0-9]+/.test(token.content)) {
+			return new ast.Integer(Number(token.content));
+		}
+		else if (this.isIdentifier(token)) {
+			return new ast.Variable(token.content);
+		}
+		else {
+			this.error(token, `cannot parse '${token.content}'`);
+		}
+	}
+
 	private require(): Bucket {
 		const token = this.tokens.next();
 		if (token.content === null) {
@@ -102,6 +175,19 @@ export class Parser {
 		}
 
 		return token;
+	}
+
+	private identifier(): Bucket {
+		const token = this.require();
+		if (!this.isIdentifier(token)) {
+			this.error(token, `expected identifier, got '${token.content}'`);
+		}
+
+		return token;
+	}
+
+	private isIdentifier(token: Bucket): boolean {
+		return /[a-zA-Z_][a-zA-Z0-9_]*/.test(token.content)
 	}
 
 	private expect(expected: string) {
