@@ -76,8 +76,8 @@ export class Parser {
 
 	private require(): Bucket {
 		const token = this.tokens.next();
-		if (this.tokens.peek().content === null) {
-			this.error(this.tokens.next(), "unexpected end of file");
+		if (token.content === null) {
+			this.error(token, "unexpected end of file");
 		}
 
 		return token;
