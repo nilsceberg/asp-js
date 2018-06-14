@@ -2,20 +2,29 @@ import { Bucket } from "./Stream";
 import { TokenStream } from "./TokenStream";
 
 export namespace ast {
-	export class Block {
-		constructor(statements: Statement[]) {
+	export class Node {
+		constructor(bucket: Bucket) {
+			this.bucket = bucket;
+		}
+
+		bucket: Bucket;
+	}
+
+	export class Block extends Node {
+		constructor(bucket: Bucket, statements: Statement[]) {
+			super(bucket);
 			this.statements = statements;
 		}
 
 		statements: Statement[];
 	}
 
-	export class Statement {
+	export class Statement extends Node {
 	}
 
 	export class Function extends Statement {
-		constructor(name: string, args: string[], block: Block) {
-			super();
+		constructor(bucket: Bucket, name: string, args: string[], block: Block) {
+			super(bucket);
 			this.name = name;
 			this.args = args;
 			this.block = block;
@@ -27,8 +36,8 @@ export namespace ast {
 	}
 
 	export class Dim extends Statement {
-		constructor(name: string) {
-			super();
+		constructor(bucket: Bucket, name: string) {
+			super(bucket);
 			this.name = name;
 		}
 
@@ -36,8 +45,8 @@ export namespace ast {
 	}
 
 	export class Assignment extends Statement {
-		constructor(variable: string[], expr: Expression) {
-			super();
+		constructor(bucket: Bucket, variable: string[], expr: Expression) {
+			super(bucket);
 			this.variable = variable;
 			this.expr = expr;
 		}
@@ -46,12 +55,12 @@ export namespace ast {
 		expr: Expression;
 	}
 
-	export class Expression {
+	export class Expression extends Node {
 	}
 
 	export class Mul extends Expression {
-		constructor(left: Expression, right: Expression) {
-			super();
+		constructor(bucket: Bucket, left: Expression, right: Expression) {
+			super(bucket);
 			this.left = left;
 			this.right = right;
 		}
@@ -61,8 +70,8 @@ export namespace ast {
 	}
 
 	export class Add extends Expression {
-		constructor(left: Expression, right: Expression) {
-			super();
+		constructor(bucket: Bucket, left: Expression, right: Expression) {
+			super(bucket);
 			this.left = left;
 			this.right = right;
 		}
@@ -75,8 +84,8 @@ export namespace ast {
 	}
 
 	export class Integer extends Literal {
-		constructor(i: number) {
-			super();
+		constructor(bucket: Bucket, i: number) {
+			super(bucket);
 			this.i = i;
 		}
 
@@ -84,8 +93,8 @@ export namespace ast {
 	}
 
 	export class Variable extends Expression {
-		constructor(name: string[]) {
-			super();
+		constructor(bucket: Bucket, name: string[]) {
+			super(bucket);
 			this.name = name;
 		}
 
@@ -93,8 +102,8 @@ export namespace ast {
 	}
 
 	export class Call extends Expression {
-		constructor(f: Expression, args: Expression[]) {
-			super();
+		constructor(bucket: Bucket, f: Expression, args: Expression[]) {
+			super(bucket);
 			this.f = f;
 			this.args = args;
 		}
@@ -114,7 +123,7 @@ export class Parser {
 	}
 
 	private block(): ast.Block {
-		let block = new ast.Block([]);
+		let block = new ast.Block(this.tokens.peek(), []);
 
 		let token: Bucket;
 		while ((token = this.tokens.peek()).content !== null) {
@@ -152,15 +161,16 @@ export class Parser {
 	}
 
 	private function(func: boolean = true): ast.Function {
-		this.tokens.next(); // consume keyword
+		const startToken = this.tokens.next(); // consume keyword
 
 		const name = this.require().content;
 
 		this.expect("(");
 		const args = this.argList();
 		this.expect(")");
+		this.expect(":");
 
-		const f = new ast.Function(name, args, this.block());
+		const f = new ast.Function(startToken, name, args, this.block());
 
 		this.expect("end");
 		this.expect(func ? "function" : "sub");
@@ -184,21 +194,21 @@ export class Parser {
 	}
 
 	private dim(): ast.Dim {
-		this.tokens.next(); // consume keyword
+		const keyword = this.tokens.next(); // consume keyword
 		const name = this.require().content;
-		return new ast.Dim(name);
+		return new ast.Dim(keyword, name);
 	}
 
 	private assignment(identifier: string[]): ast.Assignment {
-		this.tokens.next(); // consume operator
-		return new ast.Assignment(identifier, this.expression());
+		const operator = this.tokens.next(); // consume operator
+		return new ast.Assignment(operator, identifier, this.expression());
 	}
 
 	private expression(): ast.Expression {
 		let expr: ast.Expression = this.term();
 		while (this.tokens.peek().content === "+") {
-			this.tokens.next();
-			expr = new ast.Add(expr, this.term());
+			const operator = this.tokens.next();
+			expr = new ast.Add(operator, expr, this.term());
 		}
 		return expr;
 	}
@@ -206,8 +216,8 @@ export class Parser {
 	private term(): ast.Expression {
 		let term: ast.Expression = this.factor();
 		while (this.tokens.peek().content === "*") {
-			this.tokens.next();
-			term = new ast.Mul(term, this.factor());
+			const operator = this.tokens.next();
+			term = new ast.Mul(operator, term, this.factor());
 		}
 		return term;
 	}
@@ -222,7 +232,7 @@ export class Parser {
 			this.expect(")");
 		}
 		else if (this.isInteger(token)) {
-			expr = new ast.Integer(Number(this.tokens.next().content));
+			expr = new ast.Integer(token, Number(this.tokens.next().content));
 		}
 		else if (this.isIdentifier(token)) {
 			expr = this.variable();
@@ -240,7 +250,7 @@ export class Parser {
 	}
 
 	private variable(): ast.Variable {
-		const variable = new ast.Variable([this.tokens.next().content]);
+		const variable = new ast.Variable(this.tokens.peek(), [this.tokens.next().content]);
 		while (this.tokens.peek().content === ".") {
 			this.tokens.next();
 			variable.name.push(this.identifier().content);
@@ -249,7 +259,7 @@ export class Parser {
 	}
 
 	private call(f: ast.Expression): ast.Call {
-		const call = new ast.Call(f, []);
+		const call = new ast.Call(f.bucket, f, []);
 		this.expect("(");
 		if (this.tokens.peek().content !== ")") {
 			call.args.push(this.expression());
@@ -263,7 +273,7 @@ export class Parser {
 	}
 
 	private callStatement(f: ast.Expression): ast.Call {
-		const call = new ast.Call(f, []);
+		const call = new ast.Call(f.bucket, f, []);
 		if (this.tokens.peek().content === ":") {
 			return call;
 		}
@@ -319,7 +329,7 @@ export class Parser {
 	}
 
 	private error(bucket: Bucket, message: string) {
-		throw new Error(`${bucket.filename} line ${bucket.line} column ${bucket.position}: ${message}`);
+		throw new Error(`syntax error in ${bucket.filename} at line ${bucket.line}, column ${bucket.position}: ${message}`);
 	}
 
 	private tokens: TokenStream;

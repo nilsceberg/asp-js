@@ -1,6 +1,7 @@
 import { InputStream } from "./InputStream";
 import { TokenStream } from "./TokenStream";
 import { Parser, ast } from "./Parser";
+import { Interpreter } from "./Interpreter";
 
 import * as util from "util";
 
@@ -13,9 +14,15 @@ const parser = new Parser(tokens);
 //	console.log(bucket);
 //}
 
-console.log(util.inspect(parser.parse(), {
+const program = parser.parse();
+
+console.log(util.inspect(program, {
 	depth: null,
 	colors: true,
 }));
+
+const interpreter = new Interpreter();
+interpreter.run(program);
+
 
 console.log("OpenVBS v1.0.0");

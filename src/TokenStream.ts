@@ -26,8 +26,16 @@ export class TokenStream implements Stream {
 		}
 
 		let bucket = this.skipWhitespace();
+
 		if (this.isIdentifierStart(bucket)) {
 			return this.nextIdentifier(bucket);
+		}
+		else if (this.isInteger(bucket)) {
+			return this.nextInteger(bucket);
+		}
+		else if (bucket.content === "'") {
+			this.skipComment();
+			return this.next();
 		}
 		else {
 			return bucket;
@@ -45,6 +53,16 @@ export class TokenStream implements Stream {
 		return start;
 	}
 
+	private nextInteger(start: Bucket): Bucket {
+		let bucket;
+		while ((bucket = this.input.peek()).content !== null
+			&& this.isInteger(bucket)) {
+			this.input.next();
+			start.content += bucket.content;
+		}
+		return start;
+	}
+
 	private skipWhitespace(): Bucket {
 		let bucket;
 		while ((bucket = this.input.next()).content !== null) {
@@ -54,6 +72,12 @@ export class TokenStream implements Stream {
 		}
 
 		return bucket;
+	}
+
+	private skipComment(): void {
+		while (this.input.peek().content !== ":") {
+			this.input.next();
+		}
 	}
 
 	private isWhitespace(bucket: Bucket): boolean {
@@ -67,6 +91,10 @@ export class TokenStream implements Stream {
 
 	private isIdentifier(bucket: Bucket): boolean {
 		return bucket.content !== null && /[a-zA-Z0-9_]/.test(bucket.content);
+	}
+
+	private isInteger(bucket: Bucket): boolean {
+		return bucket.content !== null && /[0-9]/.test(bucket.content);
 	}
 
 	private input: InputStream;
