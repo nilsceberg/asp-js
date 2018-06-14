@@ -57,7 +57,7 @@ export class InputStream implements Stream {
 	}
 
 	private process(chr: string) {
-		return chr === "\n" ? ":" : chr;
+		return chr;
 	}
 
 	private line: number;

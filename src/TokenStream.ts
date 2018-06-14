@@ -37,6 +37,10 @@ export class TokenStream implements Stream {
 			this.skipComment();
 			return this.next();
 		}
+		else if (this.isNewLine(bucket)) {
+			bucket.content = ":";
+			return bucket;
+		}
 		else {
 			return bucket;
 		}
@@ -75,7 +79,7 @@ export class TokenStream implements Stream {
 	}
 
 	private skipComment(): void {
-		while (this.input.peek().content !== ":") {
+		while (this.input.peek().content !== "\n") {
 			this.input.next();
 		}
 	}
@@ -95,6 +99,10 @@ export class TokenStream implements Stream {
 
 	private isInteger(bucket: Bucket): boolean {
 		return bucket.content !== null && /[0-9]/.test(bucket.content);
+	}
+
+	private isNewLine(bucket: Bucket): boolean {
+		return bucket.content === "\n" || bucket.content === ":";
 	}
 
 	private input: InputStream;

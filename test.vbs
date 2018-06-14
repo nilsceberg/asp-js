@@ -9,7 +9,7 @@ end function
 
 sub echo(thing, b)
 	Wscript.Echo thing
-'	Wscript.Echo b
+	Wscript.Echo b
 end sub
 
 function startSET()
@@ -22,21 +22,17 @@ function recurse()
 '	end function
 
 	'recurse = inner()
-'	Wscript.Echo recurse
+	Wscript.Echo recurse
 end function
 
 function test()
 '	if 1 = 1 then
-'		dim a :' a = 19
+'		dim a : a = 19
 '	end if
-'	Wscript.Echo a
 end function
 
-'Wscript.Echo tjena
 
 test
 recurse
-
-'echo hejsan, 1337
 startSET
 

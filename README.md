@@ -9,6 +9,6 @@ eventually allow for ASP Classic rendering in nginx.
 * ~Functions calls without parameter lists will be fun - maybe we need
   significant newlines for this? They should probably be significant anyway.~
 
-* The lexer needs to be able to differentiate between real newlines and : when
-  handling comments
+* ~The lexer needs to be able to differentiate between real newlines and : when
+  handling comments~
 
