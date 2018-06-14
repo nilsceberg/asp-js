@@ -4,9 +4,27 @@ import { InputStream } from "./InputStream";
 export class TokenStream implements Stream {
 	constructor(input: InputStream) {
 		this.input = input;
+		this.peekValue = null;
+	}
+
+	peek(): Bucket {
+		if (this.peekValue !== null) {
+			return this.peekValue;
+		}
+		else {
+			const bucket = this.next();
+			this.peekValue = bucket;
+			return bucket;
+		}
 	}
 
 	next(): Bucket {
+		if (this.peekValue !== null) {
+			let bucket = this.peekValue;
+			this.peekValue = null;
+			return bucket;
+		}
+
 		let bucket = this.skipWhitespace();
 		if (this.isIdentifierStart(bucket)) {
 			return this.nextIdentifier(bucket);
@@ -52,5 +70,6 @@ export class TokenStream implements Stream {
 	}
 
 	private input: InputStream;
+	private peekValue: Bucket;
 }
 

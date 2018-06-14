@@ -6,5 +6,6 @@ export interface Bucket {
 
 export interface Stream {
 	next(): Bucket;
+	peek(): Bucket;
 }
 
