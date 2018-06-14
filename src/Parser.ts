@@ -8,10 +8,10 @@ export namespace ast {
 		}
 
 		statements: Statement[];
-	};
+	}
 
 	export class Statement {
-	};
+	}
 
 	export class Function extends Statement {
 		constructor(name: string, args: string[], block: Block) {
@@ -24,7 +24,7 @@ export namespace ast {
 		name: string;
 		args: string[];
 		block: Block;
-	};
+	}
 
 	export class Dim extends Statement {
 		constructor(name: string) {
@@ -33,7 +33,7 @@ export namespace ast {
 		}
 
 		name: string;
-	};
+	}
 
 	export class Assignment extends Statement {
 		constructor(variable: string, expr: Expression) {
@@ -44,10 +44,32 @@ export namespace ast {
 
 		variable: string;
 		expr: Expression;
-	};
+	}
 
 	export class Expression {
-	};
+	}
+
+	export class Mul extends Expression {
+		constructor(left: Expression, right: Expression) {
+			super();
+			this.left = left;
+			this.right = right;
+		}
+
+		left: Expression;
+		right: Expression;
+	}
+
+	export class Add extends Expression {
+		constructor(left: Expression, right: Expression) {
+			super();
+			this.left = left;
+			this.right = right;
+		}
+
+		left: Expression;
+		right: Expression;
+	}
 
 	export class Literal extends Expression {
 	}
@@ -68,7 +90,7 @@ export namespace ast {
 		}
 
 		name: string;
-	};
+	}
 }
 
 export class Parser {
@@ -85,7 +107,7 @@ export class Parser {
 
 		let token: Bucket;
 		while ((token = this.tokens.peek()).content !== null) {
-			console.log(token);
+			console.log("block", token);
 			if (token.content === "function") {
 				block.statements.push(this.function());
 			}
@@ -155,9 +177,32 @@ export class Parser {
 	}
 
 	private expression(): ast.Expression {
-		const token = this.require();
+		let expr: ast.Expression = this.term();
+		while (this.tokens.peek().content === "+") {
+			this.tokens.next();
+			expr = new ast.Add(expr, this.term());
+		}
+		return expr;
+	}
 
-		if (/[0-9]+/.test(token.content)) {
+	private term(): ast.Expression {
+		let term: ast.Expression = this.factor();
+		while (this.tokens.peek().content === "*") {
+			this.tokens.next();
+			term = new ast.Mul(term, this.factor());
+		}
+		return term;
+	}
+
+	private factor(): ast.Expression {
+		const token = this.require();
+		console.log("factor", token);
+		if (token.content === "(") {
+			const expr = this.expression();
+			this.expect(")");
+			return expr;
+		}
+		else if (/[0-9]+/.test(token.content)) {
 			return new ast.Integer(Number(token.content));
 		}
 		else if (this.isIdentifier(token)) {
@@ -187,9 +232,21 @@ export class Parser {
 	}
 
 	private isIdentifier(token: Bucket): boolean {
-		return /[a-zA-Z_][a-zA-Z0-9_]*/.test(token.content)
+		return /[a-zA-Z_][a-zA-Z0-9_]*/.test(token.content);
 	}
 
+	private isInteger(token: Bucket): boolean {
+		return /[0-9]+/.test(token.content);
+	}
+
+	private isLiteral(token: Bucket): boolean {
+		return this.isInteger(token); 
+	}
+
+	private isValue(token: Bucket): boolean {
+		return this.isLiteral(token) || this.isIdentifier(token);
+	}
+		
 	private expect(expected: string) {
 		const actual = this.require();
 		if (actual.content !== expected) {

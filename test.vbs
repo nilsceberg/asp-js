@@ -1,6 +1,6 @@
 function startFW(mul)
 	dim first : first = 4
-	startFW = first
+	startFW = first * (mul + 1)
 end function
 
 function startSET()
