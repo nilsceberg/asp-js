@@ -7,6 +7,7 @@ export class InputStream implements Stream {
 		this.content = readFileSync(filename, "utf-8");
 		this.position = 1;
 		this.line = 1;
+		this.filename = filename;
 	}
 
 	next(): Bucket {
@@ -21,6 +22,7 @@ export class InputStream implements Stream {
 			content: chr,
 			line: this.line,
 			position: this.position++,
+			filename: this.filename,
 		};
 
 		if (chr === "\n") {
@@ -40,11 +42,13 @@ export class InputStream implements Stream {
 			content: this.content[0],
 			line: this.line,
 			position: this.position,
+			filename: this.filename,
 		};
 	}
 
 	private line: number;
 	private position: number;
 	private content: string;
+	private filename: string;
 }
 

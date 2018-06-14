@@ -41,6 +41,7 @@ export class TokenStream implements Stream {
 			this.input.next();
 			start.content += bucket.content;
 		}
+		start.content = start.content.toLowerCase();
 		return start;
 	}
 
