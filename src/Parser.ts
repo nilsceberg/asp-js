@@ -233,9 +233,9 @@ export class Parser {
 		if (this.tokens.peek().content === "(") {
 			expr = this.call(expr);
 		}
-		//else if (this.isValue(this.tokens.peek())) {
-		//	expr = new ast.Call(expr, [this.expression()]);
-		//}
+		else if (this.isValue(this.tokens.peek())) {
+			expr = new ast.Call(expr, [this.expression()]);
+		}
 
 		return expr;
 	}

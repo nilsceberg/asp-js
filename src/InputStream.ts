@@ -24,7 +24,7 @@ export class InputStream implements Stream {
 		this.content = this.content.slice(1);
 
 		let bucket = <Bucket>{
-			content: chr,
+			content: this.process(chr),
 			line: this.line,
 			position: this.position++,
 			filename: this.filename,
@@ -49,11 +49,15 @@ export class InputStream implements Stream {
 		}
 
 		return {
-			content: this.content[0],
+			content: this.process(this.content[0]),
 			line: this.line,
 			position: this.position,
 			filename: this.filename,
 		};
+	}
+
+	private process(chr: string) {
+		return chr === "\n" ? ":" : chr;
 	}
 
 	private line: number;

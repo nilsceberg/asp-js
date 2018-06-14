@@ -58,8 +58,7 @@ export class TokenStream implements Stream {
 
 	private isWhitespace(bucket: Bucket): boolean {
 		return (bucket.content === " "
-			|| bucket.content === "\t"
-			|| bucket.content === "\n");
+			|| bucket.content === "\t");
 	}
 
 	private isIdentifierStart(bucket: Bucket): boolean {
