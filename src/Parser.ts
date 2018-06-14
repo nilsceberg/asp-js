@@ -50,6 +50,9 @@ export class Parser {
 			if (token.content === "function") {
 				block.statements.push(this.function());
 			}
+			else if (token.content === "end") {
+				break;
+			}
 			else {
 				this.tokens.next();
 			}
@@ -66,12 +69,14 @@ export class Parser {
 			throw new Error("unexpected end of file");
 		}
 
-		return new ast.Function(
+		const f = new ast.Function(
 			this.tokens.next().content,
 			this.block());
 
 		this.expect("end");
 		this.expect("function");
+
+		return f;
 	}
 
 	private expect(expected: string) {
