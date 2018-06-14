@@ -12,7 +12,12 @@ export class InputStream implements Stream {
 
 	next(): Bucket {
 		if (this.content === "") {
-			return null;
+			return {
+				content: null,
+				filename: this.filename,
+				line: this.line,
+				position: this.position,
+			};
 		}
 
 		let chr = this.content[0];
@@ -35,7 +40,12 @@ export class InputStream implements Stream {
 
 	peek(): Bucket {
 		if (this.content === "") {
-			return null;
+			return {
+				content: null,
+				filename: this.filename,
+				line: this.line,
+				position: this.position,
+			};
 		}
 
 		return {

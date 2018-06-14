@@ -45,7 +45,7 @@ export class Parser {
 		let block = new ast.Block([]);
 
 		let token: Bucket;
-		while ((token = this.tokens.peek()) !== null) {
+		while ((token = this.tokens.peek()).content !== null) {
 			console.log(token);
 			if (token.content === "function") {
 				block.statements.push(this.function());
@@ -64,13 +64,8 @@ export class Parser {
 	private function(): ast.Function {
 		this.tokens.next(); // consume keyword
 
-		if (this.tokens.peek() === null) {
-			//this.error("unexpected end of file");
-			throw new Error("unexpected end of file");
-		}
-
 		const f = new ast.Function(
-			this.tokens.next().content,
+			this.require().content,
 			this.block());
 
 		this.expect("end");
@@ -79,10 +74,19 @@ export class Parser {
 		return f;
 	}
 
+	private require(): Bucket {
+		const token = this.tokens.next();
+		if (this.tokens.peek().content === null) {
+			this.error(this.tokens.next(), "unexpected end of file");
+		}
+
+		return token;
+	}
+
 	private expect(expected: string) {
-		const actual = this.tokens.next();
+		const actual = this.require();
 		if (actual.content !== expected) {
-			this.error(actual, `expected '${expected}', got '$`);
+			this.error(actual, `expected '${expected}', got '${actual.content}'`);
 		}
 	}
 

@@ -36,7 +36,7 @@ export class TokenStream implements Stream {
 
 	private nextIdentifier(start: Bucket): Bucket {
 		let bucket;
-		while ((bucket = this.input.peek()) !== null
+		while ((bucket = this.input.peek()).content !== null
 			&& this.isIdentifier(bucket)) {
 			this.input.next();
 			start.content += bucket.content;
@@ -47,7 +47,7 @@ export class TokenStream implements Stream {
 
 	private skipWhitespace(): Bucket {
 		let bucket;
-		while ((bucket = this.input.next()) !== null) {
+		while ((bucket = this.input.next()).content !== null) {
 			if (!this.isWhitespace(bucket)) {
 				break;
 			}
@@ -63,11 +63,11 @@ export class TokenStream implements Stream {
 	}
 
 	private isIdentifierStart(bucket: Bucket): boolean {
-		return bucket !== null && /[a-zA-Z_]/.test(bucket.content);
+		return bucket.content !== null && /[a-zA-Z_]/.test(bucket.content);
 	}
 
 	private isIdentifier(bucket: Bucket): boolean {
-		return bucket !== null && /[a-zA-Z0-9_]/.test(bucket.content);
+		return bucket.content !== null && /[a-zA-Z0-9_]/.test(bucket.content);
 	}
 
 	private input: InputStream;
