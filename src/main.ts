@@ -16,18 +16,20 @@ const parser = new Parser(tokens);
 
 const program = parser.parse();
 
-console.log(util.inspect(program, {
-	depth: null,
-	colors: true,
-}));
+//console.log(util.inspect(program, {
+//	depth: null,
+//	colors: true,
+//}));
 
 const interpreter = new Interpreter({
-	"print": new Box((context: Context, thing: any) => {
-		console.log(thing);
-	}),
 	"wscript": new Box({
 		"echo": new Box((context: Context, thing: any) => {
-			console.log(thing);
+			if (!thing) {
+				console.log("");
+			}
+			else {
+				console.log(thing);
+			}
 		})
 	})
 });

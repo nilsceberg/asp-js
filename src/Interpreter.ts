@@ -104,7 +104,7 @@ export class Interpreter {
 	}
 
 	private runBlock(block: ast.Block): any {
-		console.log(util.inspect(this.context.stack, { depth: null, colors: true }));
+		//console.log(util.inspect(this.context.stack, { depth: null, colors: true }));
 		for (let stmt of block.statements) {
 			if (stmt instanceof ast.Function) {
 				this.defineFunction(stmt);
@@ -125,7 +125,6 @@ export class Interpreter {
 	}
 
 	private defineFunction(f: ast.Function): void {
-		console.log("defining function", f);
 		if (this.context.stack.isDefined(f.name.name[0])) {
 			error(f, `redefining name '${f.name}'`);
 		}
@@ -135,7 +134,7 @@ export class Interpreter {
 	}
 
 	private assign(assignment: ast.Assignment): void {
-		console.log("assigning", util.inspect(assignment, { depth: null, colors: true }));
+		//console.log("assigning", util.inspect(assignment, { depth: null, colors: true }));
 		// TODO dot notation
 		const box = this.evaluateRef(assignment.variable); //this.context.stack.get(assignment.variable);
 		if (box instanceof Box) {
@@ -146,7 +145,6 @@ export class Interpreter {
 	}
 
 	private dim(dim: ast.Dim): void {
-		console.log("dimming", dim);
 		if (this.context.stack.isDefined(dim.name)) {
 			error(dim, `dim: variable '${dim.name}' is already defined`);
 		}
@@ -233,8 +231,6 @@ export class Interpreter {
 
 		let returnValue;
 		if (func instanceof ast.Function) {
-			console.log("CALL", functionName);
-
 			if (args.length !== func.args.length) {
 				error(call, `'${functionName}' expected ${func.args.length} arguments but got ${args.length}`);
 			}
@@ -251,11 +247,9 @@ export class Interpreter {
 			returnValue = this.context.stack.get(<ast.Variable>call.f);
 		}
 		else if (func instanceof Function) {
-			console.log("CALL (JavaScript)", functionName);
 			returnValue = func(this.context, ...args);
 		}
 
-		console.log("RETURN", returnValue);
 		this.context.stack.pop();
 		return returnValue;
 	}
