@@ -36,13 +36,13 @@ export namespace ast {
 	}
 
 	export class Assignment extends Statement {
-		constructor(variable: string, expr: Expression) {
+		constructor(variable: string[], expr: Expression) {
 			super();
 			this.variable = variable;
 			this.expr = expr;
 		}
 
-		variable: string;
+		variable: string[];
 		expr: Expression;
 	}
 
@@ -118,9 +118,11 @@ export class Parser {
 
 		let token: Bucket;
 		while ((token = this.tokens.peek()).content !== null) {
-			console.log("block", token);
 			if (token.content === "function") {
 				block.statements.push(this.function());
+			}
+			else if (token.content === "sub") {
+				block.statements.push(this.function(false));
 			}
 			else if (token.content === "dim") {
 				block.statements.push(this.dim());
@@ -128,28 +130,28 @@ export class Parser {
 			else if (token.content === "end") {
 				break;
 			}
+			else if (this.isIdentifier(token)) {
+				const variable = this.variable();
+
+				if (this.tokens.peek().content === "=") {
+					block.statements.push(this.assignment(variable.name));
+				}
+				else {
+					block.statements.push(this.callStatement(variable));
+				}
+			}
 			else if (token.content === ":") {
 				this.tokens.next();
 			}
 			else {
-				let expression = this.expression();
-
-				// If this is a variable, check to see if we're actually on
-				// an assignment
-				if ((expression instanceof ast.Variable)
-					&& expression.name.length === 1
-					&& this.tokens.peek().content === "=") {
-					expression = this.assignment(expression.name[0]);
-				}
-
-				block.statements.push(expression);
+				this.error(token, `unexpected token '${token.content}' (expected statement)`);
 			}
 		}
 
 		return block;
 	}
 
-	private function(): ast.Function {
+	private function(func: boolean = true): ast.Function {
 		this.tokens.next(); // consume keyword
 
 		const name = this.require().content;
@@ -161,7 +163,7 @@ export class Parser {
 		const f = new ast.Function(name, args, this.block());
 
 		this.expect("end");
-		this.expect("function");
+		this.expect(func ? "function" : "sub");
 
 		return f;
 	}
@@ -187,7 +189,7 @@ export class Parser {
 		return new ast.Dim(name);
 	}
 
-	private assignment(identifier: string): ast.Assignment {
+	private assignment(identifier: string[]): ast.Assignment {
 		this.tokens.next(); // consume operator
 		return new ast.Assignment(identifier, this.expression());
 	}
@@ -211,19 +213,19 @@ export class Parser {
 	}
 
 	private factor(): ast.Expression {
-		const token = this.require();
+		const token = this.tokens.peek();
 		let expr: ast.Expression;
-		console.log("factor", token);
 
 		if (token.content === "(") {
+			this.tokens.next();
 			expr = this.expression();
 			this.expect(")");
 		}
 		else if (this.isInteger(token)) {
-			expr = new ast.Integer(Number(token.content));
+			expr = new ast.Integer(Number(this.tokens.next().content));
 		}
 		else if (this.isIdentifier(token)) {
-			expr = this.variable(token);
+			expr = this.variable();
 		}
 		else {
 			this.error(token, `unexpected token '${token.content}'`);
@@ -233,15 +235,12 @@ export class Parser {
 		if (this.tokens.peek().content === "(") {
 			expr = this.call(expr);
 		}
-		else if (this.isValue(this.tokens.peek())) {
-			expr = new ast.Call(expr, [this.expression()]);
-		}
 
 		return expr;
 	}
 
-	private variable(token: Bucket): ast.Variable {
-		const variable = new ast.Variable([token.content]);
+	private variable(): ast.Variable {
+		const variable = new ast.Variable([this.tokens.next().content]);
 		while (this.tokens.peek().content === ".") {
 			this.tokens.next();
 			variable.name.push(this.identifier().content);
@@ -260,6 +259,21 @@ export class Parser {
 			}
 		}
 		this.expect(")");
+		return call;
+	}
+
+	private callStatement(f: ast.Expression): ast.Call {
+		const call = new ast.Call(f, []);
+		if (this.tokens.peek().content === ":") {
+			return call;
+		}
+
+		call.args.push(this.expression());
+
+		while (this.tokens.peek().content === ",") {
+			this.tokens.next();
+			call.args.push(this.expression());
+		}
 		return call;
 	}
 
