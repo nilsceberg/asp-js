@@ -25,8 +25,8 @@ export class Stack {
 		this.array = [global];
 	}
 
-	push() {
-		this.array.push({});
+	push(frame = {}) {
+		this.array.push(frame);
 	}
 
 	pop() {
@@ -221,13 +221,23 @@ export class Interpreter {
 			error(call, `function '${functionName}' not defined`);
 		}
 
+		// Make sure we've resolved to a function
 		if (!(func instanceof Function || func instanceof ast.Function)) {
-			error(call, `type mismatch ('${functionName}' is not a function)`);
+			error(call, `type mismatch ('${functionName.join(".")}' is not a function)`);
 		}
 
+		// Evaluate arguments
 		const args = call.args.map((arg, i) => this.evaluate(arg));
 
-		this.context.stack.push();
+		// If we're calling an object method, copy that object into the stack
+		// frame
+		if (functionName.length > 1) {
+			this.context.stack.push(Object.assign({}, this.evaluate(
+				new ast.Variable(call.bucket, functionName.slice(0, -1)))));
+		}
+		else {
+			this.context.stack.push();
+		}
 
 		let returnValue;
 		if (func instanceof ast.Function) {

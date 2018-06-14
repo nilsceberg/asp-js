@@ -6,13 +6,16 @@ class Myclass
 	dim hejsan
 
 	function test()
-		wscript.echo 999
+		wscript.echo hejsan
+		hejsan = hejsan + 1
 	end function
 end class
 
 dim myObject
 set myObject = new MyClass
 myObject.hejsan = 7654
+myObject.test
+myObject.test
 myObject.test
 
 dim mul : mul = 14
