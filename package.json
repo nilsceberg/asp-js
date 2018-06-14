@@ -1,0 +1,15 @@
+{
+  "name": "openvbs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "tsc && node build/main.js"
+  },
+  "author": "Nils Ceberg",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^10.3.3",
+    "typescript": "^2.9.2"
+  }
+}
