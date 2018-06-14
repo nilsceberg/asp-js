@@ -1,4 +1,4 @@
-import { ast } from "./Parser";
+import { ast, namespaces } from "./AST";
 import * as util from "util";
 
 function error(node: ast.Node, message: string) {
@@ -6,9 +6,14 @@ function error(node: ast.Node, message: string) {
 	throw new Error(`runtime error in ${bucket.filename} at line ${bucket.line}, column ${bucket.position}: ${message}`);
 }
 
+interface Objekt {
+	members: { [identifier: string]: any };
+	methods: { [identifier: string]: Function | ast.Function };
+}
+
 export class Stack {
-	constructor() {
-		this.array = [{}];
+	constructor(global: any = {}) {
+		this.array = [global];
 	}
 
 	push() {
@@ -53,16 +58,16 @@ export class Stack {
 }
 
 export interface Context {
-	stack: Stack
-	functions: { [identifier: string]: ast.Function | Function }
-	explicit: boolean
+	stack: Stack;
+	classes: { [identifier: string]: ast.Class };
+	explicit: boolean;
 }
 
 export class Interpreter {
 	constructor(functions: { [identifier: string]: Function } = {}) {
 		this.context = {
-			stack: new Stack(),
-			functions: functions,
+			stack: new Stack(functions),
+			classes: {},
 			explicit: true,
 		};
 	}
@@ -87,12 +92,15 @@ export class Interpreter {
 			else if (stmt instanceof ast.Assignment) {
 				this.assign(stmt);
 			}
+			else if (stmt instanceof ast.Class) {
+				this.class(stmt);
+			}
 		}
 	}
 
 	private defineFunction(f: ast.Function): void {
 		console.log("defining function", f);
-		this.context.functions[f.name] = f;
+		this.context.stack.set(f.name, f);
 	}
 
 	private assign(assignment: ast.Assignment): void {
@@ -133,14 +141,46 @@ export class Interpreter {
 		else if (expr instanceof ast.Call) {
 			return this.call(expr);
 		}
+		else if (expr instanceof ast.New) {
+			return this.new(expr);
+		}
+	}
+
+	private new(n: ast.New): any {
+		const klass = this.context.classes[n.klass];
+		if (klass === undefined) {
+			error(n, `undefined class '${n.klass}'`);
+		}
+
+		const obj: Objekt = {
+			members: {},
+			methods: {},
+		};
+
+		for (let dim of klass.dims) {
+			obj.members[dim.name] = null;
+		}
+		for (let method of klass.methods) {
+			obj.methods[method.name] = method;
+		}
+
+		return obj;
+	}
+
+	private class(klass: ast.Class): any {
+		if (this.context.classes[klass.name] !== undefined) {
+			error(klass, `class ${klass.name} already defined`);
+		}
+
+		this.context.classes[klass.name] = klass;
 	}
 
 	private call(call: ast.Call): any {
 		// TODO should function name be variable instead? :O
 		const functionName = (<ast.Variable>call.f).name;
-		const func = this.context.functions[functionName[0]];
+		const func = this.evaluate(call.f);
 
-		if (func === undefined) {
+		if (func === undefined || !(func instanceof Function || func instanceof ast.Function)) {
 			error(call, `unknown function '${functionName}'`);
 		}
 

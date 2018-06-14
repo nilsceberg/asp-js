@@ -2,15 +2,33 @@
 
 dim offByOne : offByOne = 3
 
-function startFW(mul)
-	dim first : first = 4
-	startFW = first * (mul + offByOne)
-end function
+class Myclass
+	dim hejsan
+
+	function test()
+		wscript.echo hejsan
+	end function
+end class
+
+dim myObject
+set myObject = new MyClass
+myObject.hejsan = 7654
+myObject.test
+
+dim mul : mul = 14
 
 sub echo(thing, b)
 	Wscript.Echo thing
 	Wscript.Echo b
 end sub
+
+echo = 141
+
+function startFW(echo)
+	dim first : first = 4
+	startFW = first * (echo + offByOne)
+	echo 88, 1
+end function
 
 function startSET()
 	echo startFW(2) * 2, 5
@@ -31,8 +49,11 @@ function test()
 '	end if
 end function
 
+Wscript.echo mul
 
 test
 recurse
 startSET
+
+Wscript.echo mul
 

@@ -1,117 +1,6 @@
 import { Bucket } from "./Stream";
 import { TokenStream } from "./TokenStream";
-
-export namespace ast {
-	export class Node {
-		constructor(bucket: Bucket) {
-			this.bucket = bucket;
-		}
-
-		bucket: Bucket;
-	}
-
-	export class Block extends Node {
-		constructor(bucket: Bucket, statements: Statement[]) {
-			super(bucket);
-			this.statements = statements;
-		}
-
-		statements: Statement[];
-	}
-
-	export class Statement extends Node {
-	}
-
-	export class Function extends Statement {
-		constructor(bucket: Bucket, name: string, args: string[], block: Block) {
-			super(bucket);
-			this.name = name;
-			this.args = args;
-			this.block = block;
-		}
-
-		name: string;
-		args: string[];
-		block: Block;
-	}
-
-	export class Dim extends Statement {
-		constructor(bucket: Bucket, name: string) {
-			super(bucket);
-			this.name = name;
-		}
-
-		name: string;
-	}
-
-	export class Assignment extends Statement {
-		constructor(bucket: Bucket, variable: string[], expr: Expression) {
-			super(bucket);
-			this.variable = variable;
-			this.expr = expr;
-		}
-
-		variable: string[];
-		expr: Expression;
-	}
-
-	export class Expression extends Node {
-	}
-
-	export class Mul extends Expression {
-		constructor(bucket: Bucket, left: Expression, right: Expression) {
-			super(bucket);
-			this.left = left;
-			this.right = right;
-		}
-
-		left: Expression;
-		right: Expression;
-	}
-
-	export class Add extends Expression {
-		constructor(bucket: Bucket, left: Expression, right: Expression) {
-			super(bucket);
-			this.left = left;
-			this.right = right;
-		}
-
-		left: Expression;
-		right: Expression;
-	}
-
-	export class Literal extends Expression {
-	}
-
-	export class Integer extends Literal {
-		constructor(bucket: Bucket, i: number) {
-			super(bucket);
-			this.i = i;
-		}
-
-		i: number;
-	}
-
-	export class Variable extends Expression {
-		constructor(bucket: Bucket, name: string[]) {
-			super(bucket);
-			this.name = name;
-		}
-
-		name: string[];
-	}
-
-	export class Call extends Expression {
-		constructor(bucket: Bucket, f: Expression, args: Expression[]) {
-			super(bucket);
-			this.f = f;
-			this.args = args;
-		}
-
-		f: Expression;
-		args: Expression[];
-	}
-}
+import { ast, namespaces } from "./AST";
 
 export class Parser {
 	constructor(tokens: TokenStream) {
@@ -133,8 +22,15 @@ export class Parser {
 			else if (token.content === "sub") {
 				block.statements.push(this.function(false));
 			}
+			else if (token.content === "class") {
+				block.statements.push(this.klass());
+			}
 			else if (token.content === "dim") {
 				block.statements.push(this.dim());
+			}
+			else if (token.content === "set") {
+				// TODO: can we just ignore set?
+				this.tokens.next();
 			}
 			else if (token.content === "end") {
 				break;
@@ -161,7 +57,7 @@ export class Parser {
 	}
 
 	private function(func: boolean = true): ast.Function {
-		const startToken = this.tokens.next(); // consume keyword
+		const keyword = this.tokens.next(); // consume keyword
 
 		const name = this.require().content;
 
@@ -170,12 +66,41 @@ export class Parser {
 		this.expect(")");
 		this.expect(":");
 
-		const f = new ast.Function(startToken, name, args, this.block());
+		const f = new ast.Function(keyword, name, args, this.block());
 
 		this.expect("end");
 		this.expect(func ? "function" : "sub");
 
 		return f;
+	}
+
+	private klass(): ast.Class {
+		const keyword = this.tokens.next(); // consume keyword
+
+		const name = this.identifier().content;
+
+		const k = new ast.Class(keyword, name, [], []);
+
+		let token;
+		while ((token = this.tokens.peek()).content !== "end") {
+			if (token.content === "dim") {
+				k.dims.push(this.dim());
+			}
+			else if (token.content === "function" || token.content === "sub") {
+				k.methods.push(this.function(token.content === "function"));
+			}
+			else if (token.content === ":") {
+				this.tokens.next();
+			}
+			else {
+				this.error(token, `unexpected token '${token.content}'`);
+			}
+		}
+
+		this.expect("end");
+		this.expect("class");
+
+		return k;
 	}
 
 	private argList(): string[] {
@@ -231,6 +156,9 @@ export class Parser {
 			expr = this.expression();
 			this.expect(")");
 		}
+		else if (token.content === "new") {
+			return this.new();
+		}
 		else if (this.isInteger(token)) {
 			expr = new ast.Integer(token, Number(this.tokens.next().content));
 		}
@@ -249,8 +177,13 @@ export class Parser {
 		return expr;
 	}
 
+	private new(): ast.New {
+		const keyword = this.tokens.next();
+		return new ast.New(keyword, this.tokens.next().content);
+	}
+
 	private variable(): ast.Variable {
-		const variable = new ast.Variable(this.tokens.peek(), [this.tokens.next().content]);
+		const variable = new ast.Variable(this.tokens.peek(), [this.tokens.next().content], namespaces.Var);
 		while (this.tokens.peek().content === ".") {
 			this.tokens.next();
 			variable.name.push(this.identifier().content);
@@ -259,17 +192,7 @@ export class Parser {
 	}
 
 	private call(f: ast.Expression): ast.Call {
-		const call = new ast.Call(f.bucket, f, []);
-		this.expect("(");
-		if (this.tokens.peek().content !== ")") {
-			call.args.push(this.expression());
-			while (this.tokens.peek().content === ",") {
-				this.tokens.next();
-				call.args.push(this.expression());
-			}
-		}
-		this.expect(")");
-		return call;
+		return new ast.Call(f.bucket, f, this.args());
 	}
 
 	private callStatement(f: ast.Expression): ast.Call {
@@ -285,6 +208,20 @@ export class Parser {
 			call.args.push(this.expression());
 		}
 		return call;
+	}
+
+	private args(): ast.Expression[] {
+		let args: ast.Expression[] = [];
+		this.expect("(");
+		if (this.tokens.peek().content !== ")") {
+			args.push(this.expression());
+			while (this.tokens.peek().content === ",") {
+				this.tokens.next();
+				args.push(this.expression());
+			}
+		}
+		this.expect(")");
+		return args;
 	}
 
 	private require(): Bucket {

@@ -1,6 +1,6 @@
 import { InputStream } from "./InputStream";
 import { TokenStream } from "./TokenStream";
-import { Parser, ast } from "./Parser";
+import { Parser } from "./Parser";
 import { Interpreter, Context } from "./Interpreter";
 
 import * as util from "util";
