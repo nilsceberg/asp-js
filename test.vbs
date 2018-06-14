@@ -4,6 +4,7 @@ function startFW(mul)
 end function
 
 function startSET()
+	Wscript.Echo startFW(2)
 end function
 
 startSET

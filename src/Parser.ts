@@ -84,12 +84,12 @@ export namespace ast {
 	}
 
 	export class Variable extends Expression {
-		constructor(name: string) {
+		constructor(name: string[]) {
 			super();
 			this.name = name;
 		}
 
-		name: string;
+		name: string[];
 	}
 }
 
@@ -126,8 +126,9 @@ export class Parser {
 				// If this is a variable, check to see if we're actually on
 				// an assignment
 				if ((expression instanceof ast.Variable)
+					&& expression.name.length === 1
 					&& this.tokens.peek().content === "=") {
-					expression = this.assignment(expression.name);
+					expression = this.assignment(expression.name[0]);
 				}
 
 				block.statements.push(expression);
@@ -210,11 +211,20 @@ export class Parser {
 			return new ast.Integer(Number(token.content));
 		}
 		else if (this.isIdentifier(token)) {
-			return new ast.Variable(token.content);
+			return this.variable(token);
 		}
 		else {
 			this.error(token, `unexpected token '${token.content}'`);
 		}
+	}
+
+	private variable(token: Bucket): ast.Variable {
+		const variable = new ast.Variable([token.content]);
+		while (this.tokens.peek().content === ".") {
+			this.tokens.next();
+			variable.name.push(this.identifier().content);
+		}
+		return variable;
 	}
 
 	private require(): Bucket {
