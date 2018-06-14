@@ -91,6 +91,17 @@ export namespace ast {
 
 		name: string[];
 	}
+
+	export class Call extends Expression {
+		constructor(f: Expression, args: Expression[]) {
+			super();
+			this.f = f;
+			this.args = args;
+		}
+
+		f: Expression;
+		args: Expression[];
+	}
 }
 
 export class Parser {
@@ -201,21 +212,32 @@ export class Parser {
 
 	private factor(): ast.Expression {
 		const token = this.require();
+		let expr: ast.Expression;
 		console.log("factor", token);
+
 		if (token.content === "(") {
-			const expr = this.expression();
+			expr = this.expression();
 			this.expect(")");
-			return expr;
 		}
 		else if (this.isInteger(token)) {
-			return new ast.Integer(Number(token.content));
+			expr = new ast.Integer(Number(token.content));
 		}
 		else if (this.isIdentifier(token)) {
-			return this.variable(token);
+			expr = this.variable(token);
 		}
 		else {
 			this.error(token, `unexpected token '${token.content}'`);
 		}
+
+		// Is this a function call?
+		if (this.tokens.peek().content === "(") {
+			expr = this.call(expr);
+		}
+		//else if (this.isValue(this.tokens.peek())) {
+		//	expr = new ast.Call(expr, [this.expression()]);
+		//}
+
+		return expr;
 	}
 
 	private variable(token: Bucket): ast.Variable {
@@ -225,6 +247,20 @@ export class Parser {
 			variable.name.push(this.identifier().content);
 		}
 		return variable;
+	}
+
+	private call(f: ast.Expression): ast.Call {
+		const call = new ast.Call(f, []);
+		this.expect("(");
+		if (this.tokens.peek().content !== ")") {
+			call.args.push(this.expression());
+			while (this.tokens.peek().content === ",") {
+				this.tokens.next();
+				call.args.push(this.expression());
+			}
+		}
+		this.expect(")");
+		return call;
 	}
 
 	private require(): Bucket {

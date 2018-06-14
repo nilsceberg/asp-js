@@ -3,8 +3,12 @@ function startFW(mul)
 	startFW = first * (mul + 1)
 end function
 
+function echo(thing)
+	Wscript.Echo thing
+end function
+
 function startSET()
-	Wscript.Echo startFW(2)
+	echo startFW(2)
 end function
 
 startSET
