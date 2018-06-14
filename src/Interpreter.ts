@@ -1,6 +1,11 @@
 import { ast } from "./Parser";
 import * as util from "util";
 
+function error(node: ast.Node, message: string) {
+	const bucket = node.bucket;
+	throw new Error(`runtime error in ${bucket.filename} at line ${bucket.line}, column ${bucket.position}: ${message}`);
+}
+
 export class Stack {
 	constructor() {
 		this.array = [{}];
@@ -14,17 +19,34 @@ export class Stack {
 		this.array.splice(-1);
 	}
 
-	get(identifier: string[]): any {
-		for (let i = this.array.length - 1; i >= 0; --i) {
-			if (this.array[i][identifier[0]] !== undefined) {
-				return this.array[i][identifier[0]];
-			}
+	isDefined(identifier: string): boolean {
+		return this.resolve(identifier) !== undefined;
+	}
+
+	get(variable: ast.Variable): any {
+		const value = this.resolve(variable.name[0]);
+		if (value === undefined) {
+			error(variable, `undefined variable '${variable.name}'`);
 		}
-		return undefined;
+		return value;
 	}
 
 	set(identifier: string, value: any): void {
 		this.array[this.array.length - 1][identifier] = value;
+	}
+
+	private resolve(identifier: string): any {
+		const frame = this.array.slice(-1)[0];
+		if (frame[identifier] !== undefined) {
+			return frame[identifier];
+		}
+
+		const global = this.array[0];
+		if (global[identifier] !== undefined) {
+			return global[identifier];
+		}
+
+		return undefined;
 	}
 
 	private array: { [identifier: string]: any }[];
@@ -33,13 +55,15 @@ export class Stack {
 export interface Context {
 	stack: Stack
 	functions: { [identifier: string]: ast.Function }
+	explicit: boolean
 }
 
 export class Interpreter {
 	constructor() {
 		this.context = {
 			stack: new Stack(),
-			functions: {}
+			functions: {},
+			explicit: true,
 		};
 	}
 
@@ -74,21 +98,26 @@ export class Interpreter {
 	private assign(assignment: ast.Assignment): void {
 		console.log("assigning", util.inspect(assignment, { depth: null, colors: true }));
 		// TODO dot notation
+		if (!this.context.stack.isDefined(assignment.variable[0])) {
+			error(assignment, `assignment: undefined variable '${assignment.variable}'`);
+		}
 		this.context.stack.set(assignment.variable[0], this.evaluate(assignment.expr));
 	}
 
 	private dim(dim: ast.Dim): void {
 		console.log("dimming", dim);
-		// TODO not sure about this one
+		if (this.context.stack.isDefined(dim.name)) {
+			error(dim, `dim: variable '${dim.name}' is already defined`);
+		}
 		this.context.stack.set(dim.name, null);
 	}
 
 	private evaluate(expr: ast.Expression): any {
 		if (expr instanceof ast.Variable) {
 			// TODO dot notation
-			const value = this.context.stack.get(expr.name);
+			const value = this.context.stack.get(expr);
 			if (value === undefined) {
-				this.error(expr, `undefined variable '${expr.name}'`);
+				error(expr, `undefined variable '${expr.name}'`);
 			}
 			return value;
 		}
@@ -112,10 +141,12 @@ export class Interpreter {
 		const func = this.context.functions[functionName[0]];
 
 		if (func === undefined) {
-			this.error(call, `unknown function '${functionName}'`);
+			error(call, `unknown function '${functionName}'`);
 		}
 
 		this.context.stack.push();
+		this.context.stack.set(functionName.slice(-1)[0], null);
+
 		call.args.map((arg, i) => {
 			this.context.stack.set(func.args[i], this.evaluate(arg));
 		});
@@ -123,17 +154,12 @@ export class Interpreter {
 		console.log("CALL", functionName);
 		this.runBlock(func.block);
 
-		const returnValue = this.context.stack.get(functionName);
+		const returnValue = this.context.stack.get(<ast.Variable>call.f);
 		console.log("RETURN", returnValue);
 
 		this.context.stack.pop();
 
 		return returnValue;
-	}
-
-	private error(node: ast.Node, message: string) {
-		const bucket = node.bucket;
-		throw new Error(`runtime error in ${bucket.filename} at line ${bucket.line}, column ${bucket.position}: ${message}`);
 	}
 
 	private context: Context;
