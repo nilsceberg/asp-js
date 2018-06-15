@@ -1,5 +1,5 @@
 export interface Bucket {
-	content: string;
+	content: any;
 	line: number;
 	position: number;
 	filename: string;

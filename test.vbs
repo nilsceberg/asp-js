@@ -18,6 +18,8 @@ myObject.test
 myObject.test
 myObject.test
 
+echo 1234, 1
+
 dim mul : mul = 14
 
 sub echo(thing, b)
@@ -42,7 +44,7 @@ function recurse()
 '	end function
 
 	'recurse = inner()
-	Wscript.Echo recurse
+	recurse
 end function
 
 function test()
@@ -58,4 +60,3 @@ recurse
 startSET
 
 Wscript.echo mul
-

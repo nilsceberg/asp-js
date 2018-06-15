@@ -1,6 +1,39 @@
 import { Stream, Bucket } from "./Stream";
 import { InputStream } from "./InputStream";
 
+export namespace tokens {
+	export abstract class Token {
+		constructor(value: any) {
+			this.value = value;
+		}
+		value: any;
+	};
+
+	export class Identifier extends Token {
+		constructor(name: string) {
+			super(name);
+		}
+	}
+
+	export class String extends Token {
+		constructor(value: string) {
+			super(value);
+		}
+	}
+
+	export class Integer extends Token {
+		constructor(value: number) {
+			super(value);
+		}
+	}
+
+	export class Punctuation extends Token {
+		constructor(value: string) {
+			super(value);
+		}
+	}
+}
+
 export class TokenStream implements Stream {
 	constructor(input: InputStream) {
 		this.input = input;
@@ -39,9 +72,30 @@ export class TokenStream implements Stream {
 		}
 		else if (this.isNewLine(bucket)) {
 			bucket.content = ":";
+			bucket.content = new tokens.Punctuation(bucket.content);
+			return bucket;
+		}
+		else if (bucket.content === "<") {
+			const next = this.input.peek().content;
+			if (next === ">" || next === "%") {
+				bucket.content += this.input.next().content;
+			}
+			bucket.content = new tokens.Punctuation(bucket.content);
+			return bucket;
+		}
+		else if (bucket.content === "%") {
+			const next = this.input.peek().content;
+			if (next === ">") {
+				bucket.content += this.input.next().content;
+			}
+			bucket.content = new tokens.Punctuation(bucket.content);
+			return bucket;
+		}
+		else if (bucket.content === null) {
 			return bucket;
 		}
 		else {
+			bucket.content = new tokens.Punctuation(bucket.content);
 			return bucket;
 		}
 	}
@@ -54,6 +108,7 @@ export class TokenStream implements Stream {
 			start.content += bucket.content;
 		}
 		start.content = start.content.toLowerCase();
+		start.content = new tokens.Identifier(start.content);
 		return start;
 	}
 
@@ -64,6 +119,7 @@ export class TokenStream implements Stream {
 			this.input.next();
 			start.content += bucket.content;
 		}
+		start.content = new tokens.Integer(Number(start.content));
 		return start;
 	}
 
