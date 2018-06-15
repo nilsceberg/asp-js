@@ -107,6 +107,7 @@ export class Interpreter {
 	}
 
 	run(block: ast.Block): void {
+		//console.log(util.inspect(block, { depth: null, colors: true }));
 		this.runBlock(block);
 		//console.log(util.inspect(this.context, { depth: null, colors: true }));
 	}
@@ -167,8 +168,8 @@ export class Interpreter {
 		if (expr instanceof ast.Variable) {
 			return this.context.stack.get(expr);
 		}
-		else if (expr instanceof ast.Integer) {
-			return expr.i;
+		else if (expr instanceof ast.Literal) {
+			return expr.value;
 		}
 		else if (expr instanceof ast.Add) {
 			return this.evaluate(expr.left) + this.evaluate(expr.right);
@@ -184,6 +185,8 @@ export class Interpreter {
 		}
 	}
 
+	// This function is only resolves variables to functions and not other
+	// values, so that 
 	private evaluateFunction(expr: ast.Expression): any {
 		if (expr instanceof ast.Variable) {
 			return this.context.stack.get(expr, true).value;

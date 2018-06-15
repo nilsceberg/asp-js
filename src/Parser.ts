@@ -162,19 +162,21 @@ export class Parser {
 		const token = this.tokens.peek();
 		let expr: ast.Expression;
 
-		if (token.content.value === "(") {
+		if (this.isLiteral(token)) {
+			expr = new ast.Literal(token, this.tokens.next().content.value);
+		}
+		else if (this.isIdentifier(token)) {
+			if (token.content.value === "new") {
+				return this.new();
+			}
+			else {
+				expr = this.variable();
+			}
+		}
+		else if (token.content.value === "(") {
 			this.tokens.next();
 			expr = this.expression();
 			this.expect(")");
-		}
-		else if (token.content.value === "new") {
-			return this.new();
-		}
-		else if (this.isInteger(token)) {
-			expr = new ast.Integer(token, Number(this.tokens.next().content.value));
-		}
-		else if (this.isIdentifier(token)) {
-			expr = this.variable();
 		}
 		else {
 			this.error(token, `unexpected token '${token.content.value}'`);
@@ -256,8 +258,12 @@ export class Parser {
 		return token.content instanceof tokens.Integer;
 	}
 
+	private isString(token: Bucket): boolean {
+		return token.content instanceof tokens.String;
+	}
+
 	private isLiteral(token: Bucket): boolean {
-		return this.isInteger(token); 
+		return this.isInteger(token) || this.isString(token);
 	}
 
 	private isValue(token: Bucket): boolean {

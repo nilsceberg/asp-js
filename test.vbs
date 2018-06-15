@@ -1,5 +1,7 @@
 'option explicit
 
+wscript.echo "hello "" :)"
+
 dim offByOne : offByOne = 3
 
 class Myclass
@@ -57,6 +59,9 @@ function recurse()
 end function
 
 function test()
+	dim echo : echo = 1345
+	' this doesn't work in vbscript
+	'echo echo, 1
 '	if 1 = 1 then
 '		dim a : a = 19
 '	end if

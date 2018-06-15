@@ -96,15 +96,12 @@ export namespace ast {
 	}
 
 	export class Literal extends Expression {
-	}
-
-	export class Integer extends Literal {
-		constructor(bucket: Bucket, i: number) {
+		constructor(bucket: Bucket, value: any) {
 			super(bucket);
-			this.i = i;
+			this.value = value;
 		}
 
-		i: number;
+		value: any;
 	}
 
 	export class Variable extends Expression {

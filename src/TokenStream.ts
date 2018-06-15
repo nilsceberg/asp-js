@@ -1,6 +1,10 @@
 import { Stream, Bucket } from "./Stream";
 import { InputStream } from "./InputStream";
 
+function error(bucket: Bucket, message: string) {
+	throw new Error(`runtime error in ${bucket.filename} at line ${bucket.line}, column ${bucket.position}: ${message}`);
+}
+
 export namespace tokens {
 	export abstract class Token {
 		constructor(value: any) {
@@ -67,13 +71,15 @@ export class TokenStream implements Stream {
 		else if (this.isInteger(bucket)) {
 			token = this.nextInteger(bucket);
 		}
+		else if (bucket.content === "\"") {
+			token = this.nextString(bucket);
+		}
 		else if (bucket.content === "'") {
 			this.skipComment();
 			token = this.next();
 		}
 		else if (this.isNewLine(bucket)) {
-			bucket.content = ":";
-			bucket.content = new tokens.Punctuation(bucket.content);
+			bucket.content = new tokens.Punctuation(":");
 			token = bucket;
 		}
 		else if (bucket.content === "<") {
@@ -124,6 +130,30 @@ export class TokenStream implements Stream {
 			start.content += bucket.content;
 		}
 		start.content = new tokens.Integer(Number(start.content));
+		return start;
+	}
+
+	private nextString(start: Bucket): Bucket {
+		start.content = "";
+
+		while (true) {
+			const bucket = this.input.next();
+			if (bucket.content === null) {
+				error(bucket, "unexpected end of file in string");
+			}
+			else if (bucket.content === "\"") {
+				if (this.input.peek().content !== "\"") {
+					break;
+				}
+				else {
+					this.input.next();
+				}
+			}
+
+			start.content += bucket.content;
+		}
+
+		start.content = new tokens.String(start.content);
 		return start;
 	}
 
