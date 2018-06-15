@@ -37,8 +37,12 @@ export class Stack {
 		return this.resolve(identifier) !== undefined;
 	}
 
-	get(variable: ast.Variable): Box {
-		let box = this.resolve(variable.name[0]);
+	isDefinedLocally(identifier: string): boolean {
+		return this.resolve(identifier, true) !== undefined;
+	}
+
+	get(variable: ast.Variable, functionOnly: boolean = false): Box {
+		let box = this.resolve(variable.name[0], false, functionOnly);
 		if (box === undefined) {
 			error(variable, `undefined variable '${variable.name[0]}'`);
 		}
@@ -66,10 +70,14 @@ export class Stack {
 		}
 	}*/
 
-	private resolve(identifier: string): Box {
+	private resolve(identifier: string, localOnly: boolean = false, functionOnly: boolean = false): Box {
 		const frame = this.array.slice(-1)[0];
-		if (frame[identifier] !== undefined) {
-			return frame[identifier];
+		if (frame[identifier] !== undefined || localOnly) {
+			const box = frame[identifier];
+			// If we're only looking for functions, skip this
+			if (!functionOnly) {
+				return frame[identifier];
+			}
 		}
 
 		const global = this.array[0];
@@ -149,7 +157,7 @@ export class Interpreter {
 	}
 
 	private dim(dim: ast.Dim): void {
-		if (this.context.stack.isDefined(dim.name)) {
+		if (this.context.stack.isDefinedLocally(dim.name)) {
 			error(dim, `dim: variable '${dim.name}' is already defined`);
 		}
 		this.context.stack.define(dim.name);
@@ -167,6 +175,18 @@ export class Interpreter {
 		}
 		else if (expr instanceof ast.Mul) {
 			return this.evaluate(expr.left) * this.evaluate(expr.right);
+		}
+		else if (expr instanceof ast.Call) {
+			return this.call(expr);
+		}
+		else if (expr instanceof ast.New) {
+			return this.new(expr);
+		}
+	}
+
+	private evaluateFunction(expr: ast.Expression): any {
+		if (expr instanceof ast.Variable) {
+			return this.context.stack.get(expr, true).value;
 		}
 		else if (expr instanceof ast.Call) {
 			return this.call(expr);
@@ -215,7 +235,7 @@ export class Interpreter {
 	private call(call: ast.Call): any {
 		// TODO should function name be variable instead? :O
 		const functionName = (<ast.Variable>call.f).name;
-		const func = this.evaluate(call.f);
+		const func = this.evaluateFunction(call.f);
 		//		console.log(util.inspect(this.context.stack, {
 		//			depth: 3,
 		//			colors: true

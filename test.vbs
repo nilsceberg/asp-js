@@ -22,7 +22,12 @@ echo 1234, 1
 
 dim mul : mul = 14
 
-dim echo
+'obj(1234689), 4
+'obj(4) = 9
+
+sub hej(x, a)
+	wscript.echo x
+end sub
 
 sub echo(thing, b)
 	Wscript.Echo thing
@@ -47,6 +52,7 @@ function recurse()
 
 	'recurse = inner()
 	recurse = 7575
+	wscript.echo recurse
 	recurse
 end function
 
@@ -58,8 +64,8 @@ end function
 
 Wscript.echo mul
 
+'recurse
 test
-recurse
 startSET
 
 Wscript.echo mul

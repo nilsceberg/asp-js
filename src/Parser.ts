@@ -54,6 +54,9 @@ export class Parser {
 				if (token.content.value === ":") {
 					this.tokens.next();
 				}
+				else {
+					this.error(token, `unexpected token '${token.content.value}' (expected statement)`);
+				}
 			}
 			else {
 				this.error(token, `unexpected token '${token.content.value}' (expected statement)`);

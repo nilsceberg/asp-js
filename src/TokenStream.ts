@@ -59,21 +59,22 @@ export class TokenStream implements Stream {
 		}
 
 		let bucket = this.skipWhitespace();
+		let token;
 
 		if (this.isIdentifierStart(bucket)) {
-			return this.nextIdentifier(bucket);
+			token = this.nextIdentifier(bucket);
 		}
 		else if (this.isInteger(bucket)) {
-			return this.nextInteger(bucket);
+			token = this.nextInteger(bucket);
 		}
 		else if (bucket.content === "'") {
 			this.skipComment();
-			return this.next();
+			token = this.next();
 		}
 		else if (this.isNewLine(bucket)) {
 			bucket.content = ":";
 			bucket.content = new tokens.Punctuation(bucket.content);
-			return bucket;
+			token = bucket;
 		}
 		else if (bucket.content === "<") {
 			const next = this.input.peek().content;
@@ -81,7 +82,7 @@ export class TokenStream implements Stream {
 				bucket.content += this.input.next().content;
 			}
 			bucket.content = new tokens.Punctuation(bucket.content);
-			return bucket;
+			token = bucket;
 		}
 		else if (bucket.content === "%") {
 			const next = this.input.peek().content;
@@ -89,15 +90,18 @@ export class TokenStream implements Stream {
 				bucket.content += this.input.next().content;
 			}
 			bucket.content = new tokens.Punctuation(bucket.content);
-			return bucket;
-		}
-		else if (bucket.content === null) {
-			return bucket;
+			token = bucket;
 		}
 		else {
 			bucket.content = new tokens.Punctuation(bucket.content);
-			return bucket;
+			token = bucket;
 		}
+
+		if (token.content.value === null) {
+			token.content = null;
+		}
+
+		return token;
 	}
 
 	private nextIdentifier(start: Bucket): Bucket {
