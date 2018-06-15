@@ -104,16 +104,20 @@ export class Interpreter {
 	}
 
 	private runBlock(block: ast.Block): any {
-		//console.log(util.inspect(this.context.stack, { depth: null, colors: true }));
-		for (let stmt of block.statements) {
+		// Go through and define functions first
+		for (const stmt of block.statements) {
 			if (stmt instanceof ast.Function) {
 				this.defineFunction(stmt);
 			}
-			else if (stmt instanceof ast.Call) {
-				this.call(stmt);
-			}
 			else if (stmt instanceof ast.Dim) {
 				this.dim(stmt);
+			}
+		}
+
+		//console.log(util.inspect(this.context.stack, { depth: null, colors: true }));
+		for (let stmt of block.statements) {
+			if (stmt instanceof ast.Call) {
+				this.call(stmt);
 			}
 			else if (stmt instanceof ast.Assignment) {
 				this.assign(stmt);
@@ -126,7 +130,7 @@ export class Interpreter {
 
 	private defineFunction(f: ast.Function): void {
 		if (this.context.stack.isDefined(f.name.name[0])) {
-			error(f, `redefining name '${f.name}'`);
+			error(f, `redefining name '${f.name.name[0]}'`);
 		}
 
 		this.context.stack.define(f.name.name[0]);

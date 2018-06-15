@@ -11,8 +11,8 @@ class Myclass
 	end function
 end class
 
-dim myObject
 set myObject = new MyClass
+dim myObject
 myObject.hejsan = 7654
 myObject.test
 myObject.test
@@ -21,6 +21,8 @@ myObject.test
 echo 1234, 1
 
 dim mul : mul = 14
+
+dim echo
 
 sub echo(thing, b)
 	Wscript.Echo thing
@@ -44,6 +46,7 @@ function recurse()
 '	end function
 
 	'recurse = inner()
+	recurse = 7575
 	recurse
 end function
 
