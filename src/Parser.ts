@@ -3,9 +3,8 @@ import { TokenStream, tokens } from "./TokenStream";
 import { ast } from "./AST";
 
 export class Parser {
-	constructor(tokens: TokenStream, asp: boolean = false) {
+	constructor(tokens: TokenStream) {
 		this.tokens = tokens;
-		this.asp = asp;
 	}
 
 	parse(): ast.Block {
@@ -17,7 +16,13 @@ export class Parser {
 
 		let token: Bucket;
 		while ((token = this.tokens.peek()).content !== null) {
-			if (token.content instanceof tokens.Identifier) {
+			if (token.content instanceof tokens.Inline) {
+				this.tokens.next();
+				block.statements.push(new ast.Call(token,
+					new ast.Variable(token, ["response", "write"]),
+					[new ast.Literal(token, token.content.value)]));
+			}
+			else if (token.content instanceof tokens.Identifier) {
 				if (token.content.value === "function") {
 					block.statements.push(this.function());
 				}
@@ -282,6 +287,5 @@ export class Parser {
 	}
 
 	private tokens: TokenStream;
-	private asp: boolean;
 }
 

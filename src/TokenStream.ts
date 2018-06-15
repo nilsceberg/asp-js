@@ -31,6 +31,12 @@ export namespace tokens {
 		}
 	}
 
+	export class Inline extends Token {
+		constructor(value: string) {
+			super(value);
+		}
+	}
+
 	export class Punctuation extends Token {
 		constructor(value: string) {
 			super(value);
@@ -39,9 +45,11 @@ export namespace tokens {
 }
 
 export class TokenStream implements Stream {
-	constructor(input: InputStream) {
+	constructor(input: InputStream, asp: boolean = false) {
 		this.input = input;
 		this.peekValue = null;
+		this.asp = asp;
+		this.inline = asp;
 	}
 
 	peek(): Bucket {
@@ -60,6 +68,11 @@ export class TokenStream implements Stream {
 			let bucket = this.peekValue;
 			this.peekValue = null;
 			return bucket;
+		}
+
+		if (this.inline) {
+			this.inline = false;
+			return this.nextInline(this.input.peek());
 		}
 
 		let bucket = this.skipWhitespace();
@@ -82,20 +95,15 @@ export class TokenStream implements Stream {
 			bucket.content = new tokens.Punctuation(":");
 			token = bucket;
 		}
-		else if (bucket.content === "<") {
-			const next = this.input.peek().content;
-			if (next === ">" || next === "%") {
-				bucket.content += this.input.next().content;
-			}
-			bucket.content = new tokens.Punctuation(bucket.content);
-			token = bucket;
-		}
 		else if (bucket.content === "%") {
 			const next = this.input.peek().content;
 			if (next === ">") {
-				bucket.content += this.input.next().content;
+				this.input.next();
+				bucket.content = this.nextInline(bucket).content;
 			}
-			bucket.content = new tokens.Punctuation(bucket.content);
+			else {
+				bucket.content = new tokens.Punctuation(bucket.content);
+			}
 			token = bucket;
 		}
 		else {
@@ -157,6 +165,30 @@ export class TokenStream implements Stream {
 		return start;
 	}
 
+	private nextInline(start: Bucket): Bucket {
+		start.content = "";
+		let bucket = start;
+
+		while (true) {
+			if (bucket.content === null) {
+				break;
+			}
+			else if (bucket.content === "<") {
+				if (this.input.peek().content === "%") {
+					this.input.next();
+					break;
+				}
+			}
+
+			start.content += bucket.content;
+
+			bucket = this.input.next();
+		}
+
+		start.content = new tokens.Inline(start.content);
+		return start;
+	}
+
 	private skipWhitespace(): Bucket {
 		let bucket;
 		while ((bucket = this.input.next()).content !== null) {
@@ -197,5 +229,7 @@ export class TokenStream implements Stream {
 
 	private input: InputStream;
 	private peekValue: Bucket;
+	private asp: boolean;
+	private inline: boolean;
 }
 

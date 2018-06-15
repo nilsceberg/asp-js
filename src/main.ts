@@ -7,8 +7,8 @@ import * as util from "util";
 
 console.log("OpenVBS v1.0.0");
 
-const input = new InputStream("test.vbs");
-const tokens = new TokenStream(input);
+const input = new InputStream("test.asp");
+const tokens = new TokenStream(input, true);
 const parser = new Parser(tokens);
 const program = parser.parse();
 
@@ -27,6 +27,11 @@ const interpreter = new Interpreter({
 			else {
 				console.log(thing);
 			}
+		})
+	}),
+	"response": new Box({
+		"write": new Box((context: Context, thing: any) => {
+			console.log(thing);
 		})
 	})
 });
