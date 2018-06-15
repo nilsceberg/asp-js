@@ -12,3 +12,9 @@ eventually allow for ASP Classic rendering in nginx.
 * ~The lexer needs to be able to differentiate between real newlines and : when
   handling comments~
 
+* Solve ambiguity:
+  ```
+  obj(1234689), 4
+  obj(4) = 9
+  ```
+
