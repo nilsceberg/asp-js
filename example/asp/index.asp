@@ -1,4 +1,7 @@
-<% Response.AddHeader "Content-Type", "text/html" %>
+<%
+Response.AddHeader "Content-Type", "text/html"
+Response.AddHeader "Server", "Koa with ASP.JS"
+%>
 <!DOCTYPE html>
 <html>
 	<head>
