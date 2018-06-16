@@ -35,7 +35,7 @@ eventually allow for ASP Classic rendering in nginx.
   * **objects**: done
   * **visibility**: to-do
 * **includes**: in progress
-  * **file**: in progress
+  * **file**: done
   * **virtual**: to-do
 * **byval**: to-do
 * **byref**: to-do
