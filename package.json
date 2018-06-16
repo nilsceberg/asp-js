@@ -5,7 +5,8 @@
   "main": "build/lib",
   "types": "build/lib",
   "scripts": {
-    "test": "tsc && node build/main.js"
+    "test": "tsc && node build/main.js",
+	"example": "tsc && cd example && npm test"
   },
   "author": "Nils Ceberg",
   "license": "ISC",

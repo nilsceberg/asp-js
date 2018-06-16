@@ -9,7 +9,16 @@ Response.AddHeader "Server", "Koa with ASP.JS"
 	</head>
 	<!-- #include file "functions.asp" -->
 	<body>
-		<% bold welcome(Request.QueryString("name")) %>
+		<%
+			dim name : name = Request.QueryString("name")
+			bold welcome(Request.QueryString("name"))
+			if not name then
+				nameForm
+			else
+				%><br><a href="/">Forget me!</a><%
+			end if
+		%><br><br>
+		View this site's source code <a href="https://github.com/Deoxyribonucleic/asp-js/tree/master/example/asp">here</a>!
 	</body>
 </html>
 
