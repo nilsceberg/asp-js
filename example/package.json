@@ -1,0 +1,18 @@
+{
+  "name": "asp-js-example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "build/index.js",
+  "scripts": {
+    "test": "tsc && node build/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "koa": "^2.5.1",
+    "asp-js": "../"
+  },
+  "devDependencies": {
+    "@types/koa": "^2.0.46"
+  }
+}

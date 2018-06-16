@@ -1,6 +1,7 @@
 import { Stream, Bucket } from "./Stream";
 
 import { readFileSync } from "fs";
+import * as path from "path";
 
 export class InputStream implements Stream {
 	constructor(filename: string) {
@@ -35,7 +36,8 @@ export class InputStream implements Stream {
 					this.error("virtual includes are not yet supported");
 				}
 
-				this.include = new InputStream(includeMatch[2]);
+				const includedFilename = path.join(path.dirname(this.filename), includeMatch[2]);
+				this.include = new InputStream(includedFilename);
 				this.content = this.content.slice(includeMatch[0].length); // skip include statement itself
 				return this.next();
 			}

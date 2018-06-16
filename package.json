@@ -2,13 +2,15 @@
   "name": "asp-js",
   "version": "0.1.0",
   "description": "",
-  "main": "index.js",
+  "main": "build/lib",
+  "types": "build/lib",
   "scripts": {
     "test": "tsc && node build/main.js"
   },
   "author": "Nils Ceberg",
   "license": "ISC",
   "devDependencies": {
+    "@types/koa": "^2.0.46",
     "@types/node": "^10.3.3",
     "typescript": "^2.9.2"
   }

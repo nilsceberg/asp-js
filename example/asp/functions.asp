@@ -1,6 +1,8 @@
 <%
 	function welcome(name)
-		if name = "Nisse" then
+		if not name then
+			welcome = "Welcome!"
+		elseif name = "Nisse" then
 			welcome = "Holy shit, it's you!"
 		else
 			welcome = "Welcome, " & name & "!"
