@@ -23,6 +23,20 @@ eventually allow for ASP Classic rendering in nginx.
   access the function in function calls. It also probably will not work
   with the left-hand function call expressions for dictionaries, above.
 
+* Related to the above, return values aren't quite implemented correctly.
+
+## Features
+* **expressions**: done
+* **functions**: done
+* **classes**: in progress
+  * **objects**: done
+  * **visibility**: to-do
+* **includes**: in progress
+  * **file**: in progress
+  * **virtual**: to-do
+* **byval**: to-do
+* **byref**: to-do
+
 ### Stricly to-do
 * Document binary operators (and maybe optimize, they are unlikely to be fast I believe)
 * Refactor token stream and parser for better readability
