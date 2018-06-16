@@ -69,6 +69,15 @@ end function
 
 Wscript.echo mul
 
+dim rightHand : rightHand = -(1 - 2 * 3)
+
+wscript.echo "rightHand = "&rightHand
+if not 5 = rightHand then
+	wscript.echo "Yay :D"
+else
+	wscript.echo "damn :("
+end if
+
 'recurse
 test
 startSET

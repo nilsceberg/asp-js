@@ -23,3 +23,10 @@ eventually allow for ASP Classic rendering in nginx.
   access the function in function calls. It also probably will not work
   with the left-hand function call expressions for dictionaries, above.
 
+### Stricly to-do
+* Document binary operators (and maybe optimize, they are unlikely to be fast I believe)
+* Refactor token stream and parser for better readability
+
+## VBScript links
+* and: https://stackoverflow.com/questions/10871895/boolean-not-operator-in-vbscript
+

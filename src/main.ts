@@ -7,8 +7,8 @@ import * as util from "util";
 
 console.log("OpenVBS v1.0.0");
 
-const input = new InputStream("test.asp");
-const tokens = new TokenStream(input, true);
+const input = new InputStream("test.vbs");
+const tokens = new TokenStream(input, false);
 const parser = new Parser(tokens);
 const program = parser.parse();
 

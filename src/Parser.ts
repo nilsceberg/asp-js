@@ -243,6 +243,11 @@ export class Parser {
 			if (token.content.value === "new") {
 				return this.new();
 			}
+			if (token.content.value === "not") {
+				this.tokens.next();
+				const not = (a: any) => !a;
+				return new ast.UnaryOperator(token, not, this.expression());
+			}
 			else {
 				expr = this.variable();
 			}
@@ -251,6 +256,11 @@ export class Parser {
 			this.tokens.next();
 			expr = this.expression();
 			this.expect(")");
+		}
+		else if (token.content.value === "-") {
+			this.tokens.next();
+			const negate = (a: any) => -a;
+			return new ast.UnaryOperator(token, negate, this.factor());
 		}
 		else {
 			this.error(token, `unexpected token ${token.content}`);

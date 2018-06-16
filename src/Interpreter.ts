@@ -175,7 +175,11 @@ export class Interpreter {
 			return expr.value;
 		}
 		else if (expr instanceof ast.BinaryOperator) {
+			// Note that this is not lazy - VBScript isn't!
 			return expr.f(this.evaluate(expr.left), this.evaluate(expr.right));
+		}
+		else if (expr instanceof ast.UnaryOperator) {
+			return expr.f(this.evaluate(expr.operand));
 		}
 		else if (expr instanceof ast.Call) {
 			return this.call(expr);

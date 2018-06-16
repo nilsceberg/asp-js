@@ -86,6 +86,16 @@ export namespace ast {
 		right: Expression;
 		f: BinaryFunction;
 	}
+	export class UnaryOperator extends Expression {
+		constructor(bucket: Bucket, f: (a: any) => any, operand: Expression) {
+			super(bucket);
+			this.operand = operand;
+			this.f = f;
+		}
+
+		operand: Expression;
+		f: (a: any) => any;
+	}
 
 	export class Literal extends Expression {
 		constructor(bucket: Bucket, value: any) {
