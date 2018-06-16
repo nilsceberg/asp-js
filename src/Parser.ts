@@ -1,6 +1,7 @@
 import { Bucket } from "./Stream";
 import { TokenStream, tokens } from "./TokenStream";
 import { ast } from "./AST";
+import { Operators, BinaryFunction } from "./BinaryOperators";
 
 export class Parser {
 	constructor(tokens: TokenStream) {
@@ -183,22 +184,53 @@ export class Parser {
 	}
 
 	private expression(): ast.Expression {
-		let expr: ast.Expression = this.term();
-		while (this.tokens.peek().content.value === "+") {
-			const operator = this.tokens.next();
-			expr = new ast.Add(operator, expr, this.term());
-		}
-		return expr;
+		let operatorFunctions: Function[] = [];
+		// This is a bit of magic... :)
+		Operators.forEach((group: any, i) => operatorFunctions.push(() => {
+			let nextPrecedence = operatorFunctions[i + 1];
+			if (nextPrecedence === undefined) {
+				nextPrecedence = this.factor.bind(this);
+			}
+
+			let expr: ast.Expression = nextPrecedence();
+			let f: BinaryFunction;
+			while (true) {
+				const operator = this.tokens.peek();
+				if (!(operator.content instanceof tokens.Punctuation
+					|| operator.content instanceof tokens.Identifier)) {
+					break;
+				}
+
+				const f = group[operator.content.value];
+				if (f === undefined) {
+					break;
+				}
+
+				this.tokens.next();
+				expr = new ast.BinaryOperator(operator, f, expr, nextPrecedence());
+			}
+			return expr;
+		}));
+		return operatorFunctions[0]();
 	}
 
-	private term(): ast.Expression {
-		let term: ast.Expression = this.factor();
-		while (this.tokens.peek().content.value === "*") {
-			const operator = this.tokens.next();
-			term = new ast.Mul(operator, term, this.factor());
-		}
-		return term;
-	}
+	// private expression(): ast.Expression {
+	// 	let expr: ast.Expression = this.term();
+	// 	while (this.tokens.peek().content.value === "+") {
+	// 		const operator = this.tokens.next();
+	// 		expr = new ast.Add(operator, expr, this.term());
+	// 	}
+	// 	return expr;
+	// }
+
+	// private term(): ast.Expression {
+	// 	let term: ast.Expression = this.factor();
+	// 	while (this.tokens.peek().content.value === "*") {
+	// 		const operator = this.tokens.next();
+	// 		term = new ast.Mul(operator, term, this.factor());
+	// 	}
+	// 	return term;
+	// }
 
 	private factor(): ast.Expression {
 		const token = this.tokens.peek();

@@ -5,8 +5,10 @@
 	<%
 		function bold(label)
 			%><b><%
-				if 6 + 4 then
+				if 6 = 6 "or" 4 = 1 then
 					response.write label
+				elseif 5 + 7 then
+					response.write "elseif"
 				else
 					response.write "nejdu"
 				end if

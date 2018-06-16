@@ -174,11 +174,8 @@ export class Interpreter {
 		else if (expr instanceof ast.Literal) {
 			return expr.value;
 		}
-		else if (expr instanceof ast.Add) {
-			return this.evaluate(expr.left) + this.evaluate(expr.right);
-		}
-		else if (expr instanceof ast.Mul) {
-			return this.evaluate(expr.left) * this.evaluate(expr.right);
+		else if (expr instanceof ast.BinaryOperator) {
+			return expr.f(this.evaluate(expr.left), this.evaluate(expr.right));
 		}
 		else if (expr instanceof ast.Call) {
 			return this.call(expr);
@@ -240,7 +237,7 @@ export class Interpreter {
 	
 	private if(stmt: ast.If): any {
 		// TODO: look up actual if conditions
-		if (this.evaluate(stmt.condition) === 10) {
+		if (this.evaluate(stmt.condition)) {
 			this.runBlock(stmt.block);
 		}
 		else {

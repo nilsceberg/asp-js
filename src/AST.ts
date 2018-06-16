@@ -1,4 +1,5 @@
 import { Bucket } from "./Stream";
+import { BinaryFunction } from "./BinaryOperators";
 
 export namespace ast {
 	export class Node {
@@ -73,26 +74,17 @@ export namespace ast {
 	export class Expression extends Node {
 	}
 
-	export class Mul extends Expression {
-		constructor(bucket: Bucket, left: Expression, right: Expression) {
+	export class BinaryOperator extends Expression {
+		constructor(bucket: Bucket, f: BinaryFunction, left: Expression, right: Expression) {
 			super(bucket);
 			this.left = left;
 			this.right = right;
+			this.f = f;
 		}
 
 		left: Expression;
 		right: Expression;
-	}
-
-	export class Add extends Expression {
-		constructor(bucket: Bucket, left: Expression, right: Expression) {
-			super(bucket);
-			this.left = left;
-			this.right = right;
-		}
-
-		left: Expression;
-		right: Expression;
+		f: BinaryFunction;
 	}
 
 	export class Literal extends Expression {
