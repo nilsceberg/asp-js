@@ -23,7 +23,6 @@ const interpreter = new Interpreter({
 	})
 });
 
-console.log(process.argv);
 const filename = process.argv[2];
 if (!filename) {
 	console.log("Please specify filename.");
