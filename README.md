@@ -1,11 +1,10 @@
 # ASP.JS
 
-**"The rumours of my demise have been greatly exaggerated."**
+**"The rumours of my demise have been greatly exaggerated."**\
 *- Classic ASP*
 
 ASP.JS brings classic Active Server Pages using VBScript
 to the world of Node.
-
 This project is as of yet a quick-and-dirty proof-of-concept, but just you
 wait...!
 
