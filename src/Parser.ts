@@ -66,11 +66,11 @@ export class Parser {
 					this.tokens.next();
 				}
 				else {
-					this.error(token, `unexpected token '${token.content.value}' (expected statement)`);
+					this.error(token, `unexpected token ${token.content} (expected statement)`);
 				}
 			}
 			else {
-				this.error(token, `unexpected token '${token.content.value}' (expected statement)`);
+				this.error(token, `unexpected token ${token.content} (expected statement)`);
 			}
 		}
 
@@ -114,7 +114,7 @@ export class Parser {
 				this.tokens.next();
 			}
 			else {
-				this.error(token, `unexpected token '${token.content.value}'`);
+				this.error(token, `unexpected token ${token.content}`);
 			}
 		}
 
@@ -155,7 +155,7 @@ export class Parser {
 		let elseBlock: ast.Block;
 
 		if (!(elseToken.content instanceof tokens.Identifier)) {
-			this.error(elseToken, `unexpected token '${elseToken.content}'`);
+			this.error(elseToken, `unexpected token ${elseToken.content}`);
 		}
 		else if (elseToken.content.value === "elseif") {
 			elseBlock = new ast.Block(elseToken, [this.if()]);
@@ -172,7 +172,7 @@ export class Parser {
 			this.expect("if");
 		}
 		else {
-			this.error(elseToken, `invalid keyword '${elseToken.content}'`);
+			this.error(elseToken, `invalid keyword ${elseToken.content}`);
 		}
 
 		return new ast.If(keyword, expression, block, elseBlock);
@@ -253,7 +253,7 @@ export class Parser {
 			this.expect(")");
 		}
 		else {
-			this.error(token, `unexpected token '${token.content.value}'`);
+			this.error(token, `unexpected token ${token.content}`);
 		}
 
 		// Is this a function call?
@@ -318,7 +318,7 @@ export class Parser {
 		}
 
 		if (!(token.content instanceof type)) {
-			this.error(token, `expected ${type.name}, got '${token.content}'`);
+			this.error(token, `expected ${type.name}, got ${token.content}`);
 		}
 
 		return token;
@@ -347,7 +347,7 @@ export class Parser {
 	private expect(expected: string) {
 		const actual = this.require(tokens.Token); // allow any kind of token here
 		if (actual.content.value !== expected) {
-			this.error(actual, `expected '${expected}', got '${actual.content.value}'`);
+			this.error(actual, `expected '${expected}', got ${actual.content}`);
 		}
 	}
 
