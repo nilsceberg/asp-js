@@ -4,7 +4,7 @@ An effort to create a VBScript interpreter with the ambition to
 eventually allow for ASP Classic rendering in nginx.
 
 
-## Scribbles and to-do
+## Scribbles
 
 * ~Functions calls without parameter lists will be fun - maybe we need
   significant newlines for this? They should probably be significant anyway.~
@@ -28,6 +28,10 @@ eventually allow for ASP Classic rendering in nginx.
 * Current way of handling includes is not quite consistent with VBScript,
   as we allow it inside of <% ... %> tags -- anywhere, in fact!
 
+### To-do list
+* Document binary operators (and maybe optimize, they are unlikely to be fast I believe)
+* Refactor token stream and parser for better readability
+
 ## Features
 * **expressions**: done
 * **functions**: done
@@ -39,10 +43,6 @@ eventually allow for ASP Classic rendering in nginx.
   * **virtual**: to-do
 * **byval**: to-do
 * **byref**: to-do
-
-### Stricly to-do
-* Document binary operators (and maybe optimize, they are unlikely to be fast I believe)
-* Refactor token stream and parser for better readability
 
 ## VBScript links
 * and: https://stackoverflow.com/questions/10871895/boolean-not-operator-in-vbscript
