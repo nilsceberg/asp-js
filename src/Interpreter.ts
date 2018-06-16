@@ -1,4 +1,7 @@
 import { ast } from "./AST";
+import { InputStream } from "./InputStream";
+import { TokenStream } from "./TokenStream";
+import { Parser } from "./Parser";
 import * as util from "util";
 
 function error(node: ast.Node, message: string) {
@@ -104,6 +107,18 @@ export class Interpreter {
 			classes: {},
 			explicit: true,
 		};
+	}
+
+	load(filename: string): ast.Block {
+		const isAsp = filename.split(".").slice(-1)[0] === "asp";
+		const input = new InputStream(filename);
+		const tokens = new TokenStream(input, isAsp);
+		const parser = new Parser(tokens);
+		return parser.parse();
+	}
+
+	runFile(filename: string): void {
+		this.run(this.load(filename));
 	}
 
 	run(block: ast.Block): void {

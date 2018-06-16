@@ -1,22 +1,8 @@
-import { InputStream } from "./InputStream";
-import { TokenStream } from "./TokenStream";
-import { Parser } from "./Parser";
 import { Interpreter, Context, Box } from "./Interpreter";
 
 import * as util from "util";
 
 console.log("OpenVBS v1.0.0");
-
-const input = new InputStream("test.vbs");
-const tokens = new TokenStream(input, false);
-const parser = new Parser(tokens);
-const program = parser.parse();
-
-// Uncomment to dump AST:
-//console.log(util.inspect(program, {
-//	depth: null,
-//	colors: true,
-//}));
 
 const interpreter = new Interpreter({
 	"wscript": new Box({
@@ -35,5 +21,6 @@ const interpreter = new Interpreter({
 		})
 	})
 });
-interpreter.run(program);
+
+interpreter.runFile("test.vbs");
 
