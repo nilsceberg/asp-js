@@ -1,7 +1,13 @@
-# OpenVBS
+# ASP.JS
 
-An effort to create a VBScript interpreter with the ambition to
-eventually allow for ASP Classic rendering in nginx.
+**"The rumours of my demise have been greatly exaggerated."**
+*- Classic ASP*
+
+ASP.JS brings classic Active Server Pages using VBScript
+to the world of Node.
+
+This project is as of yet a quick-and-dirty proof-of-concept, but just you
+wait...!
 
 
 ## Scribbles
@@ -44,6 +50,6 @@ eventually allow for ASP Classic rendering in nginx.
 * **byval**: to-do
 * **byref**: to-do
 
-## VBScript links
+## Language reference links
 * and: https://stackoverflow.com/questions/10871895/boolean-not-operator-in-vbscript
 

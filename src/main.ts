@@ -3,7 +3,7 @@ import { Interpreter, Context, Box } from "./Interpreter";
 import * as util from "util";
 import * as process from "process";
 
-console.log("OpenVBS v1.0.0");
+console.log("ASP.JS v1.0.0");
 
 const interpreter = new Interpreter({
 	"wscript": new Box({
