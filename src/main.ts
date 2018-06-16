@@ -1,6 +1,7 @@
 import { Interpreter, Context, Box } from "./Interpreter";
 
 import * as util from "util";
+import * as process from "process";
 
 console.log("OpenVBS v1.0.0");
 
@@ -22,5 +23,12 @@ const interpreter = new Interpreter({
 	})
 });
 
-interpreter.runFile("test.vbs");
+console.log(process.argv);
+const filename = process.argv[2];
+if (!filename) {
+	console.log("Please specify filename.");
+}
+else {
+	interpreter.runFile(filename);
+}
 

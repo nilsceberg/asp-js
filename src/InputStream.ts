@@ -1,6 +1,7 @@
 import { Stream, Bucket } from "./Stream";
 
 import { readFileSync } from "fs";
+import * as process from "process";
 
 export class InputStream implements Stream {
 	constructor(filename: string) {
@@ -11,6 +12,14 @@ export class InputStream implements Stream {
 	}
 
 	next(): Bucket {
+		if (this.include) {
+			const next = this.include.next();
+			if (next.content) {
+				return next;
+			}
+			this.include = null;
+		}
+
 		if (this.content === "") {
 			return {
 				content: null,
@@ -20,8 +29,24 @@ export class InputStream implements Stream {
 			};
 		}
 
+		if (this.content[0] === "<") {
+			const includeMatch = this.content.match(/^<!--\s*#include\s+(file|virtual)\s*"([^"]+)"\s*-->/);
+			if (includeMatch) {
+				if (includeMatch[1] === "virtual") {
+					this.error("virtual includes are not yet supported");
+				}
+
+				console.log(" !!!including ", includeMatch[2], "!!!");
+				this.include = new InputStream(includeMatch[2]);
+				this.content = this.content.slice(includeMatch[0].length); // skip include statement itself
+				return this.next();
+			}
+		}
+
 		let chr = this.content[0];
 		this.content = this.content.slice(1);
+
+		process.stdout.write(chr);
 
 		let bucket = <Bucket>{
 			content: this.process(chr),
@@ -39,6 +64,10 @@ export class InputStream implements Stream {
 	}
 
 	peek(): Bucket {
+		if (this.include) {
+			return this.include.peek();
+		}
+		
 		if (this.content === "") {
 			return {
 				content: null,
@@ -60,9 +89,14 @@ export class InputStream implements Stream {
 		return chr;
 	}
 
+	private error(message: string) {
+		throw new Error(`input error in ${this.filename} at line ${this.line}, column ${this.position}: ${message}`);
+	}
+
 	private line: number;
 	private position: number;
 	private content: string;
 	private filename: string;
+	private include: InputStream;
 }
 

@@ -25,6 +25,9 @@ eventually allow for ASP Classic rendering in nginx.
 
 * Related to the above, return values aren't quite implemented correctly.
 
+* Current way of handling includes is not quite consistent with VBScript,
+  as we allow it inside of <% ... %> tags -- anywhere, in fact!
+
 ## Features
 * **expressions**: done
 * **functions**: done
