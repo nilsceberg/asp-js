@@ -3,20 +3,22 @@
 		<title>Hello</title>
 	</head>
 	<%
+		function welcome(name)
+			if name = "Nisse" then
+				welcome = "Holy shit, it's you!"
+			else
+				welcome = "Welcome, " & name & "!"
+			end if
+		end function
+
 		function bold(label)
 			%><b><%
-				if 6 = 6 "or" 4 = 1 then
-					response.write label
-				elseif 5 + 7 then
-					response.write "elseif"
-				else
-					response.write "nejdu"
-				end if
+				response.write label
 			%></b><%
 		end function
 	%>
 	<body>
-		<% bold "Welcome!" %>
+		<% bold welcome("Nils") %>
 	</body>
 </html>
 
