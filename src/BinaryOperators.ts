@@ -5,7 +5,7 @@ export const Operators: {[operator: string]: BinaryFunction}[] = [
 		"or": (a, b) => a || b,
 	},
 	{
-		"and": (a, b) => a || b,
+		"and": (a, b) => a && b,
 	},
 	{
 		"=": (a, b) => a == b,
