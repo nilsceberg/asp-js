@@ -132,5 +132,18 @@ export namespace ast {
 
 		klass: string;
 	}
+
+	export class If extends Statement {
+		constructor(bucket: Bucket, condition: Expression, block: Block, elseBlock: Block) {
+			super(bucket);
+			this.condition = condition;
+			this.block = block;
+			this.elseBlock = elseBlock;
+		}
+
+		condition: Expression;
+		block: Block;
+		elseBlock: Block;
+	}
 }
 

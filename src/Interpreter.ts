@@ -107,7 +107,7 @@ export class Interpreter {
 	}
 
 	run(block: ast.Block): void {
-		//console.log(util.inspect(block, { depth: null, colors: true }));
+		console.log(util.inspect(block, { depth: null, colors: true }));
 		this.runBlock(block);
 		//console.log(util.inspect(this.context, { depth: null, colors: true }));
 	}
@@ -130,6 +130,9 @@ export class Interpreter {
 			}
 			else if (stmt instanceof ast.Assignment) {
 				this.assign(stmt);
+			}
+			else if (stmt instanceof ast.If) {
+				this.if(stmt);
 			}
 			else if (stmt instanceof ast.Class) {
 				this.class(stmt);
@@ -233,6 +236,16 @@ export class Interpreter {
 		}
 
 		this.context.classes[klass.name] = klass;
+	}
+	
+	private if(stmt: ast.If): any {
+		// TODO: look up actual if conditions
+		if (this.evaluate(stmt.condition) === 10) {
+			this.runBlock(stmt.block);
+		}
+		else {
+			this.runBlock(stmt.elseBlock);
+		}
 	}
 
 	private call(call: ast.Call): any {

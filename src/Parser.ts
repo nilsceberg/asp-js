@@ -35,11 +35,16 @@ export class Parser {
 				else if (token.content.value === "dim") {
 					block.statements.push(this.dim());
 				}
+				else if (token.content.value === "if") {
+					block.statements.push(this.if());
+				}
 				else if (token.content.value === "set") {
 					// TODO: can we just ignore set?
 					this.tokens.next();
 				}
-				else if (token.content.value === "end") {
+				else if (token.content.value === "end"
+					|| token.content.value === "else"
+					|| token.content.value === "elseif") {
 					break;
 				}
 				else {
@@ -138,6 +143,38 @@ export class Parser {
 		const keyword = this.tokens.next(); // consume keyword
 		const name = this.require(tokens.Identifier).content.value;
 		return new ast.Dim(keyword, name);
+	}
+
+	private if(): ast.If {
+		const keyword = this.tokens.next(); // consume keyword
+		const expression = this.expression();
+		this.expect("then");
+		const block = this.block();
+		const elseToken = this.tokens.peek();
+		let elseBlock: ast.Block;
+
+		if (!(elseToken.content instanceof tokens.Identifier)) {
+			this.error(elseToken, `unexpected token '${elseToken.content}'`);
+		}
+		else if (elseToken.content.value === "elseif") {
+			elseBlock = new ast.Block(elseToken, [this.if()]);
+		}
+		else if (elseToken.content.value === "else") {
+			this.tokens.next();
+			elseBlock = this.block();
+			this.expect("end");
+			this.expect("if");
+		}
+		else if (elseToken.content.value === "end") {
+			elseBlock = new ast.Block(elseToken, []);
+			this.expect("end");
+			this.expect("if");
+		}
+		else {
+			this.error(elseToken, `invalid keyword '${elseToken.content}'`);
+		}
+
+		return new ast.If(keyword, expression, block, elseBlock);
 	}
 
 	private assignment(leftHand: ast.Expression): ast.Assignment {

@@ -5,7 +5,11 @@
 	<%
 		function bold(label)
 			%><b><%
-				response.write label
+				if 6 + 4 then
+					response.write label
+				else
+					response.write "nejdu"
+				end if
 			%></b><%
 		end function
 	%>
