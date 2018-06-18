@@ -289,35 +289,39 @@ export class Parser {
 	}
 
 	private call(f: ast.Expression): ast.Call {
-		return new ast.Call(f.bucket, f, this.args());
+		this.expect("(");
+		const args = this.args();
+		this.expect(")");
+		return new ast.Call(f.bucket, f, args);
 	}
 
 	private callStatement(f: ast.Expression): ast.Call {
-		const call = new ast.Call(f.bucket, f, []);
-		if (this.tokens.peek().content.value === ":") {
-			return call;
-		}
-
-		call.args.push(this.expression());
-
-		while (this.tokens.peek().content.value === ",") {
-			this.tokens.next();
-			call.args.push(this.expression());
-		}
-		return call;
+		return new ast.Call(f.bucket, f, this.args());
 	}
 
 	private args(): ast.Expression[] {
 		let args: ast.Expression[] = [];
-		this.expect("(");
-		if (this.tokens.peek().content.value !== ")") {
-			args.push(this.expression());
-			while (this.tokens.peek().content.value === ",") {
+		while (true) {
+			let next = this.tokens.peek();
+			if (next.content instanceof tokens.Punctuation
+				&& (next.content.value === ":" || next.content.value === ")")) {
+				break;
+			}
+
+			const arg = this.expression();
+			args.push(arg);
+
+			next = this.tokens.peek();
+			if (!(next.content instanceof tokens.Punctuation)) {
+				this.error(next, `unexpected token ${next}`);
+			}
+			else if(next.content.value !== ",") {
+				break;
+			}
+			else {
 				this.tokens.next();
-				args.push(this.expression());
 			}
 		}
-		this.expect(")");
 		return args;
 	}
 

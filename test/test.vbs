@@ -82,4 +82,10 @@ end if
 test
 startSET
 
+
 Wscript.echo mul
+
+myDict("hejsan") = 123
+myFunc (123), 88
+'myFunc(123, 40), 88
+

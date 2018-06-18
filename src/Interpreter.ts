@@ -122,7 +122,7 @@ export class Interpreter {
 	}
 
 	run(block: ast.Block): void {
-		//console.log(util.inspect(block, { depth: null, colors: true }));
+		console.log(util.inspect(block, { depth: null, colors: true }));
 		this.runBlock(block);
 		//console.log(util.inspect(this.context, { depth: null, colors: true }));
 	}

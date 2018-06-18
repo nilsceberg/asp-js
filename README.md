@@ -36,6 +36,11 @@ wait...!
 ### To-do list
 * Document binary operators (and maybe optimize, they are unlikely to be fast I believe)
 * Refactor token stream and parser for better readability
+* Unit tests
+* Refactor stack/scope stuff
+* Split files and organize in directories (parse, runtime?)
+* Make sure to check token types, especially when expecting puncutation,
+  because string literals may match otherwise
 
 ## Features
 * **expressions**: done
@@ -48,6 +53,7 @@ wait...!
   * **virtual**: to-do
 * **byval**: to-do
 * **byref**: to-do
+* **line continuation**: to-do
 
 ## Language reference links
 * and: https://stackoverflow.com/questions/10871895/boolean-not-operator-in-vbscript
