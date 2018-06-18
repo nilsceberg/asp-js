@@ -49,16 +49,7 @@ export class Parser {
 					break;
 				}
 				else {
-					// TODO: might have to change this to allow for weird set
-					// syntax
-					const variable = this.variable();
-
-					if (this.tokens.peek().content.value === "=") {
-						block.statements.push(this.assignment(variable));
-					}
-					else {
-						block.statements.push(this.callStatement(variable));
-					}
+					block.statements.push(this.assignmentOrSubCall());
 				}
 			}
 			else if (token.content instanceof tokens.Punctuation) {
@@ -178,10 +169,66 @@ export class Parser {
 		return new ast.If(keyword, expression, block, elseBlock);
 	}
 
-	private assignment(leftHand: ast.Expression): ast.Assignment {
-		const operator = this.tokens.next(); // consume operator
-		return new ast.Assignment(operator, leftHand, this.expression());
+	// This one is disgusting
+	private assignmentOrSubCall(): ast.Statement {
+		const identifier = this.variable();
+		const token = this.tokens.peek();
+
+		if (token.content instanceof tokens.Punctuation) {
+			if (token.content.value === "=") {
+				this.tokens.next();
+				return new ast.Assignment(token, identifier, this.expression());
+			}
+			else if (token.content.value === "(") {
+				this.tokens.next();
+				const args = this.args();
+				this.expect(")", tokens.Punctuation);
+
+
+				const nextToken = this.tokens.peek();
+				if (nextToken.content instanceof tokens.Punctuation) {
+					console.log("handling", identifier, args);
+					console.log("next = ", this.tokens.peek());
+
+					if (nextToken.content.value === "=") {
+						// This is of the form f(1, ...) = ...
+						this.tokens.next();
+						return new ast.Assignment(nextToken, new ast.Call(token, identifier, args), this.expression());
+					}
+					else if (nextToken.content.value === ",") {
+						// Turns out the first argument was just enclosed in parentheses
+						this.tokens.next();
+						
+						if (args.length !== 1) {
+							this.error(nextToken, `unexpected token ${nextToken}`);
+						}
+
+						args.push(...this.args());
+						return new ast.Call(token, identifier, args);
+					}
+					else if (nextToken.content.value === ":") {
+						// This is of the format f(1, ...)
+						// Note that this is only allowed if there is only one argument, in which case
+						// it should actually be parsed as a sub call with one argument which happens to be enclosed in parentheses
+						// TODO: decide whether enforcing this really is necessary
+						if  (args.length !== 1) {
+							this.error(token, "expected statement");
+						}
+						return new ast.Call(token, identifier, args);
+					}
+				}
+			}
+		}
+
+		// If we have parameters without a parenthesis or no more arguments,
+		// we have a sub call
+		return this.subCall(identifier);
 	}
+
+	//private assignment(leftHand: ast.Expression): ast.Assignment {
+	//	const operator = this.tokens.next(); // consume operator
+	//	return new ast.Assignment(operator, leftHand, this.expression());
+	//}
 
 	private expression(): ast.Expression {
 		let operatorFunctions: Function[] = [];
@@ -262,9 +309,9 @@ export class Parser {
 			const negate = (a: any) => -a;
 			return new ast.UnaryOperator(token, negate, this.factor());
 		}
-		else {
-			this.error(token, `unexpected token ${token.content}`);
-		}
+		//else {
+		//	this.error(token, `unexpected token ${token.content}`);
+		//}
 
 		// Is this a function call?
 		if (this.tokens.peek().content.value === "(") {
@@ -295,7 +342,7 @@ export class Parser {
 		return new ast.Call(f.bucket, f, args);
 	}
 
-	private callStatement(f: ast.Expression): ast.Call {
+	private subCall(f: ast.Expression): ast.Call {
 		return new ast.Call(f.bucket, f, this.args());
 	}
 
@@ -358,8 +405,8 @@ export class Parser {
 		return this.isLiteral(token) || this.isIdentifier(token);
 	}
 		
-	private expect(expected: string) {
-		const actual = this.require(tokens.Token); // allow any kind of token here
+	private expect(expected: string, token = tokens.Token) {
+		const actual = this.require(token); // allow any kind of token here
 		if (actual.content.value !== expected) {
 			this.error(actual, `expected '${expected}', got ${actual.content}`);
 		}
