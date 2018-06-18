@@ -187,9 +187,6 @@ export class Parser {
 
 				const nextToken = this.tokens.peek();
 				if (nextToken.content instanceof tokens.Punctuation) {
-					console.log("handling", identifier, args);
-					console.log("next = ", this.tokens.peek());
-
 					if (nextToken.content.value === "=") {
 						// This is of the form f(1, ...) = ...
 						this.tokens.next();
