@@ -1,4 +1,4 @@
-import { Interpreter } from "../runtime/Interpreter";
+import { Interpreter, ScriptCache } from "../runtime/Interpreter";
 import { Box, Context } from "../runtime/Context";
 
 import * as Koa from "koa";
@@ -23,10 +23,10 @@ function createEnvironment(ctx: Koa.Context): any {
 	};
 }
 
-export function KoaAspJs(root: string): Koa.Middleware {
+export function KoaAspJs(root: string, scriptCache: ScriptCache = null): Koa.Middleware {
 	return async (ctx: Koa.Context, next: () => Promise<any>) => {
 		if (ctx.path.endsWith(".asp")) {
-			const interpreter = new Interpreter(createEnvironment(ctx));
+			const interpreter = new Interpreter(createEnvironment(ctx), scriptCache);
 			try {
 				interpreter.runFile(path.join(root, ctx.path));
 			}

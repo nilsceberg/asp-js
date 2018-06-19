@@ -12,7 +12,7 @@ app.use((ctx, next) => {
 });
 
 // ASP.JS middleware, serving ASP files from the asp/ directory
-app.use(KoaAspJs("asp"));
+app.use(KoaAspJs("asp", {}));
 
 app.listen(8080);
 

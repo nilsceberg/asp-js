@@ -8,25 +8,42 @@ import { runtimeError as error } from "../util";
 import * as util from "util";
 
 
+export type ScriptCache = { [filename: string]: ast.Block };
 export class Interpreter {
-	constructor(functions: { [identifier: string]: Box } = {}) {
+	constructor(functions: { [identifier: string]: Box } = {}, scriptCache: ScriptCache = {}) {
 		this.context = {
 			stack: new Stack(functions),
 			classes: {},
 			explicit: true,
 		};
+		this.scriptCache = scriptCache;
 	}
 
 	load(filename: string): ast.Block {
+		if (this.scriptCache && this.scriptCache[filename]) {
+			return this.scriptCache[filename];
+		}
+
 		const isAsp = filename.split(".").slice(-1)[0] === "asp";
 		const input = new InputStream(filename);
 		const tokens = new TokenStream(input, isAsp);
 		const parser = new Parser(tokens);
-		return parser.parse();
+		const block = parser.parse();
+
+		if (this.scriptCache) {
+			this.scriptCache[filename] = block;
+		}
+
+		return block;
 	}
 
 	runFile(filename: string): void {
-		this.run(this.load(filename));
+		const start = Date.now();
+		const program = this.load(filename);
+		const parsed = Date.now();
+		this.run(program);
+		const done = Date.now();
+		console.log(`${filename} parsed in ${parsed - start} ms and executed in ${done - parsed} ms`);
 	}
 
 	run(block: ast.Block): void {
@@ -244,5 +261,6 @@ export class Interpreter {
 	}
 
 	private context: Context;
+	private scriptCache: ScriptCache;
 }
 
