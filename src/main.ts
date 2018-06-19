@@ -1,4 +1,5 @@
-import { Interpreter, Context, Box } from "./Interpreter";
+import { Context, Box } from "./runtime/Context";
+import { Interpreter } from "./runtime/Interpreter";
 
 import * as util from "util";
 import * as process from "process";

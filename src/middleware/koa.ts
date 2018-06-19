@@ -1,4 +1,5 @@
-import { Interpreter, Box, Context } from "../Interpreter";
+import { Interpreter } from "../runtime/Interpreter";
+import { Box, Context } from "../runtime/Context";
 
 import * as Koa from "koa";
 import * as path from "path";
@@ -30,7 +31,7 @@ export function KoaAspJs(root: string): Koa.Middleware {
 				interpreter.runFile(path.join(root, ctx.path));
 			}
 			catch (e) {
-				ctx.body = e.toString();
+				ctx.body = e.stack;
 			}
 		}
 		else {

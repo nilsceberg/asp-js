@@ -1,4 +1,5 @@
-import { Interpreter, Context, Box } from "./Interpreter";
+import { Interpreter } from "./runtime/Interpreter";
+import { Context, Box } from "./runtime/Context";
 import { KoaAspJs } from "./middleware/koa";
 
 export {

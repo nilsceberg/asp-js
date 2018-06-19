@@ -2,6 +2,7 @@ import { Bucket } from "./Stream";
 import { TokenStream, tokens } from "./TokenStream";
 import { ast } from "./AST";
 import { Operators, BinaryFunction } from "./BinaryOperators";
+import { syntaxError as error } from "../util";
 
 export class Parser {
 	constructor(tokens: TokenStream) {
@@ -26,7 +27,7 @@ export class Parser {
 				// Hacky way of allowing <%=, and will allow without an
 				// immediately following %> -- probably will not be a problem
 				if (this.tokens.peek().content instanceof tokens.Punctuation
-					&& this.tokens.peek().content === "=") {
+					&& this.tokens.peek().content.value === "=") {
 					this.tokens.next();
 					block.statements.push(new ast.Call(this.tokens.peek(),
 						new ast.Variable(this.tokens.peek(), ["response", "write"]),
@@ -67,11 +68,11 @@ export class Parser {
 					this.tokens.next();
 				}
 				else {
-					this.error(token, `unexpected token ${token.content} (expected statement)`);
+					error(token, `unexpected token ${token.content} (expected statement)`);
 				}
 			}
 			else {
-				this.error(token, `unexpected token ${token.content} (expected statement)`);
+				error(token, `unexpected token ${token.content} (expected statement)`);
 			}
 		}
 
@@ -115,7 +116,7 @@ export class Parser {
 				this.tokens.next();
 			}
 			else {
-				this.error(token, `unexpected token ${token.content}`);
+				error(token, `unexpected token ${token.content}`);
 			}
 		}
 
@@ -156,7 +157,7 @@ export class Parser {
 		let elseBlock: ast.Block;
 
 		if (!(elseToken.content instanceof tokens.Identifier)) {
-			this.error(elseToken, `unexpected token ${elseToken.content}`);
+			error(elseToken, `unexpected token ${elseToken.content}`);
 		}
 		else if (elseToken.content.value === "elseif") {
 			elseBlock = new ast.Block(elseToken, [this.if()]);
@@ -173,7 +174,7 @@ export class Parser {
 			this.expect("if");
 		}
 		else {
-			this.error(elseToken, `invalid keyword ${elseToken.content}`);
+			error(elseToken, `invalid keyword ${elseToken.content}`);
 		}
 
 		return new ast.If(keyword, expression, block, elseBlock);
@@ -207,7 +208,7 @@ export class Parser {
 						this.tokens.next();
 						
 						if (args.length !== 1) {
-							this.error(nextToken, `unexpected token ${nextToken}`);
+							error(nextToken, `unexpected token ${nextToken}`);
 						}
 
 						args.push(...this.args());
@@ -219,7 +220,7 @@ export class Parser {
 						// it should actually be parsed as a sub call with one argument which happens to be enclosed in parentheses
 						// TODO: decide whether enforcing this really is necessary
 						if  (args.length !== 1) {
-							this.error(token, "expected statement");
+							error(token, "expected statement");
 						}
 						return new ast.Call(token, identifier, args);
 					}
@@ -317,7 +318,7 @@ export class Parser {
 			return new ast.UnaryOperator(token, negate, this.factor());
 		}
 		//else {
-		//	this.error(token, `unexpected token ${token.content}`);
+		//	error(token, `unexpected token ${token.content}`);
 		//}
 
 		// Is this a function call?
@@ -367,7 +368,7 @@ export class Parser {
 
 			next = this.tokens.peek();
 			if (!(next.content instanceof tokens.Punctuation)) {
-				this.error(next, `unexpected token ${next}`);
+				error(next, `unexpected token ${next}`);
 			}
 			else if(next.content.value !== ",") {
 				break;
@@ -382,11 +383,11 @@ export class Parser {
 	private require(type: Function): Bucket {
 		const token = this.tokens.next();
 		if (token.content === null) {
-			this.error(token, "unexpected end of file");
+			error(token, "unexpected end of file");
 		}
 
 		if (!(token.content instanceof type)) {
-			this.error(token, `expected ${type.name}, got ${token.content}`);
+			error(token, `expected ${type.name}, got ${token.content}`);
 		}
 
 		return token;
@@ -415,12 +416,8 @@ export class Parser {
 	private expect(expected: string, token = tokens.Token) {
 		const actual = this.require(token); // allow any kind of token here
 		if (actual.content.value !== expected) {
-			this.error(actual, `expected '${expected}', got ${actual.content}`);
+			error(actual, `expected '${expected}', got ${actual.content}`);
 		}
-	}
-
-	private error(bucket: Bucket, message: string) {
-		throw new Error(`syntax error in ${bucket.filename} at line ${bucket.line}, column ${bucket.position}: ${message}`);
 	}
 
 	private tokens: TokenStream;
