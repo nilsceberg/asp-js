@@ -78,6 +78,7 @@ export class Stack {
 		if (frame[identifier] !== undefined || localOnly) {
 			const box = frame[identifier];
 			// If we're only looking for functions, skip this
+			// TODO: this doesn't seem complete?
 			if (!functionOnly) {
 				return frame[identifier];
 			}

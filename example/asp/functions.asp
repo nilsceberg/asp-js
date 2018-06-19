@@ -20,8 +20,6 @@
 	end function
 
 	function bold(label)
-		%><b><%
-			response.write label
-		%></b><%
+		%><b><%= label %></b><%
 	end function
 %>

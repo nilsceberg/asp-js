@@ -22,6 +22,16 @@ export class Parser {
 				block.statements.push(new ast.Call(token,
 					new ast.Variable(token, ["response", "write"]),
 					[new ast.Literal(token, token.content.value)]));
+
+				// Hacky way of allowing <%=, and will allow without an
+				// immediately following %> -- probably will not be a problem
+				if (this.tokens.peek().content instanceof tokens.Punctuation
+					&& this.tokens.peek().content === "=") {
+					this.tokens.next();
+					block.statements.push(new ast.Call(this.tokens.peek(),
+						new ast.Variable(this.tokens.peek(), ["response", "write"]),
+						[this.expression()]));
+				}
 			}
 			else if (token.content instanceof tokens.Identifier) {
 				if (token.content.value === "function") {
