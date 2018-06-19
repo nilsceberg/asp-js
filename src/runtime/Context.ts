@@ -52,8 +52,8 @@ export class Stack {
 		return box;
 	}
 
-	define(identifier: string): void {
-		this.array[this.array.length - 1][identifier] = new Box();
+	define(identifier: string, box: Box = new Box()): void {
+		this.array[this.array.length - 1][identifier] = box;
 	}
 
 	/*set(identifier: string[], value: any): void {

@@ -127,7 +127,10 @@ export class Interpreter {
 	}
 
 	private evaluate(expr: ast.Expression): any {
-		const maybeBox = this.evaluateRef(expr);
+		return this.valueOf(this.evaluateRef(expr));
+	}
+
+	private valueOf(maybeBox: any): any {
 		if (maybeBox instanceof Box) {
 			return maybeBox.value;
 		}
@@ -191,7 +194,7 @@ export class Interpreter {
 		}
 
 		// Evaluate arguments
-		const args = call.args.map((arg, i) => this.evaluate(arg));
+		const args = call.args.map((arg, i) => this.evaluateRef(arg));
 
 		// If we're calling an object method, copy that object into the stack
 		// frame
@@ -211,9 +214,15 @@ export class Interpreter {
 
 			this.context.stack.define(functionName.slice(-1)[0]);
 
+			// Bind the arguments to stack frame
 			args.map((arg, i) => {
-				this.context.stack.define(func.args[i].name[0]);
-				this.context.stack.get(func.args[i]).value = arg;
+				if (func.args[i].byref && arg instanceof Box) {
+					this.context.stack.define(func.args[i].name, arg);
+				}
+				else {
+					this.context.stack.define(func.args[i].name);
+					this.context.stack.get(func.args[i].toVariable()).value = this.valueOf(arg);
+				}
 			});
 
 			this.runBlock(func.block);
@@ -221,7 +230,7 @@ export class Interpreter {
 			returnValue = this.context.stack.get(<ast.Variable>call.f);
 		}
 		else if (func instanceof Function) {
-			returnValue = func(this.context, ...args);
+			returnValue = func(this.context, ...args.map(this.valueOf));
 		}
 
 		this.context.stack.pop();

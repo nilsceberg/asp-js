@@ -26,7 +26,7 @@ export namespace ast {
 	}
 
 	export class Function extends Statement {
-		constructor(bucket: Bucket, name: Variable, args: Variable[], block: Block) {
+		constructor(bucket: Bucket, name: Variable, args: Argument[], block: Block) {
 			super(bucket);
 			this.name = name;
 			this.args = args;
@@ -34,7 +34,7 @@ export namespace ast {
 		}
 
 		name: Variable;
-		args: Variable[];
+		args: Argument[];
 		block: Block;
 	}
 
@@ -113,6 +113,21 @@ export namespace ast {
 		}
 
 		name: string[];
+	}
+
+	export class Argument extends Expression {
+		constructor(bucket: Bucket, name: string, byref: boolean = false) {
+			super(bucket);
+			this.name = name;
+			this.byref = byref;
+		}
+
+		toVariable(): Variable {
+			return new Variable(this.bucket, [this.name]);
+		}
+
+		name: string;
+		byref: boolean;
 	}
 
 	export class Call extends Expression {

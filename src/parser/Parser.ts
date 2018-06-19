@@ -126,11 +126,10 @@ export class Parser {
 		return k;
 	}
 
-	private argList(): ast.Variable[] {
-		let variables: ast.Variable[] = [];
+	private argList(): ast.Argument[] {
+		let args: ast.Argument[] = [];
 		while (this.tokens.peek().content.value !== ")") {
-			const token = this.require(tokens.Identifier);
-			variables.push(new ast.Variable(token, [token.content.value]));
+			args.push(this.argument());
 
 			if (this.tokens.peek().content.value === ")") {
 				break;
@@ -139,7 +138,17 @@ export class Parser {
 				this.expect(",");
 			}
 		}
-		return variables;
+		return args;
+	}
+
+	private argument(): ast.Argument {
+		let byref = false;
+		let token = this.require(tokens.Identifier);
+		if (token.content.value === "byref" || token.content.value === "byval") {
+			byref = token.content.value === "byref";
+			token = this.require(tokens.Identifier);
+		}
+		return new ast.Argument(token, token.content.value, byref);
 	}
 
 	private dim(): ast.Dim {
