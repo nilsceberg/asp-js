@@ -4,6 +4,8 @@ import { Box, Context } from "../runtime/Context";
 import * as Koa from "koa";
 import * as path from "path";
 
+let renderStartTime: number;
+
 function createEnvironment(ctx: Koa.Context): any {
 	ctx.body = "";
 	return {
@@ -19,13 +21,17 @@ function createEnvironment(ctx: Koa.Context): any {
 			"querystring": new Box((context: Context, key: string) => {
 				return ctx.query[key];
 			}),
-		})
+		}),
+		"getrendertime": new Box((context: Context) => {
+			return Date.now() - renderStartTime;
+		}),
 	};
 }
 
 export function KoaAspJs(root: string, scriptCache: ScriptCache = null): Koa.Middleware {
 	return async (ctx: Koa.Context, next: () => Promise<any>) => {
 		if (ctx.path.endsWith(".asp")) {
+			renderStartTime = Date.now();
 			const interpreter = new Interpreter(createEnvironment(ctx), scriptCache);
 			try {
 				interpreter.runFile(path.join(root, ctx.path));

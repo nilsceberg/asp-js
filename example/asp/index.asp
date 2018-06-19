@@ -18,7 +18,10 @@ Response.AddHeader "Server", "Koa with ASP.JS"
 				%><br><a href="/">Forget me!</a><%
 			end if
 		%><br><br>
-		View this site's source code <a href="https://github.com/Deoxyribonucleic/asp-js/tree/master/example/asp">here</a>!
+		<small>
+			View this site's source code <a href="https://github.com/Deoxyribonucleic/asp-js/tree/master/example/asp">here</a>!<br>
+			Rendered in <%= GetRenderTime() %> ms.
+		</small>
 	</body>
 </html>
 
