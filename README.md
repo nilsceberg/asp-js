@@ -50,9 +50,10 @@ wait...!
 * **includes**: in progress
   * **file**: done
   * **virtual**: to-do
-* **byval**: to-do
-* **byref**: to-do
+* **byval**: done
+* **byref**: done
 * **line continuation**: to-do
+* **REM comments**: to-do
 
 ## Language reference links
 * and: https://stackoverflow.com/questions/10871895/boolean-not-operator-in-vbscript
