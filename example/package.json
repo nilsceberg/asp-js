@@ -4,7 +4,8 @@
   "description": "",
   "main": "build/index.js",
   "scripts": {
-    "test": "tsc && node -r source-map-support/register build/index.js"
+    "test": "tsc && node -r source-map-support/register build/index.js",
+	"build": "tsc"
   },
   "author": "",
   "license": "ISC",

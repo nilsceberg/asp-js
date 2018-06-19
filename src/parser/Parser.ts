@@ -1,5 +1,6 @@
 import { Bucket } from "./Stream";
-import { TokenStream, tokens } from "./TokenStream";
+import { TokenStream } from "./TokenStream";
+import { tokens } from "./Tokens";
 import { ast } from "./AST";
 import { Operators, BinaryFunction } from "./BinaryOperators";
 import { syntaxError as error } from "../util";
@@ -13,7 +14,7 @@ export class Parser {
 		return this.block();
 	}
 
-	private block(): ast.Block {
+	block(): ast.Block {
 		let block = new ast.Block(this.tokens.peek(), []);
 
 		let token: Bucket;
@@ -79,7 +80,7 @@ export class Parser {
 		return block;
 	}
 
-	private function(func: boolean = true): ast.Function {
+	function(func: boolean = true): ast.Function {
 		const keyword = this.tokens.next(); // consume keyword
 
 		const name = this.require(tokens.Identifier);
@@ -97,7 +98,7 @@ export class Parser {
 		return f;
 	}
 
-	private klass(): ast.Class {
+	klass(): ast.Class {
 		const keyword = this.tokens.next(); // consume keyword
 
 		const name = this.require(tokens.Identifier).content.value;
@@ -126,7 +127,7 @@ export class Parser {
 		return k;
 	}
 
-	private argList(): ast.Argument[] {
+	argList(): ast.Argument[] {
 		let args: ast.Argument[] = [];
 		while (this.tokens.peek().content.value !== ")") {
 			args.push(this.argument());
@@ -141,7 +142,7 @@ export class Parser {
 		return args;
 	}
 
-	private argument(): ast.Argument {
+	argument(): ast.Argument {
 		let byref = false;
 		let token = this.require(tokens.Identifier);
 		if (token.content.value === "byref" || token.content.value === "byval") {
@@ -151,13 +152,13 @@ export class Parser {
 		return new ast.Argument(token, token.content.value, byref);
 	}
 
-	private dim(): ast.Dim {
+	dim(): ast.Dim {
 		const keyword = this.tokens.next(); // consume keyword
 		const name = this.require(tokens.Identifier).content.value;
 		return new ast.Dim(keyword, name);
 	}
 
-	private if(): ast.If {
+	if(): ast.If {
 		const keyword = this.tokens.next(); // consume keyword
 		const expression = this.expression();
 		this.expect("then");
@@ -190,7 +191,7 @@ export class Parser {
 	}
 
 	// This one is disgusting
-	private assignmentOrSubCall(): ast.Statement {
+	assignmentOrSubCall(): ast.Statement {
 		const identifier = this.variable();
 		const token = this.tokens.peek();
 
@@ -249,7 +250,7 @@ export class Parser {
 	//	return new ast.Assignment(operator, leftHand, this.expression());
 	//}
 
-	private expression(): ast.Expression {
+	expression(): ast.Expression {
 		let operatorFunctions: Function[] = [];
 		// This is a bit of magic... :)
 		Operators.forEach((group: any, i) => operatorFunctions.push(() => {
@@ -298,7 +299,7 @@ export class Parser {
 	// 	return term;
 	// }
 
-	private factor(): ast.Expression {
+	factor(): ast.Expression {
 		const token = this.tokens.peek();
 		let expr: ast.Expression;
 
@@ -340,12 +341,12 @@ export class Parser {
 		return expr;
 	}
 
-	private new(): ast.New {
+	new(): ast.New {
 		const keyword = this.tokens.next();
 		return new ast.New(keyword, this.tokens.next().content.value);
 	}
 
-	private variable(): ast.Variable {
+	variable(): ast.Variable {
 		const variable = new ast.Variable(this.tokens.peek(), [this.tokens.next().content.value]);
 		while (this.tokens.peek().content.value === ".") {
 			this.tokens.next();
@@ -354,18 +355,18 @@ export class Parser {
 		return variable;
 	}
 
-	private call(f: ast.Expression): ast.Call {
+	call(f: ast.Expression): ast.Call {
 		this.expect("(");
 		const args = this.args();
 		this.expect(")");
 		return new ast.Call(f.bucket, f, args);
 	}
 
-	private subCall(f: ast.Expression): ast.Call {
+	subCall(f: ast.Expression): ast.Call {
 		return new ast.Call(f.bucket, f, this.args());
 	}
 
-	private args(): ast.Expression[] {
+	args(): ast.Expression[] {
 		let args: ast.Expression[] = [];
 		while (true) {
 			let next = this.tokens.peek();

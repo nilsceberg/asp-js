@@ -47,6 +47,7 @@ wait...!
 * **classes**: in progress
   * **objects**: done
   * **visibility**: to-do
+  * **properties**: to-do
 * **includes**: in progress
   * **file**: done
   * **virtual**: to-do
@@ -54,6 +55,7 @@ wait...!
 * **byref**: done
 * **line continuation**: to-do
 * **REM comments**: to-do
+* **with statements**: to-do
 
 ## Language reference links
 * and: https://stackoverflow.com/questions/10871895/boolean-not-operator-in-vbscript

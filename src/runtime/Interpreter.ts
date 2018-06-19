@@ -1,5 +1,5 @@
 import { ast } from "../parser/AST";
-import { InputStream } from "../parser/InputStream";
+import { FileInputStream } from "../parser/FileInputStream";
 import { TokenStream } from "../parser/TokenStream";
 import { Parser } from "../parser/Parser";
 import { Objekt, Box, Stack, Context } from "./Context";
@@ -25,7 +25,7 @@ export class Interpreter {
 		}
 
 		const isAsp = filename.split(".").slice(-1)[0] === "asp";
-		const input = new InputStream(filename);
+		const input = new FileInputStream(filename);
 		const tokens = new TokenStream(input, isAsp);
 		const parser = new Parser(tokens);
 		const block = parser.parse();

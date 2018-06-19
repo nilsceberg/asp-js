@@ -1,11 +1,11 @@
 import { Stream, Bucket } from "./Stream";
+//import { FileInputStream } from "./FileInputStream";
 
-import { readFileSync } from "fs";
 import * as path from "path";
 
-export class InputStream implements Stream {
-	constructor(filename: string) {
-		this.content = readFileSync(filename, "utf-8");
+export abstract class InputStream implements Stream {
+	constructor(filename: string, content: string) {
+		this.content = content;
 		this.position = 1;
 		this.line = 1;
 		this.filename = filename;
@@ -37,7 +37,7 @@ export class InputStream implements Stream {
 				}
 
 				const includedFilename = path.join(path.dirname(this.filename), includeMatch[2]);
-				this.include = new InputStream(includedFilename);
+				this.include = this.openInclude(includedFilename);
 				this.content = this.content.slice(includeMatch[0].length); // skip include statement itself
 				return this.next();
 			}
@@ -82,6 +82,8 @@ export class InputStream implements Stream {
 			filename: this.filename,
 		};
 	}
+
+	protected abstract openInclude(filename: string): InputStream;
 
 	private process(chr: string) {
 		return chr;
