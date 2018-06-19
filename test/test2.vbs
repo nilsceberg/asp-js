@@ -20,4 +20,10 @@ increaseByVal v
 print v
 increaseByRef v
 print v
+increaseByRef (v)
+print v
+increaseByRef v * 2
+print v
+
+print 2 * (3 + 4)
 

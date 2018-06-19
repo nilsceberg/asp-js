@@ -94,6 +94,11 @@ export class Interpreter {
 		if (expr instanceof ast.Variable) {
 			return this.context.stack.get(expr);
 		}
+		// We need to keep track of parenthesis in the AST because
+		// arguments enclosed in parenthesis negate byRef
+		else if (expr instanceof ast.Parenthesis) {
+			return this.evaluateRef(expr.inner);
+		}
 		else if (expr instanceof ast.Literal) {
 			return expr.value;
 		}
@@ -216,7 +221,8 @@ export class Interpreter {
 
 			// Bind the arguments to stack frame
 			args.map((arg, i) => {
-				if (func.args[i].byref && arg instanceof Box) {
+				// If an argument is enclosed in parentheses, it's always byVal
+				if (!(call.args[i] instanceof ast.Parenthesis) && func.args[i].byref && arg instanceof Box) {
 					this.context.stack.define(func.args[i].name, arg);
 				}
 				else {

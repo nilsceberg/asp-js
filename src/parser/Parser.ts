@@ -220,6 +220,7 @@ export class Parser {
 							error(nextToken, `unexpected token ${nextToken}`);
 						}
 
+						args[0] = new ast.Parenthesis(token, args[0]);
 						args.push(...this.args());
 						return new ast.Call(token, identifier, args);
 					}
@@ -231,6 +232,7 @@ export class Parser {
 						if  (args.length !== 1) {
 							error(token, "expected statement");
 						}
+						args[0] = new ast.Parenthesis(token, args[0]);
 						return new ast.Call(token, identifier, args);
 					}
 				}
@@ -318,7 +320,7 @@ export class Parser {
 		}
 		else if (token.content.value === "(") {
 			this.tokens.next();
-			expr = this.expression();
+			expr = new ast.Parenthesis(token, this.expression());
 			this.expect(")");
 		}
 		else if (token.content.value === "-") {

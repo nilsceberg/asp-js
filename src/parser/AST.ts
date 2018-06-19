@@ -97,6 +97,15 @@ export namespace ast {
 		f: (a: any) => any;
 	}
 
+	export class Parenthesis extends Expression {
+		constructor(bucket: Bucket, inner: Expression) {
+			super(bucket);
+			this.inner = inner;
+		}
+
+		inner: Expression;
+	}
+
 	export class Literal extends Expression {
 		constructor(bucket: Bucket, value: any) {
 			super(bucket);
