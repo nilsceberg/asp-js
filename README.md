@@ -17,11 +17,11 @@ wait...!
 * ~The lexer needs to be able to differentiate between real newlines and : when
   handling comments~
 
-* Solve ambiguity:
+* ~Solve ambiguity:
   ```
   obj(1234689), 4
   obj(4) = 9
-  ```
+  ```~
 
 * evalFunction isn't quite how the namespaces are handled in VBScript,
   as it allows redefining a function name inside another scope and still
@@ -38,7 +38,6 @@ wait...!
 * Refactor token stream and parser for better readability
 * Unit tests
 * Refactor stack/scope stuff
-* Split files and organize in directories (parse, runtime?)
 * Make sure to check token types, especially when expecting puncutation,
   because string literals may match otherwise
 
