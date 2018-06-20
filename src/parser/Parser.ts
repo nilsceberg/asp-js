@@ -348,7 +348,7 @@ export class Parser {
 
 	variable(): ast.Variable {
 		const variable = new ast.Variable(this.tokens.peek(), [this.tokens.next().content.value]);
-		while (this.tokens.peek().content.value === ".") {
+		while (this.tokens.peek().content !== null && this.tokens.peek().content.value === ".") {
 			this.tokens.next();
 			variable.name.push(this.require(tokens.Identifier).content.value);
 		}

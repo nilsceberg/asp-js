@@ -8,6 +8,10 @@ export namespace tokens {
 		toString(): string {
 			return `'${this.value}'`;
 		}
+
+		compare(type: Function, value: any): boolean {
+			return this instanceof type && this.value === value;
+		}
 	};
 
 	export class Identifier extends Token {
