@@ -284,3 +284,99 @@ test("parse args", () => {
 	)
 });
 
+describe("parse factor", () => {
+	const new_ = jest.fn(function() {
+		this.expect("new", tokens.Identifier);
+		return new ast.New(BUCKET, this.require(tokens.Identifier).content.value);
+	});
+
+	const variable = jest.fn(function() {
+		return new ast.Variable(BUCKET, [this.require(tokens.Identifier).content.value]);
+	});
+
+	const expression = jest.fn(function() {
+		return new ast.Literal(BUCKET, this.require(tokens.Identifier).content.value);
+	});
+
+	const call = jest.fn(function(f: ast.Expression) {
+		return new ast.Call(BUCKET, f, []);
+	});
+
+	test("literal", () => {
+		expect(parser(
+			`12345`,
+			{}
+		).factor()).toStrictEqual(
+			new ast.Literal(BUCKET, 12345),
+		)
+	});
+
+	test("new", () => {
+		expect(parser(
+			`new __class__`,
+			{ new: new_ }
+		).factor()).toStrictEqual(
+			new ast.New(BUCKET, "__class__"),
+		)
+		expect(new_).toHaveBeenCalledTimes(1);
+		new_.mockClear();
+	});
+
+	test("not", () => {
+		expect(parser(
+			`not __expr__`,
+			{ expression }
+		).factor()).toStrictEqual(
+			new ast.UnaryOperator(BUCKET, expect.any(Function), new ast.Literal(BUCKET, "__expr__")),
+		)
+		expect(expression).toHaveBeenCalledTimes(1);
+		expression.mockClear();
+	});
+
+	test("negative", () => {
+		expect(parser(
+			`- __expr__`,
+			{ expression, variable }
+		).factor()).toStrictEqual(
+			new ast.UnaryOperator(BUCKET, expect.any(Function), new ast.Variable(BUCKET, ["__expr__"])),
+		)
+		expect(variable).toHaveBeenCalledTimes(1);
+		variable.mockClear();
+	});
+
+	test("variable", () => {
+		expect(parser(
+			`__variable__`,
+			{ variable }
+		).factor()).toStrictEqual(
+			new ast.Variable(BUCKET, ["__variable__"]),
+		)
+		expect(variable).toHaveBeenCalledTimes(1);
+		variable.mockClear();
+	});
+
+	test("function call", () => {
+		expect(parser(
+			`__function__ ()`,
+			{ variable, call }
+		).factor()).toStrictEqual(
+			new ast.Call(BUCKET, new ast.Variable(BUCKET, ["__function__"]), []),
+		)
+		expect(variable).toHaveBeenCalledTimes(1);
+		expect(call).toHaveBeenCalledTimes(1);
+		variable.mockClear();
+		call.mockClear();
+	});
+
+	test("parenthesis", () => {
+		expect(parser(
+			`(__expr__)`,
+			{ expression }
+		).factor()).toStrictEqual(
+			new ast.Parenthesis(BUCKET, new ast.Literal(BUCKET, "__expr__")),
+		)
+		expect(expression).toHaveBeenCalledTimes(1);
+		expression.mockClear();
+	});
+});
+
