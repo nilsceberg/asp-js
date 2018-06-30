@@ -4,7 +4,7 @@ import { readFileSync } from "fs";
 
 export class StringInputStream extends InputStream {
 	constructor(content: string, filename: string = "<string>") {
-		super(filename, content);
+		super(filename, content + "\n");
 	}
 
 	protected openInclude(filename: string): InputStream {

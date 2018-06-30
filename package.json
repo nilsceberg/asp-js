@@ -6,8 +6,8 @@
   "types": "build/lib",
   "scripts": {
     "test": "jest",
-	"watch": "jest --watch",
-	"build": "tsc",
+    "watch": "jest --watch",
+    "build": "tsc",
     "example": "tsc && cd example && npm test"
   },
   "author": "Nils Ceberg",
@@ -26,7 +26,10 @@
       "^.+\\.tsx?$": "ts-jest"
     },
     "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
-	"testPathIgnorePatterns": ["<rootDir>/build/", "<rootDir>/node_modules/"],
+    "testPathIgnorePatterns": [
+      "<rootDir>/build/",
+      "<rootDir>/node_modules/"
+    ],
     "moduleFileExtensions": [
       "ts",
       "tsx",

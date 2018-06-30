@@ -334,7 +334,7 @@ export class Parser {
 		//}
 
 		// Is this a function call?
-		if (this.tokens.peek().content.value === "(") {
+		if (this.require(tokens.Punctuation, false).content.value === "(") {
 			expr = this.call(expr);
 		}
 
@@ -343,7 +343,7 @@ export class Parser {
 
 	new(): ast.New {
 		const keyword = this.tokens.next();
-		return new ast.New(keyword, this.tokens.next().content.value);
+		return new ast.New(keyword, this.require(tokens.Identifier).content.value);
 	}
 
 	variable(): ast.Variable {
@@ -392,8 +392,8 @@ export class Parser {
 		return args;
 	}
 
-	private require(type: Function): Bucket {
-		const token = this.tokens.next();
+	private require(type: Function, consume: boolean = true): Bucket {
+		const token = consume ? this.tokens.next() : this.tokens.peek();
 		if (token.content === null) {
 			error(token, "unexpected end of file");
 		}

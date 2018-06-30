@@ -17,14 +17,6 @@ function parser(code: string, mocks: any = {}): Parser {
 const BUCKET = expect.anything();
 const BLOCK = new ast.Block(BUCKET, []);
 
-test("parse variable", () => {
-	expect(parser(
-		`_some_thing123.some_thing_other_._last`
-	).variable()).toStrictEqual(
-		new ast.Variable(BUCKET, ["_some_thing123", "some_thing_other_", "_last"])
-	);
-});
-
 test("parse function", () => {
 	const argList = jest.fn(function() {
 		expect(this.tokens.next().content).toStrictEqual(new tokens.Identifier("__arglist__"));
@@ -43,11 +35,6 @@ test("parse function", () => {
 		));
 
 	expect(argList).toHaveBeenCalled();
-});
-
-test("parse dim", () => {
-	expect(parser(`dim myVar`).dim())
-		.toStrictEqual(new ast.Dim(BUCKET, "myvar"));
 });
 
 test("parse class", () => {
@@ -120,5 +107,180 @@ test("parse if", () => {
 	);
 
 	expect(expression).toHaveBeenCalledTimes(2);
+});
+
+test("parse argList", () => {
+	const argument = jest.fn(function() {
+		return new ast.Argument(BUCKET, this.tokens.next().content.value);
+	});
+
+	expect(parser(
+		`__arg1__, __arg2__, __arg3__)`,
+		{ argument }
+	).argList()).toStrictEqual(
+		[
+			new ast.Argument(BUCKET, "__arg1__"),
+			new ast.Argument(BUCKET, "__arg2__",),
+			new ast.Argument(BUCKET, "__arg3__")
+		]
+	);
+
+	expect(argument).toHaveBeenCalledTimes(3);
+});
+
+describe("parse argument", () => {
+	test("default", () => {
+		expect(parser(
+			`argname,`,
+		).argument()).toStrictEqual(
+			new ast.Argument(BUCKET, "argname", false),
+		);
+	});
+
+	test("byVal", () => {
+		expect(parser(
+			`byval argname,`,
+		).argument()).toStrictEqual(
+			new ast.Argument(BUCKET, "argname", false),
+		);
+	});
+
+	test("byRef", () => {
+		expect(parser(
+			`byref argname,`,
+		).argument()).toStrictEqual(
+			new ast.Argument(BUCKET, "argname", true),
+		);
+	});
+});
+
+test("parse variable", () => {
+	expect(parser(
+		`_some_thing123.some_thing_other_._last`
+	).variable()).toStrictEqual(
+		new ast.Variable(BUCKET, ["_some_thing123", "some_thing_other_", "_last"])
+	);
+});
+
+test("parse dim", () => {
+	expect(parser(`dim myVar`).dim())
+		.toStrictEqual(new ast.Dim(BUCKET, "myvar"));
+});
+
+/* this should be rewritten with mocks; at the moment it depends heavily
+ * on other methods */
+describe("parse assignmentOrSubCall", () => {
+	test("assignment", () => {
+		expect(parser(
+			`simple.assignment = 123`
+		).assignmentOrSubCall()).toStrictEqual(
+			new ast.Assignment(
+				BUCKET,
+				new ast.Variable(BUCKET, ["simple", "assignment"]),
+				new ast.Literal(BUCKET, 123)
+			)
+		);
+	});
+
+	test("assignment with left hand function call", () => {
+		expect(parser(
+			`func.assignment(1, 2) = 123`
+		).assignmentOrSubCall()).toStrictEqual(
+			new ast.Assignment(
+				BUCKET,
+				new ast.Call(
+					BUCKET,
+					new ast.Variable(BUCKET, ["func", "assignment"]),
+					[new ast.Literal(BUCKET, 1), new ast.Literal(BUCKET, 2)]
+				),
+				new ast.Literal(BUCKET, 123)
+			)
+		);
+	});
+
+	test("sub call with single parenthesized argument", () => {
+		expect(parser(
+			`sub.name (123)`
+		).assignmentOrSubCall()).toStrictEqual(
+			new ast.Call(
+				BUCKET,
+				new ast.Variable(BUCKET, ["sub", "name"]),
+				[new ast.Parenthesis(BUCKET, new ast.Literal(BUCKET, 123))]
+			)
+		);
+	});
+
+	test("sub call with multiple parenthesized arguments", () => {
+		expect(parser(
+			`sub.name (123), (99)`
+		).assignmentOrSubCall()).toStrictEqual(
+			new ast.Call(
+				BUCKET,
+				new ast.Variable(BUCKET, ["sub", "name"]),
+				[
+					new ast.Parenthesis(BUCKET, new ast.Literal(BUCKET, 123)),
+					new ast.Parenthesis(BUCKET, new ast.Literal(BUCKET, 99))
+				]
+			)
+		);
+	});
+});
+
+test("parse new", () => {
+	expect(parser(
+		`new TestClass`
+	).new()).toStrictEqual(
+		new ast.New(BUCKET, "testclass")
+	);
+});
+
+test("parse call", () => {
+	const args = jest.fn(function() {
+		return [new ast.Literal(BUCKET, this.require(tokens.Identifier).content.value)];
+	});
+
+	expect(parser(
+		`(__args__)`,
+		{ args }
+	).call(new ast.Variable(BUCKET, ["testfunc"]))).toStrictEqual(
+		new ast.Call(
+			BUCKET,
+			new ast.Variable(BUCKET, ["testfunc"]),
+			[new ast.Literal(BUCKET, "__args__")],
+		)
+	);
+});
+
+test("parse subCall", () => {
+	const args = jest.fn(function() {
+		return [new ast.Literal(BUCKET, this.require(tokens.Identifier).content.value)];
+	});
+
+	expect(parser(
+		`__args__`,
+		{ args }
+	).subCall(new ast.Variable(BUCKET, ["testfunc"]))).toStrictEqual(
+		new ast.Call(
+			BUCKET,
+			new ast.Variable(BUCKET, ["testfunc"]),
+			[new ast.Literal(BUCKET, "__args__")],
+		)
+	);
+});
+
+test("parse args", () => {
+	const expression = jest.fn(function() {
+		return new ast.Literal(BUCKET, this.require(tokens.Identifier).content.value);
+	});
+
+	expect(parser(
+		`__arg1__, __arg2__`,
+		{ expression }
+	).args()).toStrictEqual(
+		[
+			new ast.Literal(BUCKET, "__arg1__"),
+			new ast.Literal(BUCKET, "__arg2__"),
+		]
+	)
 });
 
