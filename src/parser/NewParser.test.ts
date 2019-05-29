@@ -1,5 +1,6 @@
 import { StringSource, SourcePointer, expr } from "parser-monad";
-import { statement, statements, args } from "./NewParser";
+import { statement, statements, args, identifier, variable } from "./NewParser";
+import { ast } from "./NewAST";
 
 function src(s: string): SourcePointer {
 	return new SourcePointer(new StringSource(s));
@@ -35,4 +36,19 @@ test("args", () => {
 	expect(args().parse(s1).from()[0]).toEqual([reference[0]]);
 	expect(args().parse(s2).from()[0].toString()).toEqual(reference.toString());
 	expect(args().parse(s3).from()[0]).toEqual([reference[3]]);
+});
+
+test("identifier", () => {
+	const s1 = src("abc123");
+	expect(identifier.parse(s1).from()[0]).toStrictEqual("abc123");
+
+	const s2 = src("3abc123");
+	expect(identifier.parse(s2).isJust()).toBeFalsy();
+});
+
+test("variable", () => {
+	const s1 = src("first.second.last");
+	expect(variable().parse(s1).from()[0]).toStrictEqual(new ast.Variable([
+		"first", "second", "last"
+	]));
 });

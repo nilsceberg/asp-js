@@ -8,7 +8,7 @@ argList = argListArg "," argList | argListArg
 argListArg = identifier
 
 assignment = lvalue "=" expr
-lvalue = variable | call
+lvalue = variable | funcCall
 
 funcCall = variable "(" args ")"
 args = expr | expr "," args

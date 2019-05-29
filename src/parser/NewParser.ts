@@ -1,4 +1,5 @@
 import * as parser from "parser-monad";
+import { ast } from "./NewAST";
 
 export const statement = () => parser.Accept("statement");
 export const statements = () => 
@@ -6,8 +7,17 @@ export const statements = () =>
 	.first(parser.Accept(":").or(parser.Return("")))
 	.repeat());
 
+export const identifier = parser.Letter.then(parser.Alphanumeric.repeat().map(x => x.join(""))).map(<(p: [string, string]) => string>parser.add);
 
-export const identifier = parser.Letter.then(parser.Alphanumeric).map(<(p: [string, string]) => string>parser.add);
+export const variable_: () => parser.Parser<string[]> = () =>
+	identifier
+	.first(parser.Accept("."))
+	.then(parser.Parser.lazy(variable_))
+	.map(parser.cons)
+	.or(identifier.map(x => [x]))
+
+export const variable: () => parser.Parser<ast.Variable> = () =>
+	variable_().map(components => new ast.Variable(components));
 
 export const args: () => parser.Parser<parser.Expr[]> = () =>
 	parser.expr()
