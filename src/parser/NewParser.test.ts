@@ -1,5 +1,5 @@
-import { StringSource, SourcePointer, expr } from "parser-monad";
-import { statement, statements, args, identifier, variable } from "./NewParser";
+import { StringSource, SourcePointer, expr, Num } from "parser-monad";
+import { statement, statements, args, identifier, variable, funcCall } from "./NewParser";
 import { ast } from "./NewAST";
 
 function src(s: string): SourcePointer {
@@ -39,8 +39,10 @@ test("args", () => {
 });
 
 test("identifier", () => {
-	const s1 = src("abc123");
-	expect(identifier.parse(s1).from()[0]).toStrictEqual("abc123");
+	const s1 = src("abc123  ");
+	let [result, rest] = identifier.parse(s1).from();
+	expect(result).toStrictEqual("abc123");
+	expect(rest.equals("")).toBeTruthy();
 
 	const s2 = src("3abc123");
 	expect(identifier.parse(s2).isJust()).toBeFalsy();
@@ -48,7 +50,15 @@ test("identifier", () => {
 
 test("variable", () => {
 	const s1 = src("first.second.last");
-	expect(variable().parse(s1).from()[0]).toStrictEqual(new ast.Variable([
+	expect(variable.parse(s1).from()[0]).toStrictEqual(new ast.Variable([
 		"first", "second", "last"
 	]));
+});
+
+test("function call", () => {
+	const s1 = src("obj.f(1, 2)");
+	expect(funcCall.parse(s1).from()[0]).toStrictEqual(new ast.FunctionCall(
+		new ast.Variable(["obj", "f"]),
+		[new Num(1), new Num(2)]
+	));
 });

@@ -7,7 +7,7 @@ export const statements = () =>
 	.first(parser.Accept(":").or(parser.Return("")))
 	.repeat());
 
-export const identifier = parser.Letter.then(parser.Alphanumeric.repeat().map(x => x.join(""))).map(<(p: [string, string]) => string>parser.add);
+export const identifier = parser.Token(parser.Letter.then(parser.Alphanumeric.repeat().map(x => x.join(""))).map(<(p: [string, string]) => string>parser.add));
 
 export const variable_: () => parser.Parser<string[]> = () =>
 	identifier
@@ -16,7 +16,7 @@ export const variable_: () => parser.Parser<string[]> = () =>
 	.map(parser.cons)
 	.or(identifier.map(x => [x]))
 
-export const variable: () => parser.Parser<ast.Variable> = () =>
+export const variable: parser.Parser<ast.Variable> =
 	variable_().map(components => new ast.Variable(components));
 
 export const args: () => parser.Parser<parser.Expr[]> = () =>
@@ -25,3 +25,10 @@ export const args: () => parser.Parser<parser.Expr[]> = () =>
 	.then(parser.Parser.lazy(args))
 	.map(parser.cons)
 	.or(parser.expr().map(x => [x]));
+
+export const funcCall =
+	variable.then(parser.Accept("(").second(args()).first(parser.Require(")")))
+	.map(([v, a]) => new ast.FunctionCall(v, a));
+
+export const lvalue =
+	(funcCall as parser.Parser<ast.LValue>).or(variable);
