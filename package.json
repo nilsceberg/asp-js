@@ -40,6 +40,6 @@
     ]
   },
   "dependencies": {
-    "parser-monad": "https://github.com/nilsceberg/parser-monad"
+    "parser-monad": "git+https://github.com/nilsceberg/parser-monad"
   }
 }
