@@ -172,4 +172,3 @@ export namespace ast {
 		elseBlock: Block;
 	}
 }
-

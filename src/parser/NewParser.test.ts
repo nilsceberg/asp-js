@@ -1,5 +1,5 @@
 import { StringSource, SourcePointer, expr, Num } from "parser-monad";
-import { statement, statements, args, identifier, variable, funcCall, assignment, subCall, call } from "./NewParser";
+import { statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub } from "./NewParser";
 import { ast } from "./NewAST";
 
 function src(s: string): SourcePointer {
@@ -136,5 +136,51 @@ test("call", () => {
 	expect(call.parse(s).from()[0]).toStrictEqual(new ast.FunctionCall(
 		new ast.Variable(["obj", "sub"]),
 		[new Num(1), new Num(2)]
+	));
+});
+
+test("dim", () => {
+	const s = src("dim hello");
+
+	expect(dim.parse(s).from()[0]).toStrictEqual(new ast.Dim(
+		"hello"
+	));
+});
+
+test("argListArg", () => {
+	const s = src("arg1");
+
+	expect(argListArg.parse(s).from()[0]).toStrictEqual(new ast.Argument(
+		"arg1"
+	));
+});
+
+test("argList", () => {
+	const s = src("arg1, arg2, arg3");
+
+	expect(argList().parse(s).from()[0]).toStrictEqual([
+		new ast.Argument("arg1"),
+		new ast.Argument("arg2"),
+		new ast.Argument("arg3"),
+	]);
+});
+
+test("function", () => {
+	const s = src("function f(a, b)\n\tstatement\n\tstatement\nend function");
+
+	expect(func.parse(s).from()[0]).toStrictEqual(new ast.Function(
+		"f",
+		[new ast.Argument("a"), new ast.Argument("b")],
+		[new ast.DummyStatement, new ast.DummyStatement]
+	));
+});
+
+test("sub", () => {
+	const s = src("sub f(a, b)\n\tstatement\n\tstatement\nend sub");
+
+	expect(sub.parse(s).from()[0]).toStrictEqual(new ast.Function(
+		"f",
+		[new ast.Argument("a"), new ast.Argument("b")],
+		[new ast.DummyStatement, new ast.DummyStatement]
 	));
 });

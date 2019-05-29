@@ -8,6 +8,9 @@ export const statement: () => parser.Parser<ast.Statement> = () =>
 		assignment,
 		subCall,
 		funcCall,
+		func,
+		sub,
+		dim,
 	]);
 
 export const statements: () => parser.Parser<ast.Statement[]> = () => 
@@ -53,3 +56,38 @@ export const call: parser.Parser<ast.FunctionCall> =
 		parser.Accept("(").second(args()).first(parser.Require(")"))
 	))
 	.map(([v, a]) => new ast.FunctionCall(v, a));
+
+export const dim: parser.Parser<ast.Dim> =
+	parser.Accept("dim").second(identifier).map(name => new ast.Dim(name));
+
+export const argListArg: parser.Parser<ast.Argument> =
+	identifier.map(name => new ast.Argument(name));
+
+export const argList: () => parser.Parser<ast.Argument[]> = () =>
+	argListArg
+	.first(parser.Accept(","))
+	.then(parser.Parser.lazy(argList))
+	.map(parser.cons)
+	.or(argListArg.map(x => [x]));
+
+export const func: parser.Parser<ast.Function> =
+	parser.Accept("function")
+	.second(identifier)
+	.first(parser.Require("("))
+	.then(argList())
+	.first(parser.Require(")"))
+	.then(parser.Parser.lazy(statements))
+	.first(parser.Require("end"))
+	.first(parser.Require("function"))
+	.map(([[n, a], b]) => new ast.Function(n, a, b));
+
+export const sub: parser.Parser<ast.Function> =
+	parser.Accept("sub")
+	.second(identifier)
+	.first(parser.Require("("))
+	.then(argList())
+	.first(parser.Require(")"))
+	.then(parser.Parser.lazy(statements))
+	.first(parser.Require("end"))
+	.first(parser.Require("sub"))
+	.map(([[n, a], b]) => new ast.Function(n, a, b));

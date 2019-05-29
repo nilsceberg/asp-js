@@ -15,6 +15,7 @@ export namespace ast {
 
 	export class Variable implements LValue, Statement {
 		components: string[];
+
 		constructor(components: string[]) {
 			this.components = components;
 		}
@@ -37,6 +38,34 @@ export namespace ast {
 		constructor(lvalue: LValue, rvalue: Expr) {
 			this.lvalue = lvalue;
 			this.rvalue = rvalue;
+		}
+	}
+
+	export class Dim implements Statement {
+		name: string;
+
+		constructor(name: string) {
+			this.name = name;
+		}
+	}
+
+	export class Argument {
+		name: string;
+
+		constructor(name: string) {
+			this.name = name;
+		}
+	}
+
+	export class Function {
+		name: string;
+		args: Argument[];
+		body: Statement[];
+
+		constructor(name: string, args: Argument[], body: Statement[]) {
+			this.name = name;
+			this.args = args;
+			this.body = body;
 		}
 	}
 }
