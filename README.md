@@ -22,6 +22,7 @@ wait...!
   obj(1234689), 4
   obj(4) = 9
   ```~
+  (This is a non-issue with the new parser!)
 
 * evalFunction isn't quite how the namespaces are handled in VBScript,
   as it allows redefining a function name inside another scope and still

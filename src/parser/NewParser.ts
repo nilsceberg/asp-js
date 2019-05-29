@@ -36,3 +36,10 @@ export const lvalue: parser.Parser<ast.LValue> =
 export const assignment: parser.Parser<ast.Assignment> =
 	lvalue.first(parser.Accept("=")).then(parser.expr())
 	.map(([l, r]) => new ast.Assignment(l, r));
+
+export const subCall: parser.Parser<ast.FunctionCall> =
+	variable.then(args()).map(([v, a]) => new ast.FunctionCall(v, a));
+
+export const call: parser.Parser<ast.FunctionCall> =
+	parser.Accept("call")
+	.second(variable.then(args()).map(([v, a]) => new ast.FunctionCall(v, a)));

@@ -1,5 +1,5 @@
 import { StringSource, SourcePointer, expr, Num } from "parser-monad";
-import { statement, statements, args, identifier, variable, funcCall, assignment } from "./NewParser";
+import { statement, statements, args, identifier, variable, funcCall, assignment, subCall } from "./NewParser";
 import { ast } from "./NewAST";
 
 function src(s: string): SourcePointer {
@@ -77,5 +77,14 @@ test("assignment", () => {
 	expect(assignment.parse(s2).from()[0]).toStrictEqual(new ast.Assignment(
 		new ast.Variable(["v"]),
 		new Num(3),
+	));
+});
+
+test("sub call", () => {
+	const s = src("obj.sub (1), 2");
+
+	expect(subCall.parse(s).from()[0]).toStrictEqual(new ast.FunctionCall(
+		new ast.Variable(["obj", "sub"]),
+		[new Num(1), new Num(2)]
 	));
 });
