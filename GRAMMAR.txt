@@ -1,0 +1,25 @@
+statement = class | function | dim | assignment | subCall | call | expr
+
+class = "class" identifier statements "end" "class"
+function = "function" identifier "(" args ")" statements "end" "function"
+dim = "dim" identifier ("as" identifier)?
+
+argList = argListArg "," argList | argListArg
+argListArg = identifier
+
+assignment = lvalue "=" expr
+lvalue = variable | call
+
+funcCall = variable "(" args ")"
+args = expr | expr "," args
+call = "call" variable "(" args ")"
+
+subCall = variable args
+
+identifier = IDENTIFIER
+
+if = "if" expr "then" statements ("elseif" statements)* ("else" statements)? "end" "if"
+
+statements = (statement ":"?)*
+
+variable = identifier | identifier "." variable
