@@ -21,4 +21,14 @@ export namespace ast {
 			this.args = args;
 		}
 	}
+
+	export class Assignment {
+		lvalue: LValue;
+		rvalue: Expr;
+
+		constructor(lvalue: LValue, rvalue: Expr) {
+			this.lvalue = lvalue;
+			this.rvalue = rvalue;
+		}
+	}
 }

@@ -30,5 +30,9 @@ export const funcCall =
 	variable.then(parser.Accept("(").second(args()).first(parser.Require(")")))
 	.map(([v, a]) => new ast.FunctionCall(v, a));
 
-export const lvalue =
+export const lvalue: parser.Parser<ast.LValue> =
 	(funcCall as parser.Parser<ast.LValue>).or(variable);
+
+export const assignment: parser.Parser<ast.Assignment> =
+	lvalue.first(parser.Accept("=")).then(parser.expr())
+	.map(([l, r]) => new ast.Assignment(l, r));
