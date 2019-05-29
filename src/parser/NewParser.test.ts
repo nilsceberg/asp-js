@@ -72,6 +72,9 @@ test("args", () => {
 	expect(args().parse(s1).from()[0]).toEqual([reference[0]]);
 	expect(args().parse(s2).from()[0].toString()).toEqual(reference.toString());
 	expect(args().parse(s3).from()[0]).toEqual([reference[3]]);
+
+	const s4= src("");
+	expect(args().parse(s4).from()[0]).toEqual([]);
 });
 
 test("identifier", () => {
@@ -156,13 +159,18 @@ test("argListArg", () => {
 });
 
 test("argList", () => {
-	const s = src("arg1, arg2, arg3");
+	const s1 = src("arg1, arg2, arg3");
 
-	expect(argList().parse(s).from()[0]).toStrictEqual([
+	expect(argList().parse(s1).from()[0]).toStrictEqual([
 		new ast.Argument("arg1"),
 		new ast.Argument("arg2"),
 		new ast.Argument("arg3"),
 	]);
+
+	const s2 = src(")");
+	let [result, rest] = argList().parse(s2).from();
+	expect(result).toStrictEqual([]);
+	expect(rest.equals(")")).toBeTruthy();
 });
 
 test("function", () => {

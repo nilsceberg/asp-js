@@ -18,7 +18,16 @@ export const statements: () => parser.Parser<ast.Statement[]> = () =>
 	.first(parser.Accept(":").or(parser.Return("")))
 	.repeat());
 
-export const identifier = parser.Token(parser.Letter.then(parser.Alphanumeric.repeat().map(x => x.join(""))).map(<(p: [string, string]) => string>parser.add));
+export const isNotKeyword = (word: string): boolean =>
+	!["end"].includes(word);
+
+export const identifier = 
+	parser.Token(
+		parser.Letter
+		.then(parser.Alphanumeric.repeat().map(x => x.join("")))
+		.map(<(p: [string, string]) => string>parser.add)
+		.matches(isNotKeyword)
+	);
 
 export const variable_: () => parser.Parser<string[]> = () =>
 	identifier
@@ -35,7 +44,8 @@ export const args: () => parser.Parser<parser.Expr[]> = () =>
 	.first(parser.Accept(","))
 	.then(parser.Parser.lazy(args))
 	.map(parser.cons)
-	.or(parser.expr().map(x => [x]));
+	.or(parser.expr().map(x => [x]))
+	.or(parser.Return([]));
 
 export const funcCall =
 	variable.then(parser.Accept("(").second(args()).first(parser.Require(")")))
@@ -68,7 +78,8 @@ export const argList: () => parser.Parser<ast.Argument[]> = () =>
 	.first(parser.Accept(","))
 	.then(parser.Parser.lazy(argList))
 	.map(parser.cons)
-	.or(argListArg.map(x => [x]));
+	.or(argListArg.map(x => [x]))
+	.or(parser.Return([]));
 
 export const func: parser.Parser<ast.Function> =
 	parser.Accept("function")
