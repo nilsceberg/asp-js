@@ -1,5 +1,5 @@
 import { StringSource, SourcePointer, expr, Num } from "parser-monad";
-import { statement, statements, args, identifier, variable, funcCall, assignment, subCall } from "./NewParser";
+import { statement, statements, args, identifier, variable, funcCall, assignment, subCall, call } from "./NewParser";
 import { ast } from "./NewAST";
 
 function src(s: string): SourcePointer {
@@ -7,17 +7,53 @@ function src(s: string): SourcePointer {
 }
 
 test("statement", () => {
-	const s = src("statement");
-	expect(statement().parse(s).from()[0]).toStrictEqual("statement");
+	const s1 = src("statement");
+	expect(statement().parse(s1).from()[0]).toStrictEqual(new ast.DummyStatement);
+
+	const s2 = src("call sub (1, 2)");
+	expect(statement().parse(s2).from()[0]).toStrictEqual(
+		new ast.FunctionCall(
+			new ast.Variable(["sub"]),
+			[new Num(1), new Num(2)]
+		)
+	);
+
+	// Fun ambiguity - let's see if it works!
+	const s3 = src("sub (1), 2");
+	expect(statement().parse(s3).from()[0]).toStrictEqual(
+		new ast.FunctionCall(
+			new ast.Variable(["sub"]),
+			[new Num(1), new Num(2)]
+		)
+	);
+
+	const s4 = src("dict (1) = 2");
+	expect(statement().parse(s4).from()[0]).toStrictEqual(
+		new ast.Assignment(
+			new ast.FunctionCall(
+				new ast.Variable(["dict"]),
+				[new Num(1)]
+			),
+			new Num(2)
+		)
+	);
+
+	const s5 = src("func (1)");
+	expect(statement().parse(s5).from()[0]).toStrictEqual(
+		new ast.FunctionCall(
+			new ast.Variable(["func"]),
+			[new Num(1)]
+		)
+	);
 });
 
 test("statements", () => {
 	const s = src("statement \n statement statement : statement");
 	expect(statements().parse(s).from()[0]).toStrictEqual([
-		"statement",
-		"statement",
-		"statement",
-		"statement",
+		new ast.DummyStatement(),
+		new ast.DummyStatement(),
+		new ast.DummyStatement(),
+		new ast.DummyStatement(),
 	]);
 });
 
@@ -53,6 +89,11 @@ test("variable", () => {
 	expect(variable.parse(s1).from()[0]).toStrictEqual(new ast.Variable([
 		"first", "second", "last"
 	]));
+
+	const s2 = src("var");
+	expect(variable.parse(s2).from()[0]).toStrictEqual(new ast.Variable([
+		"var"
+	]));
 });
 
 test("function call", () => {
@@ -84,6 +125,15 @@ test("sub call", () => {
 	const s = src("obj.sub (1), 2");
 
 	expect(subCall.parse(s).from()[0]).toStrictEqual(new ast.FunctionCall(
+		new ast.Variable(["obj", "sub"]),
+		[new Num(1), new Num(2)]
+	));
+});
+
+test("call", () => {
+	const s = src("call obj.sub ((1), 2)");
+
+	expect(call.parse(s).from()[0]).toStrictEqual(new ast.FunctionCall(
 		new ast.Variable(["obj", "sub"]),
 		[new Num(1), new Num(2)]
 	));

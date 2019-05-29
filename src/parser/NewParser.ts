@@ -1,8 +1,16 @@
 import * as parser from "parser-monad";
 import { ast } from "./NewAST";
 
-export const statement = () => parser.Accept("statement");
-export const statements = () => 
+export const statement: () => parser.Parser<ast.Statement> = () =>
+	parser.Parser.orMany([
+		parser.Accept("statement").map(x => new ast.DummyStatement),
+		call,
+		assignment,
+		subCall,
+		funcCall,
+	]);
+
+export const statements: () => parser.Parser<ast.Statement[]> = () => 
 	parser.Spaces.second(statement()
 	.first(parser.Accept(":").or(parser.Return("")))
 	.repeat());
@@ -41,5 +49,7 @@ export const subCall: parser.Parser<ast.FunctionCall> =
 	variable.then(args()).map(([v, a]) => new ast.FunctionCall(v, a));
 
 export const call: parser.Parser<ast.FunctionCall> =
-	parser.Accept("call")
-	.second(variable.then(args()).map(([v, a]) => new ast.FunctionCall(v, a)));
+	parser.Accept("call").second(variable.then(
+		parser.Accept("(").second(args()).first(parser.Require(")"))
+	))
+	.map(([v, a]) => new ast.FunctionCall(v, a));

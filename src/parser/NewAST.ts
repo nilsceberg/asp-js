@@ -5,14 +5,22 @@ export namespace ast {
 
 	}
 
-	export class Variable implements LValue {
+	export interface Statement {
+
+	}
+
+	export class DummyStatement implements Statement {
+		
+	}
+
+	export class Variable implements LValue, Statement {
 		components: string[];
 		constructor(components: string[]) {
 			this.components = components;
 		}
 	}
 
-	export class FunctionCall implements LValue {
+	export class FunctionCall implements LValue, Statement {
 		variable: Variable;
 		args: Expr[];
 
@@ -22,7 +30,7 @@ export namespace ast {
 		}
 	}
 
-	export class Assignment {
+	export class Assignment implements Statement {
 		lvalue: LValue;
 		rvalue: Expr;
 
