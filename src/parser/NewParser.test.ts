@@ -1,5 +1,5 @@
 import { StringSource, SourcePointer, expr, Num } from "parser-monad";
-import { statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof } from "./NewParser";
+import { statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_ } from "./NewParser";
 import { ast } from "./NewAST";
 
 function src(s: string): SourcePointer {
@@ -82,7 +82,7 @@ test("statement", () => {
 
 test("statements", () => {
 	const s = src("statement \n statement \nstatement : statement");
-	expect(statements().parse(s).from()[0]).toStrictEqual([
+	expect(statements.parse(s).from()[0]).toStrictEqual([
 		new ast.DummyStatement(),
 		new ast.DummyStatement(),
 		new ast.DummyStatement(),
@@ -231,5 +231,17 @@ test("sub", () => {
 		"subroutine",
 		[],
 		[new ast.DummyStatement, new ast.DummyStatement]
+	));
+});
+
+test("class", () => {
+	const s1 = src("class MyClass\n\tdim a\n\tsub test :\t end sub\nend class");
+
+	expect(class_.parse(s1).from()[0]).toStrictEqual(new ast.Class(
+		"MyClass",
+		[
+			new ast.Dim("a"),
+			new ast.Function("test", [], [])
+		]
 	));
 });

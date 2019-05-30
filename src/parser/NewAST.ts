@@ -68,4 +68,14 @@ export namespace ast {
 			this.body = body;
 		}
 	}
+
+	export class Class {
+		name: string;
+		declarations: Statement[];
+
+		constructor(name: string, declarations: Statement[]) {
+			this.name = name;
+			this.declarations = declarations;
+		}
+	}
 }

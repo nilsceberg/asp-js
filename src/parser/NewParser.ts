@@ -28,13 +28,12 @@ export const statement: () => parser.Parser<ast.Statement> = () =>
 		func,
 		sub,
 		dim,
+		class_,
 	])
 	.first(eol);
 
-export const statements: () => parser.Parser<ast.Statement[]> = () => 
-	parser.Spaces.second(statement()
-	.first(parser.Accept(":").or(parser.Return("")))
-	.repeat());
+export const statements: parser.Parser<ast.Statement[]> =
+	parser.Parser.lazy(statement).repeat()
 
 export const isNotKeyword = (word: string): boolean =>
 	!["end"].includes(word);
@@ -106,7 +105,7 @@ export const func: parser.Parser<ast.Function> =
 	.then(argList())
 	.first(parser.Require(")"))
 	.first(eol)
-	.then(parser.Parser.lazy(statements))
+	.then(statements)
 	.first(parser.Require("end"))
 	.first(parser.Require("function"))
 	.map(([[n, a], b]) => new ast.Function(n, a, b));
@@ -119,7 +118,24 @@ export const sub: parser.Parser<ast.Function> =
 		[]
 	))
 	.first(eol)
-	.then(parser.Parser.lazy(statements))
+	.then(statements)
 	.first(parser.Require("end"))
 	.first(parser.Require("sub"))
 	.map(([[n, a], b]) => new ast.Function(n, a, b));
+
+export const classDecl =
+	parser.Parser.orMany([
+		func,
+		sub,
+		dim,
+	])
+	.first(eol);
+
+export const class_ =
+	parser.Accept("class")
+	.second(identifier)
+	.first(eol)
+	.then(classDecl.repeat())
+	.first(parser.Require("end"))
+	.first(parser.Require("class"))
+	.map(([n, d]) => new ast.Class(n, d));

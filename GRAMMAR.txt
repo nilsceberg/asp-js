@@ -3,6 +3,7 @@ eol = ":" | "\n" | EOF
 statement = (class | function | sub | dim | assignment | subCall | call | expr) eol
 
 class = "class" identifier eol classDecl* "end" "class"
+classDecl = (dim | function | sub) eol
 
 function = "function" identifier "(" args ")" eol statements "end" "function"
 sub = "sub" identifier ("(" args ")")? eol statements "end" "sub"
