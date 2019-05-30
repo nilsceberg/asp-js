@@ -1,9 +1,26 @@
 import * as parser from "parser-monad";
 import { ast } from "./NewAST";
 
+parser.ParserSettings.WHITESPACE = " \t";
+const EOL_CHARS = "\n:";
+
+export const eof =
+	parser.Character.or(parser.Return("")).matches(s => s == "");
+
+export const eol =
+	parser.Token(parser.Character.matches(c => EOL_CHARS.includes(c)))
+	.first(
+		parser.Character
+		.matches(c => EOL_CHARS.includes(c))
+		.first(parser.Spaces)
+		.repeat()
+	)
+	.or(eof)
+	.or(parser.Error("expected end of statement"));
+
 export const statement: () => parser.Parser<ast.Statement> = () =>
 	parser.Parser.orMany([
-		parser.Accept("statement").map(x => new ast.DummyStatement),
+		parser.Accept("statement").map(() => new ast.DummyStatement),
 		call,
 		assignment,
 		subCall,
@@ -11,7 +28,8 @@ export const statement: () => parser.Parser<ast.Statement> = () =>
 		func,
 		sub,
 		dim,
-	]);
+	])
+	.first(eol);
 
 export const statements: () => parser.Parser<ast.Statement[]> = () => 
 	parser.Spaces.second(statement()
@@ -87,6 +105,7 @@ export const func: parser.Parser<ast.Function> =
 	.first(parser.Require("("))
 	.then(argList())
 	.first(parser.Require(")"))
+	.first(eol)
 	.then(parser.Parser.lazy(statements))
 	.first(parser.Require("end"))
 	.first(parser.Require("function"))
@@ -99,6 +118,7 @@ export const sub: parser.Parser<ast.Function> =
 		parser.Accept("(").second(argList().first(parser.Require(")"))),
 		[]
 	))
+	.first(eol)
 	.then(parser.Parser.lazy(statements))
 	.first(parser.Require("end"))
 	.first(parser.Require("sub"))

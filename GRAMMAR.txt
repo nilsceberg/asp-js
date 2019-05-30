@@ -1,10 +1,11 @@
-statement = class | function | sub | dim | assignment | subCall | call | expr
+eol = ":" | "\n" | EOF
 
-class = "class" identifier classDecls "end" "class"
-classDecls
+statement = (class | function | sub | dim | assignment | subCall | call | expr) eol
 
-function = "function" identifier "(" args ")" statements "end" "function"
-sub = "sub" identifier ("(" args ")")? statements "end" "sub"
+class = "class" identifier eol classDecl* "end" "class"
+
+function = "function" identifier "(" args ")" eol statements "end" "function"
+sub = "sub" identifier ("(" args ")")? eol statements "end" "sub"
 dim = "dim" identifier ("as" identifier)?
 
 argList = argListArg "," argList | argListArg
@@ -21,8 +22,8 @@ subCall = variable args
 
 identifier = IDENTIFIER
 
-if = "if" expr "then" statements ("elseif" statements)* ("else" statements)? "end" "if"
+if = "if" expr "then" eol statements ("elseif" statements)* ("else" statements)? "end" "if"
 
-statements = (statement ":"?)*
+statements = statement*
 
 variable = identifier | identifier "." variable

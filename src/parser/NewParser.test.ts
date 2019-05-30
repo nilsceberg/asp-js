@@ -1,10 +1,43 @@
 import { StringSource, SourcePointer, expr, Num } from "parser-monad";
-import { statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub } from "./NewParser";
+import { statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof } from "./NewParser";
 import { ast } from "./NewAST";
 
 function src(s: string): SourcePointer {
 	return new SourcePointer(new StringSource(s));
 }
+
+test("eof", () => {
+	const s1 = src("text");
+	expect(eof.parse(s1).isJust()).toBeFalsy();
+
+	const s2 = src("");
+	expect(eof.parse(s2).isJust()).toBeTruthy();
+});
+
+test("eol", () => {
+	const s1 = src("text");
+	expect(() => eol.parse(s1).isJust()).toThrow();
+
+	const s2 = src("\n  next");
+	let [result, rest] = eol.parse(s2).from();
+	expect(result).toStrictEqual("\n");
+	expect(rest.equals("next"));
+
+	const s3 = src(":  next");
+	[result, rest] = eol.parse(s3).from();
+	expect(result).toStrictEqual(":");
+	expect(rest.equals("next"));
+
+	const s4 = src("");
+	[result, rest] = eol.parse(s4).from();
+	expect(result).toStrictEqual("");
+	expect(rest.equals(""));
+
+	const s5 = src(":  \n :: ");
+	[result, rest] = eol.parse(s5).from();
+	expect(result).toStrictEqual(":");
+	expect(rest.equals(""));
+});
 
 test("statement", () => {
 	const s1 = src("statement");
@@ -48,7 +81,7 @@ test("statement", () => {
 });
 
 test("statements", () => {
-	const s = src("statement \n statement statement : statement");
+	const s = src("statement \n statement \nstatement : statement");
 	expect(statements().parse(s).from()[0]).toStrictEqual([
 		new ast.DummyStatement(),
 		new ast.DummyStatement(),
