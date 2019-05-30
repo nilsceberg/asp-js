@@ -1,8 +1,10 @@
 statement = class | function | sub | dim | assignment | subCall | call | expr
 
-class = "class" identifier statements "end" "class"
+class = "class" identifier classDecls "end" "class"
+classDecls
+
 function = "function" identifier "(" args ")" statements "end" "function"
-sub = "sub" identifier "(" args ")" statements "end" "sub"
+sub = "sub" identifier ("(" args ")")? statements "end" "sub"
 dim = "dim" identifier ("as" identifier)?
 
 argList = argListArg "," argList | argListArg

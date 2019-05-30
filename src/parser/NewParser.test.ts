@@ -184,11 +184,19 @@ test("function", () => {
 });
 
 test("sub", () => {
-	const s = src("sub f(a, b)\n\tstatement\n\tstatement\nend sub");
+	const s1 = src("sub f(a, b)\n\tstatement\n\tstatement\nend sub");
 
-	expect(sub.parse(s).from()[0]).toStrictEqual(new ast.Function(
+	expect(sub.parse(s1).from()[0]).toStrictEqual(new ast.Function(
 		"f",
 		[new ast.Argument("a"), new ast.Argument("b")],
+		[new ast.DummyStatement, new ast.DummyStatement]
+	));
+
+	const s2 = src("sub subroutine\n\tstatement\n\tstatement\nend sub");
+
+	expect(sub.parse(s2).from()[0]).toStrictEqual(new ast.Function(
+		"subroutine",
+		[],
 		[new ast.DummyStatement, new ast.DummyStatement]
 	));
 });

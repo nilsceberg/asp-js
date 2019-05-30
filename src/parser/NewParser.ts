@@ -95,9 +95,10 @@ export const func: parser.Parser<ast.Function> =
 export const sub: parser.Parser<ast.Function> =
 	parser.Accept("sub")
 	.second(identifier)
-	.first(parser.Require("("))
-	.then(argList())
-	.first(parser.Require(")"))
+	.then(parser.Default(
+		parser.Accept("(").second(argList().first(parser.Require(")"))),
+		[]
+	))
 	.then(parser.Parser.lazy(statements))
 	.first(parser.Require("end"))
 	.first(parser.Require("sub"))
