@@ -57,7 +57,7 @@ export namespace ast {
 		}
 	}
 
-	export class Function {
+	export class Function implements Statement {
 		name: string;
 		args: Argument[];
 		body: Statement[];
@@ -69,13 +69,25 @@ export namespace ast {
 		}
 	}
 
-	export class Class {
+	export class Class implements Statement {
 		name: string;
 		declarations: Statement[];
 
 		constructor(name: string, declarations: Statement[]) {
 			this.name = name;
 			this.declarations = declarations;
+		}
+	}
+
+	export class If implements Statement {
+		condition: Expr;
+		body: Statement[];
+		elseBody: Statement[];
+
+		constructor(condition: Expr, body: Statement[], elseBody: Statement[]) {
+			this.condition = condition;
+			this.body = body;
+			this.elseBody = elseBody;
 		}
 	}
 }

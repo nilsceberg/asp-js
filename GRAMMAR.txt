@@ -23,7 +23,7 @@ subCall = variable args
 
 identifier = IDENTIFIER
 
-if = "if" expr "then" eol statements ("elseif" statements)* ("else" statements)? "end" "if"
+if = "if" expr "then" eol statements ("elseif" condition  "then" eol statements)* ("else" eol statements)? "end" "if"
 
 statements = statement*
 

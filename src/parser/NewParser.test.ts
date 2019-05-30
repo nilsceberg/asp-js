@@ -1,5 +1,5 @@
 import { StringSource, SourcePointer, expr, Num } from "parser-monad";
-import { statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_ } from "./NewParser";
+import { statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_, if_ } from "./NewParser";
 import { ast } from "./NewAST";
 
 function src(s: string): SourcePointer {
@@ -43,19 +43,19 @@ test("statement", () => {
 	const s1 = src("statement");
 	expect(statement().parse(s1).from()[0]).toStrictEqual(new ast.DummyStatement);
 
-	const s2 = src("call sub (1, 2)");
+	const s2 = src("call s (1, 2)");
 	expect(statement().parse(s2).from()[0]).toStrictEqual(
 		new ast.FunctionCall(
-			new ast.Variable(["sub"]),
+			new ast.Variable(["s"]),
 			[new Num(1), new Num(2)]
 		)
 	);
 
 	// Fun ambiguity - let's see if it works!
-	const s3 = src("sub (1), 2");
+	const s3 = src("s (1), 2");
 	expect(statement().parse(s3).from()[0]).toStrictEqual(
 		new ast.FunctionCall(
-			new ast.Variable(["sub"]),
+			new ast.Variable(["s"]),
 			[new Num(1), new Num(2)]
 		)
 	);
@@ -158,19 +158,19 @@ test("assignment", () => {
 });
 
 test("sub call", () => {
-	const s = src("obj.sub (1), 2");
+	const s = src("obj.s (1), 2");
 
 	expect(subCall.parse(s).from()[0]).toStrictEqual(new ast.FunctionCall(
-		new ast.Variable(["obj", "sub"]),
+		new ast.Variable(["obj", "s"]),
 		[new Num(1), new Num(2)]
 	));
 });
 
 test("call", () => {
-	const s = src("call obj.sub ((1), 2)");
+	const s = src("call obj.s ((1), 2)");
 
 	expect(call.parse(s).from()[0]).toStrictEqual(new ast.FunctionCall(
-		new ast.Variable(["obj", "sub"]),
+		new ast.Variable(["obj", "s"]),
 		[new Num(1), new Num(2)]
 	));
 });
@@ -242,6 +242,30 @@ test("class", () => {
 		[
 			new ast.Dim("a"),
 			new ast.Function("test", [], [])
+		]
+	));
+});
+
+test("if", () => {
+	const s1 = src("if 1 then\nstatement\nelseif 2 then\nelseif 3 then\nelse\nend if");
+
+	expect(if_.parse(s1).from()[0]).toStrictEqual(new ast.If(
+		new Num(1),
+		[
+			new ast.DummyStatement
+		],
+		[
+			new ast.If(
+				new Num(2),
+				[],
+				[
+					new ast.If(
+						new Num(3),
+						[],
+						[]
+					)
+				]
+			)
 		]
 	));
 });

@@ -5,7 +5,7 @@ parser.ParserSettings.WHITESPACE = " \t";
 const EOL_CHARS = "\n:";
 
 export const eof =
-	parser.Character.or(parser.Return("")).matches(s => s == "");
+	parser.Character.or(parser.Return("")).matches(s => s === "");
 
 export const eol =
 	parser.Token(parser.Character.matches(c => EOL_CHARS.includes(c)))
@@ -29,14 +29,28 @@ export const statement: () => parser.Parser<ast.Statement> = () =>
 		sub,
 		dim,
 		class_,
+		if_,
 	])
 	.first(eol);
 
 export const statements: parser.Parser<ast.Statement[]> =
 	parser.Parser.lazy(statement).repeat()
 
+export const KEYWORDS: string[] = [
+	"if",
+	"elseif",
+	"else",
+	"function",
+	"sub",
+	"call",
+	"class",
+	"end",
+	"new",
+	"dim",
+];
+
 export const isNotKeyword = (word: string): boolean =>
-	!["end"].includes(word);
+	!KEYWORDS.includes(word);
 
 export const identifier = 
 	parser.Token(
@@ -139,3 +153,30 @@ export const class_ =
 	.first(parser.Require("end"))
 	.first(parser.Require("class"))
 	.map(([n, d]) => new ast.Class(n, d));
+
+export const elseif: () => parser.Parser<ast.Statement[]> = () =>
+	parser.Accept("elseif")
+	.second(parser.expr())
+	.first(parser.Require("then"))
+	.first(eol)
+	.then(statements)
+	.then(
+		parser.Parser.lazy(elseif)
+		.or(parser.Accept("else").first(eol).second(statements))
+	)
+	.map(([[c, b], e]) => [new ast.If(c, b, e)])
+
+export const if_: parser.Parser<ast.If> =
+	parser.Accept("if")
+	.second(parser.expr())
+	.first(parser.Require("then"))
+	.first(eol)
+	.then(statements)
+	.then(
+		elseif()
+		.or(parser.Accept("else").first(eol).second(statements))
+	)
+	.first(parser.Require("end"))
+	.first(parser.Require("if"))
+	.map(([[c, s], e]) => new ast.If(c, s, e));
+
