@@ -28,4 +28,13 @@ describe("string", () => {
 		);
 		expect(rest.equals("")).toBeTruthy();
 	});
+
+	test("escaped quotes", () => {
+		const s = src('"hello ""world""!"');
+		const [result, rest] = str.parse(s).from();
+		expect(result).toEqual(
+			new ast.expr.String('hello "world"!')
+		);
+		expect(rest.equals("")).toBeTruthy();
+	});
 });
