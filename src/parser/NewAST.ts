@@ -1,4 +1,5 @@
 import { Expr } from "parser-monad";
+import { strict } from "assert";
 
 export namespace ast {
 	export interface LValue {
@@ -88,6 +89,24 @@ export namespace ast {
 			this.condition = condition;
 			this.body = body;
 			this.elseBody = elseBody;
+		}
+	}
+
+	export namespace expr {
+		export interface Expr {
+			value(): any;
+		}
+
+		export class String implements Expr {
+			str: string;
+
+			constructor(str: string) {
+				this.str = str;
+			}
+
+			value(): string {
+				return this.str;
+			}
 		}
 	}
 }

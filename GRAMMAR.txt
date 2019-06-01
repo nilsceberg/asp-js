@@ -1,3 +1,5 @@
+# Syntax
+
 eol = ":" | "\n" | EOF
 
 statement = (class | function | sub | dim | assignment | subCall | call | expr) eol
@@ -28,3 +30,9 @@ if = "if" expr "then" eol statements ("elseif" condition  "then" eol statements)
 statements = statement*
 
 variable = identifier | identifier "." variable
+
+
+# Literals
+
+string = "\"" stringChar* "\""
+stringChar = . | ("\"\"" -> "\"")
