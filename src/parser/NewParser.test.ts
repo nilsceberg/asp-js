@@ -96,10 +96,10 @@ test("args", () => {
 	const s3 = src("0");
 
 	const reference = [
-		expr().parse(src("3")).from()[0],
-		expr().parse(src("4 + 1")).from()[0],
-		expr().parse(src("(4+2)*3")).from()[0],
-		expr().parse(src("0")).from()[0],
+		expr.parse(src("3")).from()[0],
+		expr.parse(src("4 + 1")).from()[0],
+		expr.parse(src("(4+2)*3")).from()[0],
+		expr.parse(src("0")).from()[0],
 	];
 
 	expect(args().parse(s1).from()[0]).toEqual([reference[0]]);

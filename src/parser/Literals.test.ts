@@ -1,5 +1,5 @@
 import { SourcePointer, StringSource } from "parser-monad";
-import { str, strChar } from "./ExprParser";
+import { str, strChar } from "./Literals";
 import { ast } from "./NewAST";
 
 function src(s: string): SourcePointer {

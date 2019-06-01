@@ -71,11 +71,11 @@ export const variable: parser.Parser<ast.Variable> =
 	variable_().map(components => new ast.Variable(components));
 
 export const args: () => parser.Parser<parser.Expr[]> = () =>
-	parser.expr()
+	parser.expr
 	.first(parser.Accept(","))
 	.then(parser.Parser.lazy(args))
 	.map(parser.cons)
-	.or(parser.expr().map(x => [x]))
+	.or(parser.expr.map(x => [x]))
 	.or(parser.Return([]));
 
 export const funcCall =
@@ -86,7 +86,7 @@ export const lvalue: parser.Parser<ast.LValue> =
 	(funcCall as parser.Parser<ast.LValue>).or(variable);
 
 export const assignment: parser.Parser<ast.Assignment> =
-	lvalue.first(parser.Accept("=")).then(parser.expr())
+	lvalue.first(parser.Accept("=")).then(parser.expr)
 	.map(([l, r]) => new ast.Assignment(l, r));
 
 export const subCall: parser.Parser<ast.FunctionCall> =
@@ -156,7 +156,7 @@ export const class_ =
 
 export const elseif: () => parser.Parser<ast.Statement[]> = () =>
 	parser.Accept("elseif")
-	.second(parser.expr())
+	.second(parser.expr)
 	.first(parser.Require("then"))
 	.first(eol)
 	.then(statements)
@@ -168,7 +168,7 @@ export const elseif: () => parser.Parser<ast.Statement[]> = () =>
 
 export const if_: parser.Parser<ast.If> =
 	parser.Accept("if")
-	.second(parser.expr())
+	.second(parser.expr)
 	.first(parser.Require("then"))
 	.first(eol)
 	.then(statements)
