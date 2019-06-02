@@ -1,5 +1,6 @@
 import * as parser from "parser-monad";
 import { ast } from "./NewAST";
+import { exprParser } from "parser-monad";
 
 parser.ParserSettings.WHITESPACE = " \t";
 const EOL_CHARS = "\n:";
@@ -17,6 +18,63 @@ export const eol =
 	)
 	.or(eof)
 	.or(parser.Error("expected end of statement"));
+
+const id = (x: any) => x;
+const negate = (x: number) => -x;
+
+export const sign =
+	parser.Token(parser.Lit("-")).map(_ => negate)
+	.or(parser.Token(parser.Lit("+")).map(_ => id))
+	.or(parser.Return(id));
+
+export const integer: parser.Parser<ast.expr.Number> =
+	sign.bind(f => parser.Token(parser.Integer).map(x => new ast.expr.Number(f(x))));
+	
+function op (Binary: new (left: ast.Expr, right: ast.Expr) => ast.Expr): (left: ast.Expr, right: ast.Expr) => ast.Expr {
+	return (left, right) => new Binary(left, right);
+}
+
+// The order of evaluation is from here: https://www.guru99.com/vbscript-operators-constants.html
+// Might not be the most credible of sources...
+export const expr: parser.Parser<ast.Expr> = parser.Parser.lazy(() => exprParser(
+	[
+		{
+			"^": op(ast.expr.Pow),
+		},
+		{ // TODO: are these actually not of the same precedence?
+			"*": op(ast.expr.Mul),
+			"/": op(ast.expr.Div),
+		},
+		{
+			"+": op(ast.expr.Add),
+			"-": op(ast.expr.Sub),
+		},
+		{
+			"%": op(ast.expr.Mod),
+		},
+		{
+			"&": op(ast.expr.Concat),
+		},
+		{
+			"<=": op(ast.expr.LessThanOrEqual),
+			">=": op(ast.expr.GreaterThanOrEqual),
+			"<>": op(ast.expr.NotEqual),
+			"=": op(ast.expr.Equal),
+			"<": op(ast.expr.LessThan),
+			">": op(ast.expr.GreaterThan),
+		},
+		{
+			"and": op(ast.expr.And),
+		},
+		{
+			"or": op(ast.expr.Or),
+		},
+		{
+			"xor": op(ast.expr.Xor),
+		},
+	],
+	[integer]
+));
 
 export const statement: () => parser.Parser<ast.Statement> = () =>
 	parser.Parser.orMany([
@@ -70,12 +128,12 @@ export const variable_: () => parser.Parser<string[]> = () =>
 export const variable: parser.Parser<ast.Variable> =
 	variable_().map(components => new ast.Variable(components));
 
-export const args: () => parser.Parser<parser.Expr[]> = () =>
-	parser.expr
+export const args: () => parser.Parser<ast.Expr[]> = () =>
+	expr
 	.first(parser.Accept(","))
 	.then(parser.Parser.lazy(args))
 	.map(parser.cons)
-	.or(parser.expr.map(x => [x]))
+	.or(expr.map(x => [x]))
 	.or(parser.Return([]));
 
 export const funcCall =
@@ -86,7 +144,7 @@ export const lvalue: parser.Parser<ast.LValue> =
 	(funcCall as parser.Parser<ast.LValue>).or(variable);
 
 export const assignment: parser.Parser<ast.Assignment> =
-	lvalue.first(parser.Accept("=")).then(parser.expr)
+	lvalue.first(parser.Accept("=")).then(expr)
 	.map(([l, r]) => new ast.Assignment(l, r));
 
 export const subCall: parser.Parser<ast.FunctionCall> =
@@ -156,7 +214,7 @@ export const class_ =
 
 export const elseif: () => parser.Parser<ast.Statement[]> = () =>
 	parser.Accept("elseif")
-	.second(parser.expr)
+	.second(expr)
 	.first(parser.Require("then"))
 	.first(eol)
 	.then(statements)
@@ -168,7 +226,7 @@ export const elseif: () => parser.Parser<ast.Statement[]> = () =>
 
 export const if_: parser.Parser<ast.If> =
 	parser.Accept("if")
-	.second(parser.expr)
+	.second(expr)
 	.first(parser.Require("then"))
 	.first(eol)
 	.then(statements)
