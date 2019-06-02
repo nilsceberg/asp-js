@@ -31,6 +31,8 @@ statements = statement*
 
 variable = identifier | identifier "." variable
 
+new = "new" variable    # TODO: should this simply be identifier?
+
 
 # Literals
 

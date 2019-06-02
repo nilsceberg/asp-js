@@ -36,6 +36,22 @@ export namespace ast {
 			}
 		}
 
+		export class New implements Expr {
+			what: ast.Variable;
+
+			constructor(what: ast.Variable) {
+				this.what = what;
+			}
+
+			toString(): string {
+				return `new ${this.what.toString()}`;
+			}
+
+			value(): any {
+				throw "new not implemented";
+			}
+		}
+
 		export class Boolean implements Expr {
 			val: boolean;
 
@@ -237,6 +253,10 @@ export namespace ast {
 
 		value(): any {
 			throw "variables not implemented";
+		}
+
+		toString() {
+			return this.components.join(".");
 		}
 	}
 

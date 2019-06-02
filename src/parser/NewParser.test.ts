@@ -117,6 +117,18 @@ describe("expression", () => {
 			)
 		);
 	});
+
+	test("new", () => {
+		const s = src("3 + new ADODB.Connection");
+		expect(expr.parse(s).from()[0]).toStrictEqual(
+			new ast.expr.Add(
+				new ast.expr.Number(3),
+				new ast.expr.New(
+					new ast.Variable(["ADODB", "Connection"])
+				)
+			)
+		);
+	});
 });
 
 test("statement", () => {

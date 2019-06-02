@@ -73,7 +73,7 @@ export const expr: parser.Parser<ast.Expr> = parser.Parser.lazy(() => parser.exp
 			"xor": op(ast.expr.Xor),
 		},
 	],
-	[nothing, empty, null_, str, funcCall, variable, integer]
+	[nothing, empty, null_, new_, str, funcCall, variable, integer]
 ));
 
 export const statement: () => parser.Parser<ast.Statement> = () =>
@@ -127,6 +127,11 @@ export const variable_: () => parser.Parser<string[]> = () =>
 
 export const variable: parser.Parser<ast.Variable> =
 	variable_().map(components => new ast.Variable(components));
+
+export const new_: parser.Parser<ast.expr.New> =
+	parser.Accept("new")
+	.second(variable)
+	.map(v => new ast.expr.New(v));
 
 export const args: () => parser.Parser<ast.Expr[]> = () =>
 	expr
