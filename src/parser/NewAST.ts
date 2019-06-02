@@ -319,9 +319,11 @@ export namespace ast {
 
 	export class Dim implements Statement {
 		name: string;
+		length: number;
 
-		constructor(name: string) {
+		constructor(name: string, length: number) {
 			this.name = name;
+			this.length = length;
 		}
 	}
 

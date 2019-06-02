@@ -1,6 +1,7 @@
 import * as parser from "parser-monad";
 import { ast } from "./NewAST";
 import { nothing, empty, null_, str, boolean } from "./Literals";
+import { thisExpression } from "@babel/types";
 
 parser.ParserSettings.WHITESPACE = " \t";
 const EOL_CHARS = "\n:";
@@ -97,7 +98,6 @@ export const statement: () => parser.Parser<ast.Statement> = () =>
 		call,
 		assignment,
 		subCall,
-		funcCall,
 		func,
 		sub,
 		dim,
@@ -181,7 +181,15 @@ export const call: parser.Parser<ast.FunctionCall> =
 	.map(([v, a]) => new ast.FunctionCall(v, a));
 
 export const dim: parser.Parser<ast.Dim> =
-	parser.Accept("dim").second(identifier).map(name => new ast.Dim(name));
+	parser.Accept("dim")
+	.second(identifier)
+	.then(
+		parser.Accept("(")
+		.second(parser.Integer)
+		.first(parser.Require(")"))
+		.or(parser.Return(-1))
+		)
+	.map(([name, length]) => new ast.Dim(name, length));
 
 export const argListArg: parser.Parser<ast.Argument> =
 	identifier.map(name => new ast.Argument(name));
@@ -197,9 +205,10 @@ export const argList: () => parser.Parser<ast.Argument[]> = () =>
 export const func: parser.Parser<ast.Function> =
 	parser.Accept("function")
 	.second(identifier)
-	.first(parser.Require("("))
-	.then(argList())
-	.first(parser.Require(")"))
+	.then(parser.Default(
+		parser.Accept("(").second(argList().first(parser.Require(")"))),
+		[]
+	))
 	.first(eol)
 	.then(statements)
 	.first(parser.Require("end"))
@@ -219,15 +228,15 @@ export const sub: parser.Parser<ast.Function> =
 	.first(parser.Require("sub"))
 	.map(([[n, a], b]) => new ast.Function(n, a, b));
 
-export const classDecl =
-	parser.Parser.orMany([
+export const classDecl: parser.Parser<ast.Statement> =
+	parser.Parser.orMany<ast.Statement>([
 		func,
 		sub,
 		dim,
 	])
 	.first(eol);
 
-export const class_ =
+export const class_: parser.Parser<ast.Class> =
 	parser.Accept("class")
 	.second(identifier)
 	.first(eol)

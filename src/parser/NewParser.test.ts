@@ -177,12 +177,12 @@ test("statement", () => {
 		)
 	);
 
-	const s4 = src("dict (1) = 2");
+	const s4 = src("dict (1, 2) = 2");
 	expect(statement().parse(s4).from()[0]).toStrictEqual(
 		new ast.Assignment(
 			new ast.FunctionCall(
 				new ast.Variable(["dict"]),
-				[new ast.expr.Number(1)]
+				[new ast.expr.Number(1), new ast.expr.Number(2)]
 			),
 			new ast.expr.Number(2)
 		)
@@ -195,6 +195,10 @@ test("statement", () => {
 			[new ast.expr.Number(1)]
 		)
 	);
+
+	// This is not allowed
+	const s6 = src("func (1, 3)");
+	expect(() => statement().parse(s6)).toThrow();
 });
 
 test("statements", () => {
@@ -300,12 +304,23 @@ test("call", () => {
 	));
 });
 
-test("dim", () => {
-	const s = src("dim hello");
+describe("dim", () => {
+	test("scalar", () => {
+		const s = src("dim hello");
 
-	expect(dim.parse(s).from()[0]).toStrictEqual(new ast.Dim(
-		"hello"
-	));
+		expect(dim.parse(s).from()[0]).toStrictEqual(new ast.Dim(
+			"hello",
+			-1
+		));
+	});
+	test("array", () => {
+		const s = src("dim hello(4)");
+
+		expect(dim.parse(s).from()[0]).toStrictEqual(new ast.Dim(
+			"hello",
+			4
+		));
+	});
 });
 
 test("argListArg", () => {
@@ -331,32 +346,48 @@ test("argList", () => {
 	expect(rest.equals(")")).toBeTruthy();
 });
 
-test("function", () => {
-	const s = src("function f(a, b)\n\tstatement\n\tstatement\nend function");
+describe("function", () => {
+	test("with args", () => {
+		const s = src("function f(a, b)\n\tstatement\n\tstatement\nend function");
 
-	expect(func.parse(s).from()[0]).toStrictEqual(new ast.Function(
-		"f",
-		[new ast.Argument("a"), new ast.Argument("b")],
-		[new ast.DummyStatement, new ast.DummyStatement]
-	));
+		expect(func.parse(s).from()[0]).toStrictEqual(new ast.Function(
+			"f",
+			[new ast.Argument("a"), new ast.Argument("b")],
+			[new ast.DummyStatement, new ast.DummyStatement]
+		));
+	});
+
+	test("without args", () => {
+		const s = src("function f\n\tstatement\n\tstatement\nend function");
+
+		expect(func.parse(s).from()[0]).toStrictEqual(new ast.Function(
+			"f",
+			[],
+			[new ast.DummyStatement, new ast.DummyStatement]
+		));
+	});
 });
 
-test("sub", () => {
-	const s1 = src("sub f(a, b)\n\tstatement\n\tstatement\nend sub");
+describe("sub", () => {
+	test("with args", () => {
+		const s1 = src("sub f(a, b)\n\tstatement\n\tstatement\nend sub");
 
-	expect(sub.parse(s1).from()[0]).toStrictEqual(new ast.Function(
-		"f",
-		[new ast.Argument("a"), new ast.Argument("b")],
-		[new ast.DummyStatement, new ast.DummyStatement]
-	));
+		expect(sub.parse(s1).from()[0]).toStrictEqual(new ast.Function(
+			"f",
+			[new ast.Argument("a"), new ast.Argument("b")],
+			[new ast.DummyStatement, new ast.DummyStatement]
+		));
+	});
 
-	const s2 = src("sub subroutine\n\tstatement\n\tstatement\nend sub");
+	test("without args", () => {
+		const s2 = src("sub subroutine\n\tstatement\n\tstatement\nend sub");
 
-	expect(sub.parse(s2).from()[0]).toStrictEqual(new ast.Function(
-		"subroutine",
-		[],
-		[new ast.DummyStatement, new ast.DummyStatement]
-	));
+		expect(sub.parse(s2).from()[0]).toStrictEqual(new ast.Function(
+			"subroutine",
+			[],
+			[new ast.DummyStatement, new ast.DummyStatement]
+		));
+	});
 });
 
 test("class", () => {
@@ -365,7 +396,7 @@ test("class", () => {
 	expect(class_.parse(s1).from()[0]).toStrictEqual(new ast.Class(
 		"MyClass",
 		[
-			new ast.Dim("a"),
+			new ast.Dim("a", -1),
 			new ast.Function("test", [], [])
 		]
 	));

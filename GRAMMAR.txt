@@ -1,4 +1,10 @@
-# Syntax
+This document is roughly a reflection of what is actually implemented.
+It is updated as things are added, but note that it's updated before the change
+is made to the code. Thus it may list a few things that are not implemented yet.
+These things *should* be marked with "TODO", but may not be.
+
+
+### General Syntax ###
 
 eol = ":" | "\n" | EOF
 
@@ -7,9 +13,9 @@ statement = (class | function | sub | dim | assignment | subCall | call | exit) 
 class = "class" identifier eol classDecl* "end" "class"
 classDecl = (dim | function | sub) eol
 
-function = "function" identifier "(" args ")" eol statements "end" "function"
+function = "function" identifier ("(" args ")")? eol statements "end" "function"
 sub = "sub" identifier ("(" args ")")? eol statements "end" "sub"
-dim = "dim" identifier ("(" integer ")")?
+dim = "dim" identifier ("(" integer ")")? ("," identifier ("(" integer ")")?)* # TODO
 
 argList = argListArg "," argList | argListArg
 argListArg = identifier
@@ -24,7 +30,8 @@ call = "call" variable "(" args ")"
 
 subCall = variable args
 
-exit = "exit" ("function" | "sub")
+exit = "exit" ("function" | "sub") # TODO
+
 
 identifier = IDENTIFIER
 
@@ -37,7 +44,7 @@ variable = identifier | identifier "." variable
 new = "new" variable    # TODO: should this simply be identifier?
 
 
-# Literals
+### Literals ###
 
 string = "\"" stringChar* "\""
 stringChar = . | ("\"\"" -> "\"")
