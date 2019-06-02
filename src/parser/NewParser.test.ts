@@ -401,27 +401,44 @@ test("class", () => {
 		]
 	));
 });
-
-test("if", () => {
-	const s1 = src("if 1 then\nstatement\nelseif 2 then\nelseif 3 then\nelse\nend if");
-
-	expect(if_.parse(s1).from()[0]).toStrictEqual(new ast.If(
-		new ast.expr.Number(1),
-		[
-			new ast.DummyStatement
-		],
-		[
+describe("if", () => {
+	test("simple", () => {
+		const s = src("if x < y then\nstatement\nend if");
+		expect(if_.parse(s).from()[0]).toStrictEqual(
 			new ast.If(
-				new ast.expr.Number(2),
-				[],
+				new ast.expr.LessThan(
+					new ast.Variable(["x"]),
+					new ast.Variable(["y"])
+				),
 				[
-					new ast.If(
-						new ast.expr.Number(3),
-						[],
-						[]
-					)
-				]
+					new ast.DummyStatement
+				],
+				[]
 			)
-		]
-	));
+		)
+	});
+
+	test("elseif, else", () => {
+		const s1 = src("if 1 then\nstatement\nelseif 2 then\nelseif 3 then\nelse\nend if");
+
+		expect(if_.parse(s1).from()[0]).toStrictEqual(new ast.If(
+			new ast.expr.Number(1),
+			[
+				new ast.DummyStatement
+			],
+			[
+				new ast.If(
+					new ast.expr.Number(2),
+					[],
+					[
+						new ast.If(
+							new ast.expr.Number(3),
+							[],
+							[]
+						)
+					]
+				)
+			]
+		));
+	});
 });

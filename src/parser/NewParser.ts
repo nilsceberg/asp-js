@@ -9,7 +9,7 @@ const EOL_CHARS = "\n:";
 export const eof =
 	parser.Character.or(parser.Return("")).matches(s => s === "");
 
-export const eol =
+const optionalEol =
 	parser.Token(parser.Character.matches(c => EOL_CHARS.includes(c)))
 	.first(
 		parser.Character
@@ -17,6 +17,9 @@ export const eol =
 		.first(parser.Spaces)
 		.repeat()
 	)
+
+export const eol =
+	optionalEol
 	.or(eof)
 	.or(parser.Error("expected end of statement"));
 
@@ -266,8 +269,14 @@ export const if_: parser.Parser<ast.If> =
 	.then(
 		elseif()
 		.or(parser.Accept("else").first(eol).second(statements))
+		.or(parser.Return([]))
 	)
 	.first(parser.Require("end"))
 	.first(parser.Require("if"))
 	.map(([[c, s], e]) => new ast.If(c, s, e));
 
+export const script =
+	parser.Spaces
+	.then(optionalEol.repeat())
+	.second(statements)
+	.first(eof.or(parser.Error("expected end of file")));

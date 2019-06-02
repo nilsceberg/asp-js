@@ -1,3 +1,5 @@
+import * as util from "util";
+
 export namespace ast {
 	// TODO: sort these values out
 	export const TRUE = -1;
@@ -7,15 +9,23 @@ export namespace ast {
 
 	}
 
-	export interface Expr extends Statement {
-		value(): any;
+	export abstract class Expr {
+		abstract value(): any;
+
+		[util.inspect.custom](depth: number, opts: any): string {
+			return this.toString();
+		}
+	}
+
+	export abstract class Value extends Expr {
 	}
 
 	export namespace expr {
-		export class String implements Expr {
+		export class String extends Value {
 			str: string;
 
 			constructor(str: string) {
+				super();
 				this.str = str;
 			}
 
@@ -24,10 +34,11 @@ export namespace ast {
 			}
 		}
 		
-		export class Number implements Expr {
+		export class Number extends Value {
 			val: number;
 
 			constructor(val: number) {
+				super();
 				this.val = val;
 			}
 
@@ -40,10 +51,11 @@ export namespace ast {
 			}
 		}
 
-		export class New implements Expr {
+		export class New extends Expr {
 			what: ast.Variable;
 
 			constructor(what: ast.Variable) {
+				super();
 				this.what = what;
 			}
 
@@ -56,10 +68,11 @@ export namespace ast {
 			}
 		}
 
-		export class Boolean implements Expr {
+		export class Boolean extends Value {
 			val: boolean;
 
 			constructor(val: boolean) {
+				super();
 				this.val = val;
 			}
 
@@ -73,7 +86,7 @@ export namespace ast {
 			}
 		}
 
-		export class Nothing implements Expr {
+		export class Nothing extends Value {
 			value() {
 				throw "'nothing' not implemented";
 			}
@@ -83,7 +96,7 @@ export namespace ast {
 			}
 		}
 
-		export class Empty implements Expr {
+		export class Empty extends Value {
 			value() {
 				throw "'empty' not implemented";
 			}
@@ -93,7 +106,7 @@ export namespace ast {
 			}
 		}
 
-		export class Null implements Expr {
+		export class Null extends Value {
 			value() {
 				throw "'null' not implemented";
 			}
@@ -103,11 +116,12 @@ export namespace ast {
 			}
 		}
 
-		export abstract class Binary implements Expr {
+		export abstract class Binary extends Expr {
 			left: Expr;
 			right: Expr;
 
 			constructor(left: Expr, right: Expr) {
+				super();
 				this.left = left;
 				this.right = right;
 			}
@@ -127,10 +141,11 @@ export namespace ast {
 			protected abstract op(left: any, right: any): any;
 		}
 
-		export abstract class Unary implements Expr {
+		export abstract class Unary extends Expr {
 			arg: Expr;
 
 			constructor(arg: Expr) {
+				super();
 				this.arg = arg;
 			}
 
@@ -277,10 +292,11 @@ export namespace ast {
 		
 	}
 
-	export class Variable implements LValue, Expr {
+	export class Variable extends Expr implements LValue {
 		components: string[];
 
 		constructor(components: string[]) {
+			super();
 			this.components = components;
 		}
 
@@ -293,11 +309,12 @@ export namespace ast {
 		}
 	}
 
-	export class FunctionCall implements LValue, Expr {
+	export class FunctionCall extends Expr implements LValue {
 		variable: Variable;
 		args: Expr[];
 
 		constructor(variable: Variable, args: Expr[]) {
+			super();
 			this.variable = variable;
 			this.args = args;
 		}
