@@ -88,6 +88,7 @@ export const statement: () => parser.Parser<ast.Statement> = () =>
 		dim,
 		class_,
 		if_,
+		set,
 	])
 	.first(eol);
 
@@ -151,6 +152,9 @@ export const lvalue: parser.Parser<ast.LValue> =
 export const assignment: parser.Parser<ast.Assignment> =
 	lvalue.first(parser.Accept("=")).then(expr)
 	.map(([l, r]) => new ast.Assignment(l, r));
+
+export const set: parser.Parser<ast.Assignment> =
+	parser.Accept("set").second(assignment);
 
 export const subCall: parser.Parser<ast.FunctionCall> =
 	variable.then(args()).map(([v, a]) => new ast.FunctionCall(v, a));

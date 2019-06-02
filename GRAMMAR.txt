@@ -16,6 +16,7 @@ argListArg = identifier
 
 assignment = lvalue "=" expr
 lvalue = variable | funcCall
+set = "set" assignment
 
 funcCall = variable "(" args ")"
 args = expr | expr "," args
