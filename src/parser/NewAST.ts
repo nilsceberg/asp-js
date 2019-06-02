@@ -36,6 +36,53 @@ export namespace ast {
 			}
 		}
 
+		export class Boolean implements Expr {
+			val: boolean;
+
+			constructor(val: boolean) {
+				this.val = val;
+			}
+
+			value(): number {
+				// TODO: correct?
+				return this.val ? 1 : 0;
+			}
+
+			toString(): string {
+				return this.val ? "true" : "false";
+			}
+		}
+
+		export class Nothing implements Expr {
+			value() {
+				throw "'nothing' not implemented";
+			}
+
+			toString(): string {
+				return "nothing";
+			}
+		}
+
+		export class Empty implements Expr {
+			value() {
+				throw "'empty' not implemented";
+			}
+
+			toString(): string {
+				return "empty";
+			}
+		}
+
+		export class Null implements Expr {
+			value() {
+				throw "'null' not implemented";
+			}
+
+			toString(): string {
+				return "null";
+			}
+		}
+
 		export abstract class Binary implements Expr {
 			left: Expr;
 			right: Expr;
@@ -181,11 +228,15 @@ export namespace ast {
 		
 	}
 
-	export class Variable implements LValue, Statement {
+	export class Variable implements LValue, Expr {
 		components: string[];
 
 		constructor(components: string[]) {
 			this.components = components;
+		}
+
+		value(): any {
+			throw "variables not implemented";
 		}
 	}
 

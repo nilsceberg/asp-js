@@ -1,6 +1,6 @@
 import * as parser from "parser-monad";
 import { ast } from "./NewAST";
-import { exprParser } from "parser-monad";
+import { nothing, empty, null_, str } from "./Literals";
 
 parser.ParserSettings.WHITESPACE = " \t";
 const EOL_CHARS = "\n:";
@@ -36,7 +36,7 @@ function op (Binary: new (left: ast.Expr, right: ast.Expr) => ast.Expr): (left: 
 
 // The order of evaluation is from here: https://www.guru99.com/vbscript-operators-constants.html
 // Might not be the most credible of sources...
-export const expr: parser.Parser<ast.Expr> = parser.Parser.lazy(() => exprParser(
+export const expr: parser.Parser<ast.Expr> = parser.Parser.lazy(() => parser.exprParser(
 	[
 		{
 			"^": op(ast.expr.Pow),
@@ -73,7 +73,7 @@ export const expr: parser.Parser<ast.Expr> = parser.Parser.lazy(() => exprParser
 			"xor": op(ast.expr.Xor),
 		},
 	],
-	[integer]
+	[nothing, empty, null_, str, funcCall, variable, integer]
 ));
 
 export const statement: () => parser.Parser<ast.Statement> = () =>

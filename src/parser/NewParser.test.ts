@@ -69,6 +69,54 @@ describe("expression", () => {
 		const s2 = src("3 + 4 - (-2 * 3) = 13 and 3 > 4");
 		expect(expr.parse(s2).from()[0].value()).toBeFalsy();
 	});
+
+	test("variable", () => {
+		const s = src("x + obj.myVar");
+		expect(expr.parse(s).from()[0]).toStrictEqual(
+			new ast.expr.Add(
+				new ast.Variable(["x"]),
+				new ast.Variable(["obj", "myVar"])
+			)
+		)
+	});
+
+	test("function call", () => {
+		const s = src("3 * (obj.f(4, 1) + 2)");
+		expect(expr.parse(s).from()[0]).toStrictEqual(
+			new ast.expr.Mul(
+				new ast.expr.Number(3),
+				new ast.expr.Add(
+					new ast.FunctionCall(
+						new ast.Variable(["obj", "f"]),
+						[
+							new ast.expr.Number(4),
+							new ast.expr.Number(1)
+						]
+					),
+					new ast.expr.Number(2),
+				)
+			)
+		)
+	});
+
+	test("literals", () => {
+		const s = src('1 + nothing + empty + null + "hello ""world"""');
+		expect(expr.parse(s).from()[0]).toStrictEqual(
+			new ast.expr.Add(
+				new ast.expr.Add(
+					new ast.expr.Add(
+						new ast.expr.Add(
+							new ast.expr.Number(1),
+							new ast.expr.Nothing
+						),
+						new ast.expr.Empty
+					),
+					new ast.expr.Null
+				),
+				new ast.expr.String('hello "world"')
+			)
+		);
+	});
 });
 
 test("statement", () => {
