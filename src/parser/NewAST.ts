@@ -6,7 +6,7 @@ export namespace ast {
 	export const FALSE = 0;
 
 	export interface Statement {
-
+		subStatements(): Statement[];
 	}
 
 	export abstract class Expr {
@@ -289,7 +289,9 @@ export namespace ast {
 	}
 
 	export class DummyStatement implements Statement {
-		
+		subStatements(): Statement[] {
+			return [];
+		}
 	}
 
 	export class Variable extends Expr implements LValue {
@@ -309,7 +311,7 @@ export namespace ast {
 		}
 	}
 
-	export class FunctionCall extends Expr implements LValue {
+	export class FunctionCall extends Expr implements LValue, Statement {
 		variable: Variable;
 		args: Expr[];
 
@@ -322,6 +324,10 @@ export namespace ast {
 		value(): any {
 			throw "functions not implemented";
 		}
+
+		subStatements(): Statement[] {
+			return [];
+		}
 	}
 
 	export class Assignment implements Statement {
@@ -332,6 +338,10 @@ export namespace ast {
 			this.lvalue = lvalue;
 			this.rvalue = rvalue;
 		}
+
+		subStatements(): Statement[] {
+			return [];
+		}
 	}
 
 	export class Dim implements Statement {
@@ -341,6 +351,10 @@ export namespace ast {
 		constructor(name: string, length: number) {
 			this.name = name;
 			this.length = length;
+		}
+
+		subStatements(): Statement[] {
+			return [];
 		}
 	}
 
@@ -362,6 +376,10 @@ export namespace ast {
 			this.args = args;
 			this.body = body;
 		}
+
+		subStatements(): Statement[] {
+			return [];
+		}
 	}
 
 	export class Class implements Statement {
@@ -371,6 +389,10 @@ export namespace ast {
 		constructor(name: string, declarations: Statement[]) {
 			this.name = name;
 			this.declarations = declarations;
+		}
+
+		subStatements(): Statement[] {
+			return [];
 		}
 	}
 
@@ -383,6 +405,10 @@ export namespace ast {
 			this.condition = condition;
 			this.body = body;
 			this.elseBody = elseBody;
+		}
+
+		subStatements(): Statement[] {
+			return this.body.concat(this.elseBody);
 		}
 	}
 }

@@ -1,16 +1,17 @@
 import { ast } from "../parser/NewAST";
 
-export class Object extends ast.Value {
-	value() {
+export class Obj extends ast.Value {
+	value(): any {
 		return null;
 	}
 }
 
+export type BoxContent = ast.Value | ast.Function;
 export class Box {
-	public value: ast.Value;
+	public content: BoxContent;
 
-	constructor(value: ast.Value) {
-		this.value = value;
+	constructor(value: BoxContent) {
+		this.content = value;
 	}
 }
 
@@ -45,7 +46,7 @@ export class Context {
 		}
 	}
 
-	public declare(name) {
+	public declare(name: string) {
 		this.definitions[name] = new Box(new ast.expr.Empty);
 	}
 }
