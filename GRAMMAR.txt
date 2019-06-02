@@ -2,14 +2,14 @@
 
 eol = ":" | "\n" | EOF
 
-statement = (class | function | sub | dim | assignment | subCall | call | expr) eol
+statement = (class | function | sub | dim | assignment | subCall | call | exit) eol
 
 class = "class" identifier eol classDecl* "end" "class"
 classDecl = (dim | function | sub) eol
 
 function = "function" identifier "(" args ")" eol statements "end" "function"
 sub = "sub" identifier ("(" args ")")? eol statements "end" "sub"
-dim = "dim" identifier ("as" identifier)?
+dim = "dim" identifier ("(" integer ")")?
 
 argList = argListArg "," argList | argListArg
 argListArg = identifier
@@ -23,6 +23,8 @@ args = expr | expr "," args
 call = "call" variable "(" args ")"
 
 subCall = variable args
+
+exit = "exit" ("function" | "sub")
 
 identifier = IDENTIFIER
 

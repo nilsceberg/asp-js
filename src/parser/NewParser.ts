@@ -41,7 +41,10 @@ export const arithmeticAndComparison: parser.Parser<ast.Expr> = parser.Parser.la
 		{
 			"^": op(ast.expr.Pow),
 		},
-		{ // TODO: are these actually not of the same precedence?
+		{
+			// The source above claims that multiplication has higher
+			// precedence than division, but this is false - they are simply
+			// left-to-right.
 			"*": op(ast.expr.Mul),
 			"/": op(ast.expr.Div),
 		},
