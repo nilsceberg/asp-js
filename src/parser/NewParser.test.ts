@@ -66,8 +66,33 @@ describe("expression", () => {
 		);
 		expect(r1.value()).toBeTruthy();
 
-		const s2 = src("3 + 4 - (-2 * 3) = 13 and 3 > 4");
-		expect(expr.parse(s2).from()[0].value()).toBeFalsy();
+		const s2 = src("false or true = (3 + 1 = 4 and not 1 = 2)");
+		const r2 = expr.parse(s2).from()[0];
+
+		expect(r2).toStrictEqual(
+			new ast.expr.Or(
+				new ast.expr.Boolean(false),
+				new ast.expr.Equal(
+					new ast.expr.Boolean(true),
+					new ast.expr.And(
+						new ast.expr.Equal(
+							new ast.expr.Add(
+								new ast.expr.Number(3),
+								new ast.expr.Number(1)
+							),
+							new ast.expr.Number(4)
+						),
+						new ast.expr.Not(
+							new ast.expr.Equal(
+								new ast.expr.Number(1),
+								new ast.expr.Number(2)
+							)
+						)
+					)
+				)
+			)
+		);
+		expect(r2.value()).toBeTruthy();
 	});
 
 	test("variable", () => {

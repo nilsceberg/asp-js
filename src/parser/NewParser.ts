@@ -1,6 +1,6 @@
 import * as parser from "parser-monad";
 import { ast } from "./NewAST";
-import { nothing, empty, null_, str } from "./Literals";
+import { nothing, empty, null_, str, boolean } from "./Literals";
 
 parser.ParserSettings.WHITESPACE = " \t";
 const EOL_CHARS = "\n:";
@@ -36,7 +36,7 @@ function op (Binary: new (left: ast.Expr, right: ast.Expr) => ast.Expr): (left: 
 
 // The order of evaluation is from here: https://www.guru99.com/vbscript-operators-constants.html
 // Might not be the most credible of sources...
-export const expr: parser.Parser<ast.Expr> = parser.Parser.lazy(() => parser.exprParser(
+export const arithmeticAndComparison: parser.Parser<ast.Expr> = parser.Parser.lazy(() => parser.exprParser(
 	[
 		{
 			"^": op(ast.expr.Pow),
@@ -63,6 +63,18 @@ export const expr: parser.Parser<ast.Expr> = parser.Parser.lazy(() => parser.exp
 			"<": op(ast.expr.LessThan),
 			">": op(ast.expr.GreaterThan),
 		},
+	],
+	[nothing, empty, null_, boolean, new_, str, funcCall, variable, integer],
+	expr
+));
+
+const not: parser.Parser<ast.Expr> =
+	parser.Accept("not")
+	.second(arithmeticAndComparison)
+	.map(x => new ast.expr.Not(x));
+
+export const expr: parser.Parser<ast.Expr> = parser.Parser.lazy(() => parser.exprParser(
+	[
 		{
 			"and": op(ast.expr.And),
 		},
@@ -73,7 +85,7 @@ export const expr: parser.Parser<ast.Expr> = parser.Parser.lazy(() => parser.exp
 			"xor": op(ast.expr.Xor),
 		},
 	],
-	[nothing, empty, null_, new_, str, funcCall, variable, integer]
+	[not, arithmeticAndComparison]
 ));
 
 export const statement: () => parser.Parser<ast.Statement> = () =>

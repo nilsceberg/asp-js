@@ -1,4 +1,8 @@
 export namespace ast {
+	// TODO: sort these values out
+	export const TRUE = -1;
+	export const FALSE = 0;
+
 	export interface Statement {
 
 	}
@@ -61,7 +65,7 @@ export namespace ast {
 
 			value(): number {
 				// TODO: correct?
-				return this.val ? 1 : 0;
+				return this.val ? TRUE : FALSE;
 			}
 
 			toString(): string {
@@ -123,6 +127,28 @@ export namespace ast {
 			protected abstract op(left: any, right: any): any;
 		}
 
+		export abstract class Unary implements Expr {
+			arg: Expr;
+
+			constructor(arg: Expr) {
+				this.arg = arg;
+			}
+
+			value(): any {
+				// It's worth noting here that this way of implementing things
+				// results in there being not lazy evaluation of AND and OR,
+				// which is exactly how VBScript is supposed to work.
+				return this.op(this.arg.value());
+			}
+
+			toString(): string {
+				return `(${this.symbol} ${this.arg.toString()}`;
+			}
+
+			protected abstract symbol: string;
+			protected abstract op(arg: any): any;
+		}
+
 		export class Add extends Binary {
 			protected symbol = "+";
 			op(x: number, y: number) {
@@ -175,63 +201,70 @@ export namespace ast {
 		export class Equal extends Binary {
 			protected symbol = "=";
 			op(x: any, y: any) {
-				return x === y;
+				return x === y ? TRUE : FALSE;
 			}
 		}
 
 		export class NotEqual extends Binary {
 			protected symbol = "<>";
 			op(x: any, y: any) {
-				return x !== y;
+				return x !== y ? TRUE : FALSE;
 			}
 		}
 
 		export class LessThan extends Binary {
 			protected symbol = "<";
 			op(x: any, y: any) {
-				return x < y;
+				return x < y ? TRUE : FALSE;
 			}
 		}
 
 		export class LessThanOrEqual extends Binary {
 			protected symbol = "<=";
 			op(x: any, y: any) {
-				return x <= y;
+				return x <= y ? TRUE : FALSE;
 			}
 		}
 
 		export class GreaterThan extends Binary {
 			protected symbol = ">";
 			op(x: any, y: any) {
-				return x > y;
+				return x > y ? TRUE : FALSE;
 			}
 		}
 
 		export class GreaterThanOrEqual extends Binary {
 			protected symbol = ">=";
 			op(x: any, y: any) {
-				return x >= y;
+				return x >= y ? TRUE : FALSE;
 			}
 		}
 
 		export class And extends Binary {
 			protected symbol = "and";
-			op(x: boolean, y: boolean) {
-				return x && y;
+			op(x: number, y: number) {
+				return x & y;
 			}
 		}
 
 		export class Or extends Binary {
 			protected symbol = "or";
-			op(x: boolean, y: boolean) {
-				return x || y;
+			op(x: number, y: number) {
+				return x | y;
 			}
 		}
 
 		export class Xor extends Binary {
 			protected symbol = "xor";
-			op(x: boolean, y: boolean) {
-				return x !== y;
+			op(x: number, y: number) {
+				return x ^ y;
+			}
+		}
+
+		export class Not extends Unary {
+			protected symbol = "not";
+			op(x: number) {
+				return ~x;
 			}
 		}
 	}
