@@ -1,10 +1,10 @@
 import { Source, SourcePointer } from "parser-monad";
 import { script } from "../parser/NewParser";
 import * as util from "util";
-import { Context } from "./NewContext";
+import { Context, VBFunc } from "./NewContext";
 import { ast } from "../parser/NewAST";
 
-export class Block {
+export class Scope {
 	context: Context;
 	statements: ast.Statement[];
 
@@ -19,8 +19,11 @@ export class Block {
 				this.context.declare(statement.name);
 			}
 			else if (statement instanceof ast.Function) {
-				this.context.declare(statement.name);
-				this.context.resolve(statement.name).content = statement;
+				this.context.declare(statement.name,
+					new VBFunc(statement, this.context));
+			}
+			else if (statement instanceof ast.Class) {
+				throw "classes not implemented";
 			}
 			else {
 				this.hoist(statement.subStatements());
@@ -36,11 +39,29 @@ export class Block {
 			compact: false,
 			customInspect: false,
 		}));
+
+		this.execute(this.statements);
+	}
+
+	private execute(statements: ast.Statement[]) {
+		for (const statement of statements) {
+			console.log("EXECUTING:", util.inspect(statement, {
+				depth: null,
+				colors: true,
+				compact: false,
+				customInspect: false,
+			}));
+		}
 	}
 }
 
 export class Script {
 	ast: ast.Statement[];
+	globalContext: Context;
+
+	constructor(globalContext: Context = new Context()) {
+		this.globalContext = globalContext;
+	}
 
 	parse(source: Source) {
 		const sourcePointer = new SourcePointer(source);
@@ -54,12 +75,12 @@ export class Script {
 		//}));
 	}
 
-	getBlock(): Block {
-		return new Block(this.ast);
+	getScope(): Scope {
+		return new Scope(this.ast, this.globalContext);
 	}
 
 	execute() {
-		const root = this.getBlock();
+		const root = this.getScope();
 		root.run();
 	}
 }

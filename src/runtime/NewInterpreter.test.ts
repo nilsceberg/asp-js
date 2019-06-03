@@ -1,7 +1,7 @@
 import { Script } from "./NewInterpreter";
 import { StringSource } from "parser-monad";
 import { ast } from "../parser/NewAST";
-import { Box } from "./NewContext";
+import { Box, DictObj, NodeFunc, Context, VBFunc } from "./NewContext";
 import * as util from "util";
 
 describe("script", () => {
@@ -52,19 +52,39 @@ describe("block", () => {
 		dim x\n
 		`));
 
-		const block = script.getBlock();
+		const block = script.getScope();
 		block.context.explicit = true;
 		block.hoist();
 
 		expect(block.context.resolve("x")).toStrictEqual(new Box(new ast.expr.Empty));
 		expect(block.context.resolve("y")).toStrictEqual(new Box(new ast.expr.Empty));
-		expect(block.context.resolve("f")).toStrictEqual(new Box(new ast.Function("f", [], [])));
+		expect(block.context.resolve("f")).toStrictEqual(new Box(
+			new VBFunc(new ast.Function("f", [], []), block.context)));
+	});
+	
+	test("run", () => {
+		const globalContext = new Context();
 
-		console.log(util.inspect(block.context, {
-			depth: null,
-			colors: true,
-			compact: false,
-			customInspect: false,
-		}));
+		const responseObject = new DictObj();
+		responseObject.fields["write"] = new Box(new NodeFunc(
+			str => {
+				console.log(str);
+				return new Box(new ast.expr.Empty);
+			},
+			globalContext
+		));
+
+		globalContext.declare("response", responseObject);
+
+		const script = new Script(globalContext);
+		script.parse(new StringSource(`
+		response.write "hello!"\n
+		`));
+
+		const block = script.getScope();
+
+		
+		block.run();
+
 	});
 });

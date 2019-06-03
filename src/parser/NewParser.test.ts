@@ -1,6 +1,7 @@
 import { StringSource, SourcePointer } from "parser-monad";
 import { expr, statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_, if_, set } from "./NewParser";
 import { ast } from "./NewAST";
+import { Value } from "../runtime/NewContext";
 
 function src(s: string): SourcePointer {
 	return new SourcePointer(new StringSource(s));
@@ -64,7 +65,7 @@ describe("expression", () => {
 				)
 			)
 		);
-		expect(r1.value()).toBeTruthy();
+		expect((<Value>r1.evaluate(null).get()).value()).toBeTruthy();
 
 		const s2 = src("false or true = (3 + 1 = 4 and not 1 = 2)");
 		const r2 = expr.parse(s2).from()[0];
@@ -92,7 +93,7 @@ describe("expression", () => {
 				)
 			)
 		);
-		expect(r2.value()).toBeTruthy();
+		expect((<Value>r2.evaluate(null).get()).value()).toBeTruthy();
 	});
 
 	test("variable", () => {

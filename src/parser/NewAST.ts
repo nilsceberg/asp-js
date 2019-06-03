@@ -1,4 +1,6 @@
 import * as util from "util";
+import { Context, Func, Box, Value, Expr } from "../runtime/NewContext";
+import { RuntimeError } from "../runtime/Error";
 
 export namespace ast {
 	// TODO: sort these values out
@@ -9,20 +11,9 @@ export namespace ast {
 		subStatements(): Statement[];
 	}
 
-	export abstract class Expr {
-		abstract value(): any;
-
-		[util.inspect.custom](depth: number, opts: any): string {
-			return this.toString();
-		}
-	}
-
-	export abstract class Value extends Expr {
-	}
-
 	export namespace expr {
 		export class String extends Value {
-			str: string;
+			readonly str: string;
 
 			constructor(str: string) {
 				super();
@@ -35,7 +26,7 @@ export namespace ast {
 		}
 		
 		export class Number extends Value {
-			val: number;
+			readonly val: number;
 
 			constructor(val: number) {
 				super();
@@ -63,13 +54,13 @@ export namespace ast {
 				return `new ${this.what.toString()}`;
 			}
 
-			value(): any {
+			evaluate(context: Context): any {
 				throw "new not implemented";
 			}
 		}
 
 		export class Boolean extends Value {
-			val: boolean;
+			readonly val: boolean;
 
 			constructor(val: boolean) {
 				super();
@@ -126,11 +117,19 @@ export namespace ast {
 				this.right = right;
 			}
 
-			value(): any {
+			evaluate(context: Context): Box {
 				// It's worth noting here that this way of implementing things
 				// results in there being not lazy evaluation of AND and OR,
 				// which is exactly how VBScript is supposed to work.
-				return this.op(this.left.value(), this.right.value());
+				const left = this.left.evaluate(context).get();
+				const right = this.right.evaluate(context).get();
+
+				if (left instanceof Value && right instanceof Value) {
+					return new Box(this.op(left, right), true);
+				}
+				else {
+					throw new RuntimeError(`type mismatch: ${left.toString()} ${this.symbol} ${right.toString()}`);
+				}
 			}
 
 			toString(): string {
@@ -138,7 +137,16 @@ export namespace ast {
 			}
 
 			protected abstract symbol: string;
-			protected abstract op(left: any, right: any): any;
+			protected abstract op(left: Value, right: Value): Value;
+		}
+
+		export abstract class NumericBinary extends Binary {
+			op(left: Value, right: Value): Value {
+				// TODO: type checking
+				return new Number(this.o(left.value(), right.value()));
+			}
+
+			protected abstract o(left: number, right: number): number;
 		}
 
 		export abstract class Unary extends Expr {
@@ -149,11 +157,18 @@ export namespace ast {
 				this.arg = arg;
 			}
 
-			value(): any {
+			evaluate(context: Context): Box {
 				// It's worth noting here that this way of implementing things
 				// results in there being not lazy evaluation of AND and OR,
 				// which is exactly how VBScript is supposed to work.
-				return this.op(this.arg.value());
+				const arg = this.arg.evaluate(context).get();
+
+				if (arg instanceof Value) {
+					return new Box(this.op(arg), true);
+				}
+				else {
+					throw new RuntimeError("type mismatch");
+				}
 			}
 
 			toString(): string {
@@ -161,125 +176,126 @@ export namespace ast {
 			}
 
 			protected abstract symbol: string;
-			protected abstract op(arg: any): any;
+			protected abstract op(arg: Value): Value
 		}
 
-		export class Add extends Binary {
+		export class Add extends NumericBinary {
 			protected symbol = "+";
-			op(x: number, y: number) {
+			o(x: number, y: number) {
 				return x + y;
 			}
 		}
 
-		export class Sub extends Binary {
+		export class Sub extends NumericBinary {
 			protected symbol = "-";
-			op(x: number, y: number) {
+			o(x: number, y: number) {
 				return x - y;
 			}
 		}
 
-		export class Mul extends Binary {
+		export class Mul extends NumericBinary {
 			protected symbol = "*";
-			op(x: number, y: number) {
+			o(x: number, y: number) {
 				return x * y;
 			}
 		}
 
-		export class Div extends Binary {
+		export class Div extends NumericBinary {
 			protected symbol = "/";
-			op(x: number, y: number) {
+			o(x: number, y: number) {
 				return x / y;
 			}
 		}
 
-		export class Pow extends Binary {
+		export class Pow extends NumericBinary {
 			protected symbol = "^";
-			op(x: number, y: number) {
+			o(x: number, y: number) {
 				return Math.pow(x, y);
 			}
 		}
 
-		export class Mod extends Binary {
+		export class Mod extends NumericBinary {
 			protected symbol = "%";
-			op(x: number, y: number) {
+			o(x: number, y: number) {
 				return x % y;
 			}
 		}
 
 		export class Concat extends Binary {
 			protected symbol = "&";
-			op(x: string, y: string) {
-				return x + y;
+			op(x: Value, y: Value) {
+				// TODO: type checking
+				return x.value() + y.value();
 			}
 		}
 
 		export class Equal extends Binary {
 			protected symbol = "=";
-			op(x: any, y: any) {
-				return x === y ? TRUE : FALSE;
+			op(x: Value, y: Value) {
+				return new Number(x.value() === y.value() ? TRUE : FALSE);
 			}
 		}
 
 		export class NotEqual extends Binary {
 			protected symbol = "<>";
-			op(x: any, y: any) {
-				return x !== y ? TRUE : FALSE;
+			op(x: Value, y: Value) {
+				return new Number(x.value() !== y.value() ? TRUE : FALSE);
 			}
 		}
 
-		export class LessThan extends Binary {
+		export class LessThan extends NumericBinary {
 			protected symbol = "<";
-			op(x: any, y: any) {
+			o(x: number, y: number) {
 				return x < y ? TRUE : FALSE;
 			}
 		}
 
-		export class LessThanOrEqual extends Binary {
+		export class LessThanOrEqual extends NumericBinary {
 			protected symbol = "<=";
-			op(x: any, y: any) {
+			o(x: number, y: number) {
 				return x <= y ? TRUE : FALSE;
 			}
 		}
 
-		export class GreaterThan extends Binary {
+		export class GreaterThan extends NumericBinary {
 			protected symbol = ">";
-			op(x: any, y: any) {
+			o(x: number, y: number) {
 				return x > y ? TRUE : FALSE;
 			}
 		}
 
-		export class GreaterThanOrEqual extends Binary {
+		export class GreaterThanOrEqual extends NumericBinary {
 			protected symbol = ">=";
-			op(x: any, y: any) {
+			o(x: number, y: number) {
 				return x >= y ? TRUE : FALSE;
 			}
 		}
 
 		export class And extends Binary {
 			protected symbol = "and";
-			op(x: number, y: number) {
-				return x & y;
+			op(x: Value, y: Value) {
+				return new Number(x.value() & y.value());
 			}
 		}
 
 		export class Or extends Binary {
 			protected symbol = "or";
-			op(x: number, y: number) {
-				return x | y;
+			op(x: Value, y: Value) {
+				return new Number(x.value() | y.value());
 			}
 		}
 
 		export class Xor extends Binary {
 			protected symbol = "xor";
-			op(x: number, y: number) {
-				return x ^ y;
+			op(x: Value, y: Value) {
+				return new Number(x.value() ^ y.value());
 			}
 		}
 
 		export class Not extends Unary {
 			protected symbol = "not";
-			op(x: number) {
-				return ~x;
+			op(x: Value) {
+				return new Number(~x.value());
 			}
 		}
 	}
@@ -302,7 +318,7 @@ export namespace ast {
 			this.components = components;
 		}
 
-		value(): any {
+		evaluate(context: Context): any {
 			throw "variables not implemented";
 		}
 
@@ -321,7 +337,7 @@ export namespace ast {
 			this.args = args;
 		}
 
-		value(): any {
+		evaluate(): any {
 			throw "functions not implemented";
 		}
 
