@@ -119,17 +119,22 @@ export class DictObj extends Obj {
 	get(name: string): Box {
 		return this.fields[name] || null;
 	}
+
+	toString() {
+		return util.inspect(this.fields);
+	}
 }
 
-export interface Func {
-	run(args: Box[]): Box;
+export abstract class Func {
+	abstract run(args: Box[]): Box;
 }
 
-export class VBFunc implements Func {
+export class VBFunc extends Func {
 	private declarationContext: Context;
 	private definition: ast.Function;
 
 	constructor(definition: ast.Function, declarationContext: Context) {
+		super();
 		this.definition = definition;
 		this.declarationContext = declarationContext;
 	}
@@ -147,11 +152,12 @@ export class VBFunc implements Func {
 	}
 }
 
-export class NodeFunc implements Func {
+export class NodeFunc extends Func {
 	private f: (args: Box[], context: Context) => Box;
 	private globalContext: Context;
 
 	constructor(f: (args: Box[], context: Context) => Box, globalContext: Context) {
+		super();
 		this.f = f;
 		this.globalContext = globalContext;
 	}

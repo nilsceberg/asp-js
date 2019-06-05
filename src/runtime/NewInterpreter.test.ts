@@ -67,7 +67,7 @@ describe("block", () => {
 
 		const responseObject = new DictObj();
 		responseObject.fields["write"] = new Box(new NodeFunc(
-			str => {
+			([str]) => {
 				console.log(str);
 				return new Box(new ast.expr.Empty);
 			},
@@ -82,7 +82,6 @@ describe("block", () => {
 		`));
 
 		const block = script.getScope();
-
 		
 		block.run();
 

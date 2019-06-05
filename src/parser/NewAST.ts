@@ -1,5 +1,5 @@
 import * as util from "util";
-import { Context, Func, Box, Value, Expr } from "../runtime/NewContext";
+import { Context, Func, Box, Value, Expr, DictObj } from "../runtime/NewContext";
 import { RuntimeError } from "../runtime/Error";
 
 export namespace ast {
@@ -9,6 +9,7 @@ export namespace ast {
 
 	export interface Statement {
 		subStatements(): Statement[];
+		execute(context: Context): void;
 	}
 
 	export namespace expr {
@@ -22,6 +23,10 @@ export namespace ast {
 
 			value(): string {
 				return this.str;
+			}
+
+			toString(): string {
+				return `"${this.str}"`;
 			}
 		}
 		
@@ -308,6 +313,10 @@ export namespace ast {
 		subStatements(): Statement[] {
 			return [];
 		}
+
+		execute(context: Context) {
+
+		}
 	}
 
 	export class Variable extends Expr implements LValue {
@@ -318,8 +327,18 @@ export namespace ast {
 			this.components = components;
 		}
 
-		evaluate(context: Context): any {
-			throw "variables not implemented";
+		evaluate(context: Context): Box {
+			let [first, ...rest] = this.components;
+			let box = context.resolve(first);
+
+			while (true) {
+				if (rest.length === 0) {
+					return box;
+				}
+
+				[first, ...rest] = rest;
+				box = (<DictObj>box.get()).get(first);
+			}
 		}
 
 		toString() {
@@ -337,12 +356,30 @@ export namespace ast {
 			this.args = args;
 		}
 
-		evaluate(): any {
-			throw "functions not implemented";
+		evaluate(context: Context): Box {
+			console.log(`Function call ${this}`);
+			const evaluatedArgs = this.args.map(a => a.evaluate(context));
+			const evaluatedFunction = this.variable.evaluate(context);
+
+			const func = evaluatedFunction.get();
+			if (func instanceof Func) {
+				return func.run(evaluatedArgs);
+			}
+			else {
+				throw new RuntimeError("type mismatch: expected function");
+			}
 		}
 
 		subStatements(): Statement[] {
 			return [];
+		}
+
+		execute(context: Context) {
+			this.evaluate(context);
+		}
+
+		toString(): string {
+			return `${this.variable}(${this.args.map(x => x.toString()).join(", ")})`;
 		}
 	}
 
@@ -358,6 +395,10 @@ export namespace ast {
 		subStatements(): Statement[] {
 			return [];
 		}
+
+		execute(context: Context) {
+
+		}
 	}
 
 	export class Dim implements Statement {
@@ -371,6 +412,10 @@ export namespace ast {
 
 		subStatements(): Statement[] {
 			return [];
+		}
+
+		execute(context: Context) {
+
 		}
 	}
 
@@ -396,6 +441,10 @@ export namespace ast {
 		subStatements(): Statement[] {
 			return [];
 		}
+
+		execute(context: Context) {
+			// Do nothing when executing; function definitions are handled at the hoist stage
+		}
 	}
 
 	export class Class implements Statement {
@@ -409,6 +458,10 @@ export namespace ast {
 
 		subStatements(): Statement[] {
 			return [];
+		}
+
+		execute(context: Context) {
+			// Do nothing when executing; class definitions are handled at the hoist stage
 		}
 	}
 
@@ -425,6 +478,10 @@ export namespace ast {
 
 		subStatements(): Statement[] {
 			return this.body.concat(this.elseBody);
+		}
+
+		execute(context: Context) {
+			console.log(`if ${this.condition} ...`);
 		}
 	}
 }

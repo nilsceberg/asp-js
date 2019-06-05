@@ -51,6 +51,7 @@ export class Scope {
 				compact: false,
 				customInspect: false,
 			}));
+			statement.execute(this.context);
 		}
 	}
 }
