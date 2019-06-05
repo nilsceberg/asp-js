@@ -1,7 +1,7 @@
 import { Script, VBFunc } from "./NewInterpreter";
 import { StringSource } from "parser-monad";
 import { ast } from "../program/NewAST";
-import { Box, DictObj, NodeFunc, Context } from "./NewContext";
+import { Box, DictObj, NodeFunc, Context } from "../program/NewContext";
 import * as data from "../program/Data";
 
 describe("script", () => {

@@ -1,7 +1,7 @@
 import { Source, SourcePointer } from "parser-monad";
 import { script } from "../parser/NewParser";
 import * as util from "util";
-import { Context, Func, Box } from "./NewContext";
+import { Context, Func, Box } from "../program/NewContext";
 import { ast } from "../program/NewAST";
 
 export class VBFunc extends Func {

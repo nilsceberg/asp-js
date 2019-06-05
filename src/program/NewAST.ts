@@ -1,4 +1,4 @@
-import { Context, Func, Box, Expr, DictObj } from "../runtime/NewContext";
+import { Context, Func, Box, Expr, DictObj } from "./NewContext";
 import { Value } from "./Data";
 import * as data from "./Data";
 import { RuntimeError } from "../runtime/Error";

@@ -1,5 +1,5 @@
 import { ast } from "./NewAST";
-import { Context, DictObj, Box, NodeFunc } from "../runtime/NewContext";
+import { Context, DictObj, Box, NodeFunc } from "./NewContext";
 import * as data from "./Data";
 
 describe("variable", () => {

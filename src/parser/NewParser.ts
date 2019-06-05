@@ -2,7 +2,7 @@ import * as parser from "parser-monad";
 import { ast } from "../program/NewAST";
 import { nothing, empty, null_, str, boolean } from "./LiteralParser";
 import * as data from "../program/Data";
-import { Expr } from "../runtime/NewContext";
+import { Expr } from "../program/NewContext";
 
 parser.ParserSettings.WHITESPACE = " \t";
 const EOL_CHARS = "\n:";

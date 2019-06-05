@@ -1,6 +1,6 @@
 import * as util from "util";
-import { Value } from "../program/Data";
-import * as data from "../program/Data";
+import { Value } from "./Data";
+import * as data from "./Data";
 
 export abstract class Expr {
 	abstract evaluate(context: Context): Box;
