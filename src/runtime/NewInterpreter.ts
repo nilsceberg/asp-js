@@ -1,9 +1,32 @@
 import { Source, SourcePointer } from "parser-monad";
 import { script } from "../parser/NewParser";
 import * as util from "util";
-import { Context } from "./NewContext";
+import { Context, Func, Box } from "./NewContext";
 import { ast } from "../program/NewAST";
-import { VBFunc } from "../program/VBFunc";
+
+export class VBFunc extends Func {
+	private declarationContext: Context;
+	private definition: ast.Function;
+
+	constructor(definition: ast.Function, declarationContext: Context) {
+		super();
+		this.definition = definition;
+		this.declarationContext = declarationContext;
+	}
+
+	run(args: Box[]): Box {
+		const scope = new Scope(this.definition.body, this.declarationContext);
+
+		for (const i in args) {
+			const name = this.definition.args[i].name;
+			scope.context.set(name, args[i]);
+		}
+
+		scope.run();
+
+		return scope.context.returnValue;
+	}
+}
 
 export class Scope {
 	context: Context;

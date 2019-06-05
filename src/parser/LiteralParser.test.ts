@@ -1,5 +1,5 @@
 import { SourcePointer, StringSource } from "parser-monad";
-import { str, strChar } from "./Literals";
+import { str, strChar } from "./LiteralParser";
 import { ast } from "../program/NewAST";
 import * as data from "../program/Data";
 

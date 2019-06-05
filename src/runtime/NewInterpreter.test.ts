@@ -1,10 +1,8 @@
-import { Script } from "./NewInterpreter";
+import { Script, VBFunc } from "./NewInterpreter";
 import { StringSource } from "parser-monad";
 import { ast } from "../program/NewAST";
 import { Box, DictObj, NodeFunc, Context } from "./NewContext";
 import * as data from "../program/Data";
-import * as util from "util";
-import { VBFunc } from "../program/VBFunc";
 
 describe("script", () => {
 	test("parse", () => {
@@ -88,4 +86,26 @@ describe("block", () => {
 		block.run();
 
 	});
+});
+
+test("vbscript function", () => {
+	const globalContext = new Context();
+
+	const func = new VBFunc(new ast.Function(
+		"func", [], [
+			new ast.FunctionCall(
+				new ast.Variable(["success"]),
+				[]
+			)
+		]
+	), globalContext);
+
+	const successFn = jest.fn();
+	const success = new NodeFunc(successFn, globalContext);
+
+	globalContext.declare("success", success);
+
+	func.run([]);
+
+	expect(successFn).toHaveBeenCalled();
 });

@@ -1,38 +1,34 @@
 digraph deps {
-	subgraph cluster_parser {
-		NewParser;
-		Literals;
-	}
+	//subgraph cluster_parser {
+	//	NewParser;
+	//	Literals;
+	//}
 
-	subgraph cluster_program {
-		NewAST;
-		VBFunc;
-		Data;
-	}
+	//subgraph cluster_program {
+	//	NewAST;
+	//	VBFunc;
+	//	Data;
+	//}
 
-	subgraph cluster_runtime {
-		NewContext;
-		NewInterpreter;
-	}
+	//subgraph cluster_runtime {
+	//	NewContext;
+	//	NewInterpreter;
+	//}
 
 	NewParser -> NewAST;
-	NewParser -> Literals;
+	NewParser -> LiteralParser;
 	NewParser -> Data;
 	NewParser -> NewContext;
 
-	Literals -> NewAST;
-	Literals -> Data;
+	LiteralParser -> NewAST;
+	LiteralParser -> Data;
 
 	NewAST -> NewContext;
 	NewAST -> Data;
-
-	VBFunc -> NewContext;
-	VBFunc -> NewAST;
 
 	NewContext -> Data;
 
 	NewInterpreter -> NewParser;
 	NewInterpreter -> NewContext;
 	NewInterpreter -> NewAST;
-	NewInterpreter -> VBFunc;
 }
