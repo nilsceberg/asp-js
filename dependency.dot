@@ -1,4 +1,20 @@
 digraph deps {
+	subgraph cluster_parser {
+		NewParser;
+		Literals;
+	}
+
+	subgraph cluster_program {
+		NewAST;
+		VBFunc;
+		Data;
+	}
+
+	subgraph cluster_runtime {
+		NewContext;
+		NewInterpreter;
+	}
+
 	NewParser -> NewAST;
 	NewParser -> Literals;
 	NewParser -> Data;
