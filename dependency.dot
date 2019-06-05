@@ -11,7 +11,8 @@ digraph deps {
 	}
 
 	subgraph cluster_runtime {
-		NewInterpreter;
+		Scope;
+		Script;
 	}
 
 	NewParser -> NewAST;
@@ -27,7 +28,11 @@ digraph deps {
 
 	NewContext -> Data;
 
-	NewInterpreter -> NewParser;
-	NewInterpreter -> NewContext;
-	NewInterpreter -> NewAST;
+	Scope -> NewContext;
+	Scope -> NewAST;
+
+	Script -> NewAST;
+	Script -> Scope;
+	Script -> NewParser;
+	Script -> NewContext;
 }
