@@ -1,8 +1,9 @@
 import { Source, SourcePointer } from "parser-monad";
 import { script } from "../parser/NewParser";
 import * as util from "util";
-import { Context, VBFunc } from "./NewContext";
-import { ast } from "../parser/NewAST";
+import { Context } from "./NewContext";
+import { ast } from "../program/NewAST";
+import { VBFunc } from "../program/VBFunc";
 
 export class Scope {
 	context: Context;

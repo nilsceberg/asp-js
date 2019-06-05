@@ -1,8 +1,10 @@
 import { Script } from "./NewInterpreter";
 import { StringSource } from "parser-monad";
-import { ast } from "../parser/NewAST";
-import { Box, DictObj, NodeFunc, Context, VBFunc } from "./NewContext";
+import { ast } from "../program/NewAST";
+import { Box, DictObj, NodeFunc, Context } from "./NewContext";
+import * as data from "../program/Data";
 import * as util from "util";
+import { VBFunc } from "../program/VBFunc";
 
 describe("script", () => {
 	test("parse", () => {
@@ -16,17 +18,17 @@ describe("script", () => {
 		`));
 
 		expect(script.ast).toStrictEqual([
-			new ast.Assignment(new ast.Variable(["x"]), new ast.expr.Number(123)),
+			new ast.Assignment(new ast.Variable(["x"]), new ast.expr.Literal(new data.Number(123))),
 			new ast.If(
 				new ast.expr.GreaterThan(
 					new ast.Variable(["x"]),
-					new ast.expr.Number(100)
+					new ast.expr.Literal(new data.Number(100))
 				),
 				[
 					new ast.FunctionCall(
 						new ast.Variable(["response", "write"]),
 						[
-							new ast.expr.String("hello!")
+							new ast.expr.Literal(new data.String("hello!"))
 						]
 					)
 				],
@@ -56,8 +58,8 @@ describe("block", () => {
 		block.context.explicit = true;
 		block.hoist();
 
-		expect(block.context.resolve("x")).toStrictEqual(new Box(new ast.expr.Empty));
-		expect(block.context.resolve("y")).toStrictEqual(new Box(new ast.expr.Empty));
+		expect(block.context.resolve("x")).toStrictEqual(new Box(new data.Empty));
+		expect(block.context.resolve("y")).toStrictEqual(new Box(new data.Empty));
 		expect(block.context.resolve("f")).toStrictEqual(new Box(
 			new VBFunc(new ast.Function("f", [], []), block.context)));
 	});
@@ -69,7 +71,7 @@ describe("block", () => {
 		responseObject.fields["write"] = new Box(new NodeFunc(
 			([str]) => {
 				console.log(str);
-				return new Box(new ast.expr.Empty);
+				return new Box(new data.Empty);
 			},
 			globalContext
 		));

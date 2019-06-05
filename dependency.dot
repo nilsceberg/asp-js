@@ -1,0 +1,22 @@
+digraph deps {
+	NewParser -> NewAST;
+	NewParser -> Literals;
+	NewParser -> Data;
+	NewParser -> NewContext;
+
+	Literals -> NewAST;
+	Literals -> Data;
+
+	NewAST -> NewContext;
+	NewAST -> Data;
+
+	VBFunc -> NewContext;
+	VBFunc -> NewAST;
+
+	NewContext -> Data;
+
+	NewInterpreter -> NewParser;
+	NewInterpreter -> NewContext;
+	NewInterpreter -> NewAST;
+	NewInterpreter -> VBFunc;
+}

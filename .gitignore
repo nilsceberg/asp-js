@@ -2,3 +2,5 @@ node_modules/
 build/
 windows/
 npm-debug.log
+*.png
+

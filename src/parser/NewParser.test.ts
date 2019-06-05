@@ -1,7 +1,8 @@
 import { StringSource, SourcePointer } from "parser-monad";
 import { expr, statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_, if_, set } from "./NewParser";
-import { ast } from "./NewAST";
-import { Value } from "../runtime/NewContext";
+import { ast } from "../program/NewAST";
+import * as data from "../program/Data";
+import { Value } from "../program/Data";
 
 function src(s: string): SourcePointer {
 	return new SourcePointer(new StringSource(s));
@@ -48,20 +49,20 @@ describe("expression", () => {
 			new ast.expr.And(
 				new ast.expr.Equal(
 					new ast.expr.Add(
-						new ast.expr.Number(3),
+						new ast.expr.Literal(new data.Number(3)),
 						new ast.expr.Mul(
-							new ast.expr.Number(4),
+							new ast.expr.Literal(new data.Number(4)),
 							new ast.expr.Sub(
-								new ast.expr.Number(-2),
-								new ast.expr.Number(3),
+								new ast.expr.Literal(new data.Number(-2)),
+								new ast.expr.Literal(new data.Number(3)),
 							)
 						)
 					),
-					new ast.expr.Number(-17)
+					new ast.expr.Literal(new data.Number(-17))
 				),
 				new ast.expr.LessThan(
-					new ast.expr.Number(3),
-					new ast.expr.Number(4)
+					new ast.expr.Literal(new data.Number(3)),
+					new ast.expr.Literal(new data.Number(4))
 				)
 			)
 		);
@@ -72,21 +73,21 @@ describe("expression", () => {
 
 		expect(r2).toStrictEqual(
 			new ast.expr.Or(
-				new ast.expr.Boolean(false),
+				new ast.expr.Literal(new data.Boolean(false)),
 				new ast.expr.Equal(
-					new ast.expr.Boolean(true),
+					new ast.expr.Literal(new data.Boolean(true)),
 					new ast.expr.And(
 						new ast.expr.Equal(
 							new ast.expr.Add(
-								new ast.expr.Number(3),
-								new ast.expr.Number(1)
+								new ast.expr.Literal(new data.Number(3)),
+								new ast.expr.Literal(new data.Number(1))
 							),
-							new ast.expr.Number(4)
+							new ast.expr.Literal(new data.Number(4))
 						),
 						new ast.expr.Not(
 							new ast.expr.Equal(
-								new ast.expr.Number(1),
-								new ast.expr.Number(2)
+								new ast.expr.Literal(new data.Number(1)),
+								new ast.expr.Literal(new data.Number(2))
 							)
 						)
 					)
@@ -110,16 +111,16 @@ describe("expression", () => {
 		const s = src("3 * (obj.f(4, 1) + 2)");
 		expect(expr.parse(s).from()[0]).toStrictEqual(
 			new ast.expr.Mul(
-				new ast.expr.Number(3),
+				new ast.expr.Literal(new data.Number(3)),
 				new ast.expr.Add(
 					new ast.FunctionCall(
 						new ast.Variable(["obj", "f"]),
 						[
-							new ast.expr.Number(4),
-							new ast.expr.Number(1)
+							new ast.expr.Literal(new data.Number(4)),
+							new ast.expr.Literal(new data.Number(1))
 						]
 					),
-					new ast.expr.Number(2),
+					new ast.expr.Literal(new data.Number(2)),
 				)
 			)
 		)
@@ -132,14 +133,14 @@ describe("expression", () => {
 				new ast.expr.Add(
 					new ast.expr.Add(
 						new ast.expr.Add(
-							new ast.expr.Number(1),
-							new ast.expr.Nothing
+							new ast.expr.Literal(new data.Number(1)),
+							new ast.expr.Literal(new data.Nothing)
 						),
-						new ast.expr.Empty
+						new ast.expr.Literal(new data.Empty)
 					),
-					new ast.expr.Null
+					new ast.expr.Literal(new data.Null)
 				),
-				new ast.expr.String('hello "world"')
+				new ast.expr.Literal(new data.String('hello "world"'))
 			)
 		);
 	});
@@ -148,7 +149,7 @@ describe("expression", () => {
 		const s = src("3 + new ADODB.Connection");
 		expect(expr.parse(s).from()[0]).toStrictEqual(
 			new ast.expr.Add(
-				new ast.expr.Number(3),
+				new ast.expr.Literal(new data.Number(3)),
 				new ast.expr.New(
 					new ast.Variable(["ADODB", "Connection"])
 				)
@@ -165,7 +166,7 @@ test("statement", () => {
 	expect(statement().parse(s2).from()[0]).toStrictEqual(
 		new ast.FunctionCall(
 			new ast.Variable(["s"]),
-			[new ast.expr.Number(1), new ast.expr.Number(2)]
+			[new ast.expr.Literal(new data.Number(1)), new ast.expr.Literal(new data.Number(2))]
 		)
 	);
 
@@ -174,7 +175,7 @@ test("statement", () => {
 	expect(statement().parse(s3).from()[0]).toStrictEqual(
 		new ast.FunctionCall(
 			new ast.Variable(["s"]),
-			[new ast.expr.Number(1), new ast.expr.Number(2)]
+			[new ast.expr.Literal(new data.Number(1)), new ast.expr.Literal(new data.Number(2))]
 		)
 	);
 
@@ -183,9 +184,9 @@ test("statement", () => {
 		new ast.Assignment(
 			new ast.FunctionCall(
 				new ast.Variable(["dict"]),
-				[new ast.expr.Number(1), new ast.expr.Number(2)]
+				[new ast.expr.Literal(new data.Number(1)), new ast.expr.Literal(new data.Number(2))]
 			),
-			new ast.expr.Number(2)
+			new ast.expr.Literal(new data.Number(2))
 		)
 	);
 
@@ -193,7 +194,7 @@ test("statement", () => {
 	expect(statement().parse(s5).from()[0]).toStrictEqual(
 		new ast.FunctionCall(
 			new ast.Variable(["func"]),
-			[new ast.expr.Number(1)]
+			[new ast.expr.Literal(new data.Number(1))]
 		)
 	);
 
@@ -258,7 +259,7 @@ test("function call", () => {
 	const s1 = src("obj.f(1, 2)");
 	expect(funcCall.parse(s1).from()[0]).toStrictEqual(new ast.FunctionCall(
 		new ast.Variable(["obj", "f"]),
-		[new ast.expr.Number(1), new ast.expr.Number(2)]
+		[new ast.expr.Literal(new data.Number(1)), new ast.expr.Literal(new data.Number(2))]
 	));
 });
 
@@ -267,15 +268,15 @@ test("assignment", () => {
 	expect(assignment.parse(s1).from()[0]).toStrictEqual(new ast.Assignment(
 		new ast.FunctionCall(
 			new ast.Variable(["obj", "f"]),
-			[new ast.expr.Number(1), new ast.expr.Number(2)]
+			[new ast.expr.Literal(new data.Number(1)), new ast.expr.Literal(new data.Number(2))]
 		),
-		new ast.expr.Number(3)
+		new ast.expr.Literal(new data.Number(3))
 	));
 
 	const s2 = src("v = 3");
 	expect(assignment.parse(s2).from()[0]).toStrictEqual(new ast.Assignment(
 		new ast.Variable(["v"]),
-		new ast.expr.Number(3),
+		new ast.expr.Literal(new data.Number(3)),
 	));
 });
 
@@ -292,7 +293,7 @@ test("sub call", () => {
 
 	expect(subCall.parse(s).from()[0]).toStrictEqual(new ast.FunctionCall(
 		new ast.Variable(["obj", "s"]),
-		[new ast.expr.Number(1), new ast.expr.Number(2)]
+		[new ast.expr.Literal(new data.Number(1)), new ast.expr.Literal(new data.Number(2))]
 	));
 });
 
@@ -301,7 +302,7 @@ test("call", () => {
 
 	expect(call.parse(s).from()[0]).toStrictEqual(new ast.FunctionCall(
 		new ast.Variable(["obj", "s"]),
-		[new ast.expr.Number(1), new ast.expr.Number(2)]
+		[new ast.expr.Literal(new data.Number(1)), new ast.expr.Literal(new data.Number(2))]
 	));
 });
 
@@ -423,17 +424,17 @@ describe("if", () => {
 		const s1 = src("if 1 then\nstatement\nelseif 2 then\nelseif 3 then\nelse\nend if");
 
 		expect(if_.parse(s1).from()[0]).toStrictEqual(new ast.If(
-			new ast.expr.Number(1),
+			new ast.expr.Literal(new data.Number(1)),
 			[
 				new ast.DummyStatement
 			],
 			[
 				new ast.If(
-					new ast.expr.Number(2),
+					new ast.expr.Literal(new data.Number(2)),
 					[],
 					[
 						new ast.If(
-							new ast.expr.Number(3),
+							new ast.expr.Literal(new data.Number(3)),
 							[],
 							[]
 						)

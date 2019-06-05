@@ -1,11 +1,9 @@
-import * as util from "util";
-import { Context, Func, Box, Value, Expr, DictObj } from "../runtime/NewContext";
+import { Context, Func, Box, Expr, DictObj } from "../runtime/NewContext";
+import { Value } from "./Data";
+import * as data from "./Data";
 import { RuntimeError } from "../runtime/Error";
 
 export namespace ast {
-	// TODO: sort these values out
-	export const TRUE = -1;
-	export const FALSE = 0;
 
 	export interface Statement {
 		subStatements(): Statement[];
@@ -13,37 +11,16 @@ export namespace ast {
 	}
 
 	export namespace expr {
-		export class String extends Value {
-			readonly str: string;
+		export class Literal extends Expr {
+			value: Value;
 
-			constructor(str: string) {
+			constructor(value: Value) {
 				super();
-				this.str = str;
+				this.value = value;
 			}
 
-			value(): string {
-				return this.str;
-			}
-
-			toString(): string {
-				return `"${this.str}"`;
-			}
-		}
-		
-		export class Number extends Value {
-			readonly val: number;
-
-			constructor(val: number) {
-				super();
-				this.val = val;
-			}
-
-			value(): number {
-				return this.val;
-			}
-
-			toString(): string {
-				return `${this.val}`;
+			evaluate(context: Context): Box {
+				return new Box(this.value);
 			}
 		}
 
@@ -64,53 +41,6 @@ export namespace ast {
 			}
 		}
 
-		export class Boolean extends Value {
-			readonly val: boolean;
-
-			constructor(val: boolean) {
-				super();
-				this.val = val;
-			}
-
-			value(): number {
-				// TODO: correct?
-				return this.val ? TRUE : FALSE;
-			}
-
-			toString(): string {
-				return this.val ? "true" : "false";
-			}
-		}
-
-		export class Nothing extends Value {
-			value() {
-				throw "'nothing' not implemented";
-			}
-
-			toString(): string {
-				return "nothing";
-			}
-		}
-
-		export class Empty extends Value {
-			value() {
-				throw "'empty' not implemented";
-			}
-
-			toString(): string {
-				return "empty";
-			}
-		}
-
-		export class Null extends Value {
-			value() {
-				throw "'null' not implemented";
-			}
-
-			toString(): string {
-				return "null";
-			}
-		}
 
 		export abstract class Binary extends Expr {
 			left: Expr;
@@ -148,7 +78,7 @@ export namespace ast {
 		export abstract class NumericBinary extends Binary {
 			op(left: Value, right: Value): Value {
 				// TODO: type checking
-				return new Number(this.o(left.value(), right.value()));
+				return new data.Number(this.o(left.value(), right.value()));
 			}
 
 			protected abstract o(left: number, right: number): number;
@@ -237,70 +167,70 @@ export namespace ast {
 		export class Equal extends Binary {
 			protected symbol = "=";
 			op(x: Value, y: Value) {
-				return new Number(x.value() === y.value() ? TRUE : FALSE);
+				return new data.Number(x.value() === y.value() ? data.TRUE : data.FALSE);
 			}
 		}
 
 		export class NotEqual extends Binary {
 			protected symbol = "<>";
 			op(x: Value, y: Value) {
-				return new Number(x.value() !== y.value() ? TRUE : FALSE);
+				return new data.Number(x.value() !== y.value() ? data.TRUE : data.FALSE);
 			}
 		}
 
 		export class LessThan extends NumericBinary {
 			protected symbol = "<";
 			o(x: number, y: number) {
-				return x < y ? TRUE : FALSE;
+				return x < y ? data.TRUE : data.FALSE;
 			}
 		}
 
 		export class LessThanOrEqual extends NumericBinary {
 			protected symbol = "<=";
 			o(x: number, y: number) {
-				return x <= y ? TRUE : FALSE;
+				return x <= y ? data.TRUE : data.FALSE;
 			}
 		}
 
 		export class GreaterThan extends NumericBinary {
 			protected symbol = ">";
 			o(x: number, y: number) {
-				return x > y ? TRUE : FALSE;
+				return x > y ? data.TRUE : data.FALSE;
 			}
 		}
 
 		export class GreaterThanOrEqual extends NumericBinary {
 			protected symbol = ">=";
 			o(x: number, y: number) {
-				return x >= y ? TRUE : FALSE;
+				return x >= y ? data.TRUE : data.FALSE;
 			}
 		}
 
 		export class And extends Binary {
 			protected symbol = "and";
 			op(x: Value, y: Value) {
-				return new Number(x.value() & y.value());
+				return new data.Number(x.value() & y.value());
 			}
 		}
 
 		export class Or extends Binary {
 			protected symbol = "or";
 			op(x: Value, y: Value) {
-				return new Number(x.value() | y.value());
+				return new data.Number(x.value() | y.value());
 			}
 		}
 
 		export class Xor extends Binary {
 			protected symbol = "xor";
 			op(x: Value, y: Value) {
-				return new Number(x.value() ^ y.value());
+				return new data.Number(x.value() ^ y.value());
 			}
 		}
 
 		export class Not extends Unary {
 			protected symbol = "not";
 			op(x: Value) {
-				return new Number(~x.value());
+				return new data.Number(~x.value());
 			}
 		}
 	}

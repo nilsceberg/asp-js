@@ -1,5 +1,6 @@
-import { ast } from "../parser/NewAST";
 import * as util from "util";
+import { Value } from "../program/Data";
+import * as data from "../program/Data";
 
 export abstract class Expr {
 	abstract evaluate(context: Context): Box;
@@ -9,15 +10,15 @@ export abstract class Expr {
 	}
 }
 
-export abstract class Value extends Expr {
-	evaluate(context: Context): Box {
-		return new Box(this, true);
-	}
+//export abstract class Value extends Expr {
+//	evaluate(context: Context): Box {
+//		return new Box(this, true);
+//	}
+//
+//	abstract value(): any;
+//}
 
-	abstract value(): any;
-}
-
-export type BoxContent = Value | Func;
+export type BoxContent = Value;
 export class Box {
 	private content: BoxContent;
 	private readonly: boolean;
@@ -42,7 +43,7 @@ export class Context {
 	public readonly: boolean = false;
 
 	private parent: Context;
-	public returnValue: Box = new Box(new ast.expr.Nothing());
+	public returnValue: Box = new Box(new data.Nothing());
  	private definitions: { [name: string]: Box } = {};
 
 	constructor(parent: Context = null) {
@@ -81,7 +82,7 @@ export class Context {
 		return null;
 	}
 
-	public declare(name: string, content: BoxContent = new ast.expr.Empty) {
+	public declare(name: string, content: BoxContent = new data.Empty) {
 		if (this.readonly) throw "attempted to write to readonly context";
 		this.definitions[name] = new Box(content, this.readonly);
 	}
@@ -125,30 +126,11 @@ export class DictObj extends Obj {
 	}
 }
 
-export abstract class Func {
+export abstract class Func extends Value {
 	abstract run(args: Box[]): Box;
-}
-
-export class VBFunc extends Func {
-	private declarationContext: Context;
-	private definition: ast.Function;
-
-	constructor(definition: ast.Function, declarationContext: Context) {
-		super();
-		this.definition = definition;
-		this.declarationContext = declarationContext;
-	}
-
-	run(args: Box[]): Box {
-		const context = new Context(this.declarationContext);
-		for (const i in args) {
-			const name = this.definition.args[i].name;
-			context.set(name, args[i]);
-		}
-
-		// TODO: do things
-
-		return context.returnValue;
+	
+	value() {
+		return this;
 	}
 }
 

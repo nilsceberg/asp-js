@@ -1,7 +1,7 @@
 import * as parser from "parser-monad";
-import { ast } from "./NewAST";
+import { ast } from "../program/NewAST";
 import { nothing, empty, null_, str, boolean } from "./Literals";
-import { thisExpression } from "@babel/types";
+import * as data from "../program/Data";
 import { Expr } from "../runtime/NewContext";
 
 parser.ParserSettings.WHITESPACE = " \t";
@@ -32,8 +32,8 @@ export const sign =
 	.or(parser.Token(parser.Lit("+")).map(_ => id))
 	.or(parser.Return(id));
 
-export const integer: parser.Parser<ast.expr.Number> =
-	sign.bind(f => parser.Token(parser.Integer).map(x => new ast.expr.Number(f(x))));
+export const integer: parser.Parser<ast.expr.Literal> =
+	sign.bind(f => parser.Token(parser.Integer).map(x => new ast.expr.Literal(new data.Number(f(x)))));
 	
 function op (Binary: new (left: Expr, right: Expr) => Expr): (left: Expr, right: Expr) => Expr {
 	return (left, right) => new Binary(left, right);

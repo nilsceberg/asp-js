@@ -1,6 +1,7 @@
 import { SourcePointer, StringSource } from "parser-monad";
 import { str, strChar } from "./Literals";
-import { ast } from "./NewAST";
+import { ast } from "../program/NewAST";
+import * as data from "../program/Data";
 
 function src(s: string): SourcePointer {
 	return new SourcePointer(new StringSource(s));
@@ -24,7 +25,7 @@ describe("string", () => {
 		const s = src('"hello world!"');
 		const [result, rest] = str.parse(s).from();
 		expect(result).toEqual(
-			new ast.expr.String("hello world!")
+			new ast.expr.Literal(new data.String("hello world!"))
 		);
 		expect(rest.equals("")).toBeTruthy();
 	});
@@ -33,7 +34,7 @@ describe("string", () => {
 		const s = src('"hello ""world""!"');
 		const [result, rest] = str.parse(s).from();
 		expect(result).toEqual(
-			new ast.expr.String('hello "world"!')
+			new ast.expr.Literal(new data.String('hello "world"!'))
 		);
 		expect(rest.equals("")).toBeTruthy();
 	});

@@ -1,6 +1,7 @@
 import * as parser from "parser-monad";
-import { ast } from "./NewAST";
+import { ast } from "../program/NewAST";
 import { not } from "./Util";
+import * as data from "../program/Data";
 
 const isStringDelimiter = (x: string) => x === "\"";
 const stringDelimiter = parser.Character.matches(isStringDelimiter);
@@ -10,24 +11,24 @@ export const strChar: parser.Parser<parser.char> =
 	parser.Character.matches(not(isStringDelimiter))
 	.or(escapedStringDelimiter);
 
-export const str: parser.Parser<ast.expr.String> =
+export const str: parser.Parser<ast.expr.Literal> =
 	stringDelimiter
 	.second(strChar.repeat())
-	.map(cs => new ast.expr.String(cs.join("")))
+	.map(cs => new ast.expr.Literal(new data.String(cs.join(""))))
 	.first(stringDelimiter);
 
-export const boolean: parser.Parser<ast.expr.Boolean> =
+export const boolean: parser.Parser<ast.expr.Literal> =
 	parser.Accept("true").or(parser.Accept("false"))
-	.map(x => new ast.expr.Boolean(x === "true"));
+	.map(x => new ast.expr.Literal(new data.Boolean(x === "true")));
 
-export const empty: parser.Parser<ast.expr.Empty> =
+export const empty: parser.Parser<ast.expr.Literal> =
 	parser.Accept("empty")
-	.map(() => new ast.expr.Empty);
+	.map(() => new ast.expr.Literal(new data.Empty));
 
-export const nothing: parser.Parser<ast.expr.Nothing> =
+export const nothing: parser.Parser<ast.expr.Literal> =
 	parser.Accept("nothing")
-	.map(() => new ast.expr.Nothing);
+	.map(() => new ast.expr.Literal(new data.Nothing));
 
-export const null_: parser.Parser<ast.expr.Null> =
+export const null_: parser.Parser<ast.expr.Literal> =
 	parser.Accept("null")
-	.map(() => new ast.expr.Null);
+	.map(() => new ast.expr.Literal(new data.Null));
