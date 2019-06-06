@@ -2,6 +2,7 @@ import { Script } from "./Script";
 import { StringSource } from "parser-monad";
 import { ast } from "../program/NewAST";
 import * as data from "../program/Data";
+import * as util from "util";
 
 test("parse", () => {
 	const script = new Script;
@@ -32,4 +33,10 @@ test("parse", () => {
 		),
 		new ast.Dim("x", -1)
 	]);
+});
+
+test("execute test-simple.vbs", () => {
+	const script = Script.fromFile("test/test-simple.vbs");
+	console.log(util.inspect(script.ast));
+	//script.execute();
 });

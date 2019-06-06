@@ -55,24 +55,24 @@ export class Scope {
 
 	run() {
 		this.hoist();
-		console.log(util.inspect(this.context, {
-			depth: null,
-			colors: true,
-			compact: false,
-			customInspect: false,
-		}));
+		//console.log(util.inspect(this.context, {
+		//	depth: null,
+		//	colors: true,
+		//	compact: false,
+		//	customInspect: false,
+		//}));
 
 		this.execute(this.statements);
 	}
 
 	private execute(statements: ast.Statement[]) {
 		for (const statement of statements) {
-			console.log("EXECUTING:", util.inspect(statement, {
-				depth: null,
-				colors: true,
-				compact: false,
-				customInspect: false,
-			}));
+			//console.log("EXECUTING:", util.inspect(statement, {
+			//	depth: null,
+			//	colors: true,
+			//	compact: false,
+			//	customInspect: false,
+			//}));
 			statement.execute(this.context);
 		}
 	}

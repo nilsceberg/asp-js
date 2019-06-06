@@ -287,7 +287,7 @@ export namespace ast {
 		}
 
 		evaluate(context: Context): Box {
-			console.log(`Function call ${this}`);
+			//console.log(`Function call ${this}`);
 			const evaluatedArgs = this.args.map(a => a.evaluate(context));
 			const evaluatedFunction = this.variable.evaluate(context);
 

@@ -1,8 +1,9 @@
 import { ast } from "../program/NewAST";
 import { Context } from "../program/NewContext";
-import { Source, SourcePointer } from "parser-monad";
+import { Source, SourcePointer, StringSource } from "parser-monad";
 import { script } from "../parser/NewParser";
 import { Scope } from "./Scope";
+import { readFileSync } from "fs";
 
 export class Script {
 	ast: ast.Statement[];
@@ -10,6 +11,15 @@ export class Script {
 
 	constructor(globalContext: Context = new Context()) {
 		this.globalContext = globalContext;
+	}
+
+	static fromFile(filename: string): Script {
+		const contents = readFileSync(filename).toString("utf-8");
+		const source = new StringSource(contents);
+
+		const script = new Script();
+		script.parse(source);
+		return script;
 	}
 
 	parse(source: Source) {
