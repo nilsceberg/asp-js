@@ -25,7 +25,7 @@ export const eol =
 	optionalEol
 	// TODO: there HAS to be a prettier way of handling this without lookahead,
 	// but it will probably require a bit of refactoring:
-	.or(parser.Lookahead(2).matches(s => s === "<%"))
+	.or(parser.Lookahead(2).matches(s => s === "%>"))
 	.or(eof)
 	.or(parser.Error("expected end of statement"));
 
@@ -290,13 +290,17 @@ export const printBlockCharacter: parser.Parser<string> =
 export const printBlockContentString: parser.Parser<string> =
 	printBlockCharacter.repeat().map(s => s.join(""));
 
-export const printBlockContent: parser.Parser<ast.FunctionCall> =
-	printBlockContentString.map(str => new ast.FunctionCall(
-		new ast.Variable(["Response", "Write"]),
-		[new ast.expr.Literal(new data.String(str))]
+export const printBlockContent: parser.Parser<ast.Block> =
+	printBlockContentString.map(str => new ast.Block(
+		[
+			new ast.FunctionCall(
+				new ast.Variable(["Response", "Write"]),
+				[new ast.expr.Literal(new data.String(str))]
+			)
+		]
 	));
 
-export const printBlock: parser.Parser<ast.FunctionCall> =
+export const printBlock: parser.Parser<ast.Block> =
 	parser.Accept("%>")
 	.second(printBlockContent)
 	.first(parser.Accept("<%").or(eof));

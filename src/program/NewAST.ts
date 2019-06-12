@@ -10,6 +10,24 @@ export namespace ast {
 		execute(context: Context): void;
 	}
 
+	export class Block implements Statement {
+		private body: Statement[];
+
+		constructor(body: Statement[]) {
+			this.body = body;
+		}
+
+		subStatements() {
+			return this.body;
+		}
+
+		execute(context: Context): void {
+			for (const stmt of this.body) {
+				stmt.execute(context);
+			}
+		}
+	}
+
 	export namespace expr {
 		export class Literal extends Expr {
 			value: Value;

@@ -41,10 +41,10 @@ test("eol", () => {
 	expect(result).toStrictEqual(":");
 	expect(rest.equals(""));
 
-	const s6 = src("<%");
+	const s6 = src("%>");
 	[result, rest] = eol.parse(s6).from();
-	expect(result).toStrictEqual("<%");
-	expect(rest.equals("<%"));
+	expect(result).toStrictEqual("%>");
+	expect(rest.equals("%>"));
 });
 
 describe("expression", () => {
@@ -476,12 +476,36 @@ describe("literal print", () => {
 
 		const [result, rest] = printBlockContent.parse(s).from();
 
-		expect(result).toStrictEqual(
+		expect(result).toStrictEqual(new ast.Block([
 			new ast.FunctionCall(
 				new ast.Variable(["Response", "Write"]),
 				[new ast.expr.Literal(new data.String("some literal text' not a comment "))]
 			)
-		);
+		]));
+		expect(rest.equals("<% code"))
+	});
+
+	test("printBlockContent with inline print", () => {
+		const s = src("text <%= stuff %>more text<%= 4+3 %>even more<% code");
+
+		const [result, rest] = printBlockContent.parse(s).from();
+
+		expect(result).toStrictEqual(new ast.Block([
+			responseWrite("text "),
+			new ast.FunctionCall(
+				new ast.Variable(["Response", "Write"]),
+				[new ast.Variable(["stuff"])]
+			),
+			responseWrite("more text"),
+			new ast.FunctionCall(
+				new ast.Variable(["Response", "Write"]),
+				[new ast.expr.Add(
+					new ast.expr.Literal(new data.Number(4)),
+					new ast.expr.Literal(new data.Number(3)),
+				)]
+			),
+			responseWrite("even more")
+		]));
 		expect(rest.equals("<% code"))
 	});
 	
@@ -490,12 +514,12 @@ describe("literal print", () => {
 
 		const [result, rest] = printBlock.parse(s).from();
 
-		expect(result).toStrictEqual(
+		expect(result).toStrictEqual(new ast.Block([
 			new ast.FunctionCall(
 				new ast.Variable(["Response", "Write"]),
 				[new ast.expr.Literal(new data.String("some text"))]
 			)
-		);
+		]));
 		expect(rest.equals("code"))
 	});
 
@@ -504,12 +528,12 @@ describe("literal print", () => {
 
 		const [result, rest] = printBlock.parse(s).from();
 
-		expect(result).toStrictEqual(
+		expect(result).toStrictEqual(new ast.Block([
 			new ast.FunctionCall(
 				new ast.Variable(["Response", "Write"]),
 				[new ast.expr.Literal(new data.String("some text"))]
 			)
-		);
+		]));
 		expect(rest.equals(""))
 	});
 });
@@ -523,15 +547,15 @@ function responseWrite(str: string): ast.FunctionCall {
 
 describe("script", () => {
 	test("asp", () => {
-		const s = src(`header<% doThing : dim x : %>footer`);
+		const s = src(`header<% doThing : dim x %>footer`);
 
 		const [result, rest] = scriptAsp.parse(s).from();
 
 		expect(result).toStrictEqual([
-			responseWrite("header"),
+			new ast.Block([responseWrite("header")]),
 			new ast.FunctionCall(new ast.Variable(["doThing"]), []),
 			new ast.Dim("x", -1),
-			responseWrite("footer"),
+			new ast.Block([responseWrite("footer")]),
 		]);
 	});
 });
