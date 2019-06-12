@@ -5,6 +5,7 @@ import * as data from "../program/Data";
 import { Expr } from "../program/NewContext";
 
 parser.ParserSettings.WHITESPACE = " \t";
+parser.ParserSettings.LINE_COMMENT = ["'", "rem"];
 const EOL_CHARS = "\n:";
 
 export const eof =
