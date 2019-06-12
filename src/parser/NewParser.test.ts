@@ -1,5 +1,5 @@
 import { StringSource, SourcePointer } from "parser-monad";
-import { expr, statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_, if_, set, printBlockCharacter, printBlockContent, printBlockContentString, printBlock, scriptAsp, inlinePrint } from "./NewParser";
+import { expr, statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_, if_, set, printBlockCharacter, printBlockContent, printBlockContentString, printBlock, scriptAsp, inlinePrint, include } from "./NewParser";
 import { ast } from "../program/NewAST";
 import * as data from "../program/Data";
 import { Value } from "../program/Data";
@@ -467,7 +467,12 @@ describe("literal print", () => {
 
 		const [result, rest] = printBlockContentString.parse(s).from();
 
-		expect(result).toStrictEqual(new ast.expr.Literal(new data.String("some literal text' not a comment ")));
+		expect(result).toStrictEqual(
+			new ast.FunctionCall(
+				new ast.Variable(["Response", "Write"]),
+				[new ast.expr.Literal(new data.String("some literal text' not a comment "))]
+			)
+		);
 		expect(rest.equals("<% code"))
 	});
 
@@ -491,7 +496,10 @@ describe("literal print", () => {
 		const [result, rest] = inlinePrint.parse(s).from();
 
 		expect(result).toStrictEqual(
-			new ast.Variable(["expr"])
+			new ast.FunctionCall(
+				new ast.Variable(["Response", "Write"]),
+				[new ast.Variable(["expr"])]
+			)
 		);
 
 		expect(rest.equals("rest")).toBeTruthy();
@@ -519,6 +527,33 @@ describe("literal print", () => {
 			responseWrite("even more")
 		]));
 		expect(rest.equals("<% code"))
+	});
+	
+	test("include", () => {
+		const s = src('<!-- #include file "something.asp" -->');
+		const [result, rest] = include.parse(s).from();
+		expect(result).toStrictEqual(
+			new ast.Include("something.asp")
+		);
+		expect(rest.equals("")).toBeTruthy();
+	});
+
+	test("printBlockContent with include", () => {
+		const s = src('text <!-- #include file "something.asp" --><%= stuff %>more text');
+
+		const [result, rest] = printBlockContent.parse(s).from();
+
+		expect(result).toStrictEqual(new ast.Block([
+			responseWrite("text "),
+			new ast.Include("something.asp"),
+			responseWrite(""),
+			new ast.FunctionCall(
+				new ast.Variable(["Response", "Write"]),
+				[new ast.Variable(["stuff"])]
+			),
+			responseWrite("more text"),
+		]));
+		expect(rest.equals(""))
 	});
 	
 	test("printBlock", () => {

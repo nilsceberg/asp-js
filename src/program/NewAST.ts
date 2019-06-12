@@ -436,4 +436,20 @@ export namespace ast {
 			console.log(`if ${this.condition} ...`);
 		}
 	}
+
+	export class Include implements Statement {
+		file: string;
+
+		constructor(file: string) {
+			this.file = file;
+		}
+
+		execute(context: Context) {
+			throw "includes not implemented";
+		}
+
+		subStatements(): Statement[] {
+			throw "includes not implemented";
+		}
+	}
 }

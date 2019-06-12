@@ -6,6 +6,7 @@ import { Expr } from "../program/NewContext";
 import "./ParserSettings";
 import { print } from "util";
 import { cons } from "parser-monad";
+import { response } from "express";
 
 const EOL_CHARS = "\n:";
 
@@ -284,29 +285,44 @@ export const if_: parser.Parser<ast.If> =
 
 export const printBlockCharacter: parser.Parser<string> =
 	parser.RawLitSequence("<%")
+	.or(parser.Accept("<!--").first(parser.Accept("#include")))
 	.or(parser.RawCharacter)
-	.bind(x => x === "<%" ? parser.Fail : parser.Return(x));
+	.bind(x => x === "<%" || x === "<!--" ? parser.Fail : parser.Return(x));
 
-export const printBlockContentString: parser.Parser<Expr> =
-	printBlockCharacter.repeat().map(s => new ast.expr.Literal(new data.String(s.join(""))));
+function responseWrite(e: Expr) {
+	return new ast.FunctionCall(
+		new ast.Variable(["Response", "Write"]),
+		[e]
+	);
+}
 
-export const inlinePrint: parser.Parser<Expr> =
-	parser.Accept("<%=").second(expr).first(parser.Require("%>"));
+export const inlinePrint: parser.Parser<ast.Statement> =
+	parser.Accept("<%=")
+	.second(expr)
+	.first(parser.Require("%>"))
+	.map(responseWrite);
+
+export const printBlockContentString: parser.Parser<ast.Statement> =
+	printBlockCharacter
+	.repeat()
+	.map(s => responseWrite(new ast.expr.Literal(new data.String(s.join("")))));
+
+export const include: parser.Parser<ast.Statement> =
+	parser.Accept("<!--")
+	.second(parser.Accept("#include"))
+	.second(parser.Accept("file"))
+	.second(parser.Token(str))
+	.first(parser.Require("-->"))
+	.map(f => new ast.Include(f.value.value()));
 
 export const printBlockContent: parser.Parser<ast.Block> =
 	printBlockContentString.then(
-		inlinePrint.then(printBlockContentString).repeat()
-		.map(xs => <Expr[]>[].concat.apply([], xs))
+		(inlinePrint.or(include))
+		.then(printBlockContentString).repeat()
+		.map(xs => <ast.Statement[]>[].concat.apply([], xs))
 	)
 	.map(cons)
-	.map(es => new ast.Block(
-		es.map(x => 
-			new ast.FunctionCall(
-				new ast.Variable(["Response", "Write"]),
-				[x]
-			)
-		)
-	));
+	.map(statements => new ast.Block(statements));
 
 export const printBlock: parser.Parser<ast.Block> =
 	parser.Accept("%>")
