@@ -40,6 +40,10 @@ export namespace ast {
 			evaluate(context: Context): Box {
 				return new Box(this.value);
 			}
+
+			toString() {
+				return this.value.toString();
+			}
 		}
 
 		export class New extends Expr {

@@ -12,7 +12,7 @@ test("parse", () => {
 		response.write "hello!"\n
 	end if\n
 	dim x\n
-	`));
+	`), false);
 
 	expect(script.ast).toStrictEqual([
 		new ast.Assignment(new ast.Variable(["x"]), new ast.expr.Literal(new data.Number(123))),
@@ -36,7 +36,21 @@ test("parse", () => {
 });
 
 test("execute test-simple.vbs", () => {
-	const script = Script.fromFile("test/test-simple.vbs");
-	console.log(util.inspect(script.ast));
+	const script = Script.fromFile("test/test-simple.vbs", false);
+	console.log(util.inspect(script.ast, {
+		colors: true,
+		depth: null
+	}));
+	//script.execute();
+});
+
+test("execute example/asp/index.asp", () => {
+	const script = Script.fromFile("example/asp/index.asp");
+	console.log(util.inspect(script.ast, {
+		colors: true,
+		compact: false,
+		depth: null,
+		customInspect: true,
+	}));
 	//script.execute();
 });

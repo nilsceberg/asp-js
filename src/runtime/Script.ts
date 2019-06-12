@@ -1,7 +1,7 @@
 import { ast } from "../program/NewAST";
 import { Context } from "../program/NewContext";
 import { Source, SourcePointer, StringSource } from "parser-monad";
-import { script } from "../parser/NewParser";
+import { script, scriptAsp } from "../parser/NewParser";
 import { Scope } from "./Scope";
 import { readFileSync } from "fs";
 
@@ -13,19 +13,21 @@ export class Script {
 		this.globalContext = globalContext;
 	}
 
-	static fromFile(filename: string): Script {
+	static fromFile(filename: string, asp: boolean = true): Script {
 		const contents = readFileSync(filename).toString("utf-8");
 		const source = new StringSource(contents);
 
 		const script = new Script();
-		script.parse(source);
+		script.parse(source, asp);
 		return script;
 	}
 
-	parse(source: Source) {
+	parse(source: Source, asp: boolean) {
 		const sourcePointer = new SourcePointer(source);
 		let trailer: SourcePointer;
-		[this.ast, trailer] = script.parse(sourcePointer).from();
+
+		const parser = asp ? scriptAsp : script;
+		[this.ast, trailer] = parser.parse(sourcePointer).from();
 		//console.log(util.inspect(this.ast, {
 		//	depth: null,
 		//	colors: true,
