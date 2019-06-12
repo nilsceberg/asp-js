@@ -1,8 +1,9 @@
 import { StringSource, SourcePointer } from "parser-monad";
-import { expr, statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_, if_, set } from "./NewParser";
+import { expr, statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_, if_, set, printBlockCharacter, printBlockContent, printBlockContentString, printBlock, scriptAsp } from "./NewParser";
 import { ast } from "../program/NewAST";
 import * as data from "../program/Data";
 import { Value } from "../program/Data";
+import { response } from "express";
 
 function src(s: string): SourcePointer {
 	return new SourcePointer(new StringSource(s));
@@ -39,6 +40,11 @@ test("eol", () => {
 	[result, rest] = eol.parse(s5).from();
 	expect(result).toStrictEqual(":");
 	expect(rest.equals(""));
+
+	const s6 = src("<%");
+	[result, rest] = eol.parse(s6).from();
+	expect(result).toStrictEqual("<%");
+	expect(rest.equals("<%"));
 });
 
 describe("expression", () => {
@@ -403,6 +409,7 @@ test("class", () => {
 		]
 	));
 });
+
 describe("if", () => {
 	test("simple", () => {
 		const s = src("if x < y then\nstatement\nend if");
@@ -442,5 +449,89 @@ describe("if", () => {
 				)
 			]
 		));
+	});
+});
+
+describe("literal print", () => {
+	test("printBlockCharacter", () => {
+		const s1 = src("a<%");
+
+		let [result, rest] = printBlockCharacter.parse(s1).from();
+
+		expect(result).toStrictEqual("a");
+		expect(rest.equals("<%"))
+	});
+	
+	test("printBlockContentString", () => {
+		const s = src("some literal text' not a comment <% code");
+
+		const [result, rest] = printBlockContentString.parse(s).from();
+
+		expect(result).toStrictEqual("some literal text' not a comment ");
+		expect(rest.equals("<% code"))
+	});
+
+	test("printBlockContent", () => {
+		const s = src("some literal text' not a comment <% code");
+
+		const [result, rest] = printBlockContent.parse(s).from();
+
+		expect(result).toStrictEqual(
+			new ast.FunctionCall(
+				new ast.Variable(["Response", "Write"]),
+				[new ast.expr.Literal(new data.String("some literal text' not a comment "))]
+			)
+		);
+		expect(rest.equals("<% code"))
+	});
+	
+	test("printBlock", () => {
+		const s = src("%>some text<% code");
+
+		const [result, rest] = printBlock.parse(s).from();
+
+		expect(result).toStrictEqual(
+			new ast.FunctionCall(
+				new ast.Variable(["Response", "Write"]),
+				[new ast.expr.Literal(new data.String("some text"))]
+			)
+		);
+		expect(rest.equals("code"))
+	});
+
+	test("printBlockEof", () => {
+		const s = src("%>some text");
+
+		const [result, rest] = printBlock.parse(s).from();
+
+		expect(result).toStrictEqual(
+			new ast.FunctionCall(
+				new ast.Variable(["Response", "Write"]),
+				[new ast.expr.Literal(new data.String("some text"))]
+			)
+		);
+		expect(rest.equals(""))
+	});
+});
+
+function responseWrite(str: string): ast.FunctionCall {
+	return new ast.FunctionCall(
+		new ast.Variable(["Response", "Write"]),
+		[new ast.expr.Literal(new data.String(str))]
+	);
+}
+
+describe("script", () => {
+	test("asp", () => {
+		const s = src(`header<% doThing : dim x : %>footer`);
+
+		const [result, rest] = scriptAsp.parse(s).from();
+
+		expect(result).toStrictEqual([
+			responseWrite("header"),
+			new ast.FunctionCall(new ast.Variable(["doThing"]), []),
+			new ast.Dim("x", -1),
+			responseWrite("footer"),
+		]);
 	});
 });

@@ -4,6 +4,8 @@ import { nothing, empty, null_, str, boolean } from "./LiteralParser";
 import * as data from "../program/Data";
 import { Expr } from "../program/NewContext";
 import "./ParserSettings";
+import { print } from "util";
+import { cons } from "parser-monad";
 
 const EOL_CHARS = "\n:";
 
@@ -17,10 +19,13 @@ const optionalEol =
 		.matches(c => EOL_CHARS.includes(c))
 		.first(parser.Spaces)
 		.repeat()
-	)
+	);
 
 export const eol =
 	optionalEol
+	// TODO: there HAS to be a prettier way of handling this without lookahead,
+	// but it will probably require a bit of refactoring:
+	.or(parser.Lookahead(2).matches(s => s === "<%"))
 	.or(eof)
 	.or(parser.Error("expected end of statement"));
 
@@ -108,6 +113,7 @@ export const statement: () => parser.Parser<ast.Statement> = () =>
 		class_,
 		if_,
 		set,
+		printBlock,
 	])
 	.first(eol);
 
@@ -276,8 +282,35 @@ export const if_: parser.Parser<ast.If> =
 	.first(parser.Require("if"))
 	.map(([[c, s], e]) => new ast.If(c, s, e));
 
-export const script =
+export const printBlockCharacter: parser.Parser<string> =
+	parser.RawLitSequence("<%")
+	.or(parser.RawCharacter)
+	.bind(x => x === "<%" ? parser.Fail : parser.Return(x));
+
+export const printBlockContentString: parser.Parser<string> =
+	printBlockCharacter.repeat().map(s => s.join(""));
+
+export const printBlockContent: parser.Parser<ast.FunctionCall> =
+	printBlockContentString.map(str => new ast.FunctionCall(
+		new ast.Variable(["Response", "Write"]),
+		[new ast.expr.Literal(new data.String(str))]
+	));
+
+export const printBlock: parser.Parser<ast.FunctionCall> =
+	parser.Accept("%>")
+	.second(printBlockContent)
+	.first(parser.Accept("<%").or(eof));
+
+export const script: parser.Parser<ast.Statement[]> =
 	parser.Spaces
 	.then(optionalEol.repeat())
 	.second(statements)
 	.first(eof.or(parser.Error("expected end of file")));
+
+export const scriptAsp: parser.Parser<ast.Statement[]> =
+	printBlockContent.first(parser.Accept("<%"))
+	.then(parser.Spaces
+		.then(optionalEol.repeat())
+		.second(statements)
+		.first(eof.or(parser.Error("expected end of file")))
+	).map(cons);
