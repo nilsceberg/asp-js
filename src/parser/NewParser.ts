@@ -287,17 +287,25 @@ export const printBlockCharacter: parser.Parser<string> =
 	.or(parser.RawCharacter)
 	.bind(x => x === "<%" ? parser.Fail : parser.Return(x));
 
-export const printBlockContentString: parser.Parser<string> =
-	printBlockCharacter.repeat().map(s => s.join(""));
+export const printBlockContentString: parser.Parser<Expr> =
+	printBlockCharacter.repeat().map(s => new ast.expr.Literal(new data.String(s.join(""))));
+
+export const inlinePrint: parser.Parser<Expr> =
+	parser.Accept("<%=").second(expr).first(parser.Require("%>"));
 
 export const printBlockContent: parser.Parser<ast.Block> =
-	printBlockContentString.map(str => new ast.Block(
-		[
+	printBlockContentString.then(
+		inlinePrint.then(printBlockContentString).repeat()
+		.map(xs => <Expr[]>[].concat.apply([], xs))
+	)
+	.map(cons)
+	.map(es => new ast.Block(
+		es.map(x => 
 			new ast.FunctionCall(
 				new ast.Variable(["Response", "Write"]),
-				[new ast.expr.Literal(new data.String(str))]
+				[x]
 			)
-		]
+		)
 	));
 
 export const printBlock: parser.Parser<ast.Block> =

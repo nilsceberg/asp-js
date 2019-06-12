@@ -1,5 +1,5 @@
 import { StringSource, SourcePointer } from "parser-monad";
-import { expr, statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_, if_, set, printBlockCharacter, printBlockContent, printBlockContentString, printBlock, scriptAsp } from "./NewParser";
+import { expr, statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_, if_, set, printBlockCharacter, printBlockContent, printBlockContentString, printBlock, scriptAsp, inlinePrint } from "./NewParser";
 import { ast } from "../program/NewAST";
 import * as data from "../program/Data";
 import { Value } from "../program/Data";
@@ -467,7 +467,7 @@ describe("literal print", () => {
 
 		const [result, rest] = printBlockContentString.parse(s).from();
 
-		expect(result).toStrictEqual("some literal text' not a comment ");
+		expect(result).toStrictEqual(new ast.expr.Literal(new data.String("some literal text' not a comment ")));
 		expect(rest.equals("<% code"))
 	});
 
@@ -483,6 +483,18 @@ describe("literal print", () => {
 			)
 		]));
 		expect(rest.equals("<% code"))
+	});
+
+	test("inline print", () => {
+		const s = src("<%= expr %>rest");
+
+		const [result, rest] = inlinePrint.parse(s).from();
+
+		expect(result).toStrictEqual(
+			new ast.Variable(["expr"])
+		);
+
+		expect(rest.equals("rest")).toBeTruthy();
 	});
 
 	test("printBlockContent with inline print", () => {
