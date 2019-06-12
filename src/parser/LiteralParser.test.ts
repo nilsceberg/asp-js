@@ -38,4 +38,13 @@ describe("string", () => {
 		);
 		expect(rest.equals("")).toBeTruthy();
 	});
+
+	test("comment in string", () => {
+		const s = src(`"he said, 'hello'!"`);
+		const [result, rest] = str.parse(s).from();
+		expect(result).toEqual(
+			new ast.expr.Literal(new data.String(`he said, 'hello'!`))
+		);
+		expect(rest.equals("")).toBeTruthy();
+	});
 });

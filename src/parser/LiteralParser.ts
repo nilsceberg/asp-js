@@ -2,13 +2,14 @@ import * as parser from "parser-monad";
 import { ast } from "../program/NewAST";
 import { not } from "./Util";
 import * as data from "../program/Data";
+import "./ParserSettings";
 
 const isStringDelimiter = (x: string) => x === "\"";
 const stringDelimiter = parser.Character.matches(isStringDelimiter);
 const escapedStringDelimiter = stringDelimiter.second(stringDelimiter);
 
 export const strChar: parser.Parser<parser.char> =
-	parser.Character.matches(not(isStringDelimiter))
+	parser.RawCharacter.matches(not(isStringDelimiter))
 	.or(escapedStringDelimiter);
 
 export const str: parser.Parser<ast.expr.Literal> =

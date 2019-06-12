@@ -3,9 +3,8 @@ import { ast } from "../program/NewAST";
 import { nothing, empty, null_, str, boolean } from "./LiteralParser";
 import * as data from "../program/Data";
 import { Expr } from "../program/NewContext";
+import "./ParserSettings";
 
-parser.ParserSettings.WHITESPACE = " \t";
-parser.ParserSettings.LINE_COMMENT = ["'", "rem"];
 const EOL_CHARS = "\n:";
 
 export const eof =
