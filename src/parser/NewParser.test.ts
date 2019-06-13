@@ -204,9 +204,17 @@ test("statement", () => {
 		)
 	);
 
+	const s6 = src("%>text<% func (1)");
+	expect(statement().parse(s6).from()[0]).toStrictEqual(new ast.Block([
+		new ast.FunctionCall(
+			new ast.Variable(["Response", "Write"]),
+			[new ast.expr.Literal(new data.String("text"))]
+		)
+	]));
+
 	// This is not allowed
-	const s6 = src("func (1, 3)");
-	expect(() => statement().parse(s6)).toThrow();
+	const s7 = src("func (1, 3)");
+	expect(() => statement().parse(s7)).toThrow();
 });
 
 test("statements", () => {

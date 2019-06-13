@@ -114,9 +114,9 @@ export const statement: () => parser.Parser<ast.Statement> = () =>
 		class_,
 		if_,
 		set,
-		printBlock,
 	])
-	.first(eol);
+	.first(eol)
+	.or(printBlock);
 
 export const statements: parser.Parser<ast.Statement[]> =
 	parser.Parser.lazy(statement).repeat()
