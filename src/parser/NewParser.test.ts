@@ -47,6 +47,17 @@ test("eol", () => {
 	expect(rest.equals("%>"));
 });
 
+describe("line continuation", () => {
+	test("dim", () => {
+		const s = src("dim_\nhello");
+
+		expect(dim.parse(s).from()[0]).toStrictEqual(new ast.Dim(
+			"hello",
+			-1
+		));
+	});
+});
+
 describe("expression", () => {
 	test("constant", () => {
 		const s1 = src("3 + 4 * (-2 - 3) = -17 and 3 < 4");

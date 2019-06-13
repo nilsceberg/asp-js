@@ -4,9 +4,7 @@ import { nothing, empty, null_, str, boolean } from "./LiteralParser";
 import * as data from "../program/Data";
 import { Expr } from "../program/NewContext";
 import "./ParserSettings";
-import { print } from "util";
 import { cons } from "parser-monad";
-import { response } from "express";
 
 const EOL_CHARS = "\n:";
 
