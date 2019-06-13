@@ -22,7 +22,7 @@ describe("string", () => {
 	});
 
 	test("simple", () => {
-		const s = src('"hello world!"');
+		const s = src('"hello world!"   ');
 		const [result, rest] = str.parse(s).from();
 		expect(result).toEqual(
 			new ast.expr.Literal(new data.String("hello world!"))

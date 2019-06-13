@@ -37,20 +37,31 @@ test("parse", () => {
 
 test("execute test-simple.vbs", () => {
 	const script = Script.fromFile("test/test-simple.vbs", false);
-	console.log(util.inspect(script.ast, {
-		colors: true,
-		depth: null
-	}));
+	//console.log(util.inspect(script.ast, {
+	//	colors: true,
+	//	depth: null
+	//}));
+	//script.execute();
+});
+
+test("execute example/asp/functions.asp", () => {
+	const script = Script.fromFile("example/asp/functions.asp");
+//	console.log(util.inspect(script.ast, {
+//		colors: true,
+//		compact: false,
+//		depth: null,
+//		customInspect: true,
+//	}));
 	//script.execute();
 });
 
 test("execute example/asp/index.asp", () => {
 	const script = Script.fromFile("example/asp/index.asp");
-	console.log(util.inspect(script.ast, {
-		colors: true,
-		compact: false,
-		depth: null,
-		customInspect: true,
-	}));
+	//console.log(util.inspect(script.ast, {
+	//	colors: true,
+	//	compact: false,
+	//	depth: null,
+	//	customInspect: true,
+	//}));
 	//script.execute();
 });

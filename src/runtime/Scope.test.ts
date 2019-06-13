@@ -18,7 +18,7 @@ describe("scope", () => {
 			end function
 		end if\n
 		dim x\n
-		`));
+		`), false);
 
 		const block = script.getScope();
 		block.context.explicit = true;
@@ -36,7 +36,6 @@ describe("scope", () => {
 		const responseObject = new DictObj();
 		responseObject.fields["write"] = new Box(new NodeFunc(
 			([str]) => {
-				console.log(str);
 				return new Box(new data.Empty);
 			},
 			globalContext
@@ -47,7 +46,7 @@ describe("scope", () => {
 		const script = new Script(globalContext);
 		script.parse(new StringSource(`
 		response.write "hello!"\n
-		`));
+		`), false);
 
 		const block = script.getScope();
 		

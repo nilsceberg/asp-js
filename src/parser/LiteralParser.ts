@@ -13,10 +13,12 @@ export const strChar: parser.Parser<parser.char> =
 	.or(escapedStringDelimiter);
 
 export const str: parser.Parser<ast.expr.Literal> =
-	stringDelimiter
-	.second(strChar.repeat())
-	.map(cs => new ast.expr.Literal(new data.String(cs.join(""))))
-	.first(stringDelimiter);
+	parser.Token(
+		stringDelimiter
+		.second(strChar.repeat())
+		.map(cs => new ast.expr.Literal(new data.String(cs.join(""))))
+		.first(stringDelimiter)
+	);
 
 export const boolean: parser.Parser<ast.expr.Literal> =
 	parser.Accept("true").or(parser.Accept("false"))

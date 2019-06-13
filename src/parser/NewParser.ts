@@ -114,7 +114,7 @@ export const statement: () => parser.Parser<ast.Statement> = () =>
 		set,
 	])
 	.first(eol)
-	.or(printBlock);
+	.or(printBlock.first(optionalEol.repeat()));
 
 export const statements: parser.Parser<ast.Statement[]> =
 	parser.Parser.lazy(statement).repeat()
@@ -308,9 +308,9 @@ export const printBlockContentString: parser.Parser<ast.Statement> =
 export const include: parser.Parser<ast.Statement> =
 	parser.Accept("<!--")
 	.second(parser.Accept("#include"))
-	.second(parser.Accept("file"))
-	.second(parser.Accept("="))
-	.second(parser.Token(str))
+	.second(parser.Require("file"))
+	.second(parser.Require("="))
+	.second(parser.Token(str).or(parser.Error("expected file name")))
 	.first(parser.Require("-->"))
 	.map(f => new ast.Include(f.value.value()));
 

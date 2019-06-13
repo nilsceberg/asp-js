@@ -145,7 +145,8 @@ describe("expression", () => {
 
 	test("literals", () => {
 		const s = src('1 + nothing + empty + null + "hello ""world"""');
-		expect(expr.parse(s).from()[0]).toStrictEqual(
+		const [result, rest] = expr.parse(s).from();
+		expect(result).toStrictEqual(
 			new ast.expr.Add(
 				new ast.expr.Add(
 					new ast.expr.Add(
@@ -611,6 +612,40 @@ describe("literal print", () => {
 			)
 		]));
 		expect(rest.equals(""))
+	});
+
+	test("printBlockNoEol", () => {
+		const s = src("%><% statement");
+
+		const [result, rest] = statements.parse(s).from();
+
+		expect(result).toStrictEqual([
+			new ast.Block([
+				new ast.FunctionCall(
+					new ast.Variable(["Response", "Write"]),
+					[new ast.expr.Literal(new data.String(""))]
+				),
+			]),
+			new ast.DummyStatement
+		]);
+		expect(rest.equals(""))
+	});
+
+	test("printBlockEol", () => {
+		const s = src("%><%\n\r statement");
+
+		const [result, rest] = statements.parse(s).from();
+
+		expect(result).toStrictEqual([
+			new ast.Block([
+				new ast.FunctionCall(
+					new ast.Variable(["Response", "Write"]),
+					[new ast.expr.Literal(new data.String(""))]
+				),
+			]),
+			new ast.DummyStatement
+		]);
+		expect(rest.equals(""));
 	});
 });
 

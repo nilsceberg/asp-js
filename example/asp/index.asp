@@ -7,7 +7,7 @@ Response.AddHeader "Server", "Koa with ASP.JS"
 	<head>
 		<title>ASP.JS Demo</title>
 	</head>
-	<!-- #include file "functions.asp" -->
+	<!-- #include file="functions.asp" -->
 	<body>
 		<%
 			dim name : name = Request.QueryString("name")
@@ -24,4 +24,3 @@ Response.AddHeader "Server", "Koa with ASP.JS"
 		</small>
 	</body>
 </html>
-
