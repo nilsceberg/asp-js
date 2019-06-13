@@ -481,6 +481,27 @@ describe("if", () => {
 		));
 	});
 });
+	
+describe("include", () => {
+	test("file", () => {
+		const s = src('<!-- #include file="something.asp" -->');
+		const [result, rest] = include.parse(s).from();
+		expect(result).toStrictEqual(
+			new ast.Include("something.asp", false)
+		);
+		expect(rest.equals("")).toBeTruthy();
+	});
+
+	test("virtual", () => {
+		const s = src('<!-- #include virtual="something.asp" -->');
+		const [result, rest] = include.parse(s).from();
+		expect(result).toStrictEqual(
+			new ast.Include("something.asp", true)
+		);
+		expect(rest.equals("")).toBeTruthy();
+	});
+});
+
 
 describe("literal print", () => {
 	test("printBlockCharacter", () => {
@@ -558,15 +579,6 @@ describe("literal print", () => {
 		]));
 		expect(rest.equals("<% code"))
 	});
-	
-	test("include", () => {
-		const s = src('<!-- #include file="something.asp" -->');
-		const [result, rest] = include.parse(s).from();
-		expect(result).toStrictEqual(
-			new ast.Include("something.asp")
-		);
-		expect(rest.equals("")).toBeTruthy();
-	});
 
 	test("printBlockContent with include", () => {
 		const s = src('text <!-- #include file="something.asp" --><%= stuff %>more text');
@@ -575,7 +587,7 @@ describe("literal print", () => {
 
 		expect(result).toStrictEqual(new ast.Block([
 			responseWrite("text "),
-			new ast.Include("something.asp"),
+			new ast.Include("something.asp", false),
 			responseWrite(""),
 			new ast.FunctionCall(
 				new ast.Variable(["Response", "Write"]),

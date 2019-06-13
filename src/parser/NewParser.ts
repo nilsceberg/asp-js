@@ -5,6 +5,7 @@ import * as data from "../program/Data";
 import { Expr } from "../program/NewContext";
 import "./ParserSettings";
 import { cons } from "parser-monad";
+import { strEqual } from "./Util";
 
 const EOL_CHARS = "\n:";
 
@@ -308,11 +309,20 @@ export const printBlockContentString: parser.Parser<ast.Statement> =
 export const include: parser.Parser<ast.Statement> =
 	parser.Accept("<!--")
 	.second(parser.Accept("#include"))
-	.second(parser.Require("file"))
-	.second(parser.Require("="))
-	.second(parser.Token(str).or(parser.Error("expected file name")))
-	.first(parser.Require("-->"))
-	.map(f => new ast.Include(f.value.value()));
+	.second(
+		parser.Accept("file")
+		.or(parser.Accept("virtual"))
+		.or(parser.Error("expected 'file' or 'virtual'"))
+	)
+	.then(
+		parser.Require("=")
+		.second(parser.Token(str).or(parser.Error("expected file name")))
+		.first(parser.Require("-->"))
+	)
+	.map(([v, f]) => new ast.Include(
+		f.value.value(),
+		strEqual(v, "virtual")
+	));
 
 export const printBlockContent: parser.Parser<ast.Block> =
 	printBlockContentString.then(

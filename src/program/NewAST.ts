@@ -439,9 +439,11 @@ export namespace ast {
 
 	export class Include implements Statement {
 		file: string;
+		virtual: boolean;
 
-		constructor(file: string) {
+		constructor(file: string, virtual: boolean) {
 			this.file = file;
+			this.virtual = virtual;
 		}
 
 		execute(context: Context) {
