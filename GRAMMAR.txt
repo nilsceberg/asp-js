@@ -29,8 +29,7 @@ redim = "redim" "preserve"? dimDecl ("," dimDecl)*
 getProperty = access? "default"? "get" identifier ("(" ")")? eol statements "end" "property"
 setProperty = access? ("set" | "let") identifier "(" argListArg ")" eol statements "end" "property"
 
-argList = argListArg "," argList | argListArg
-# TODO
+argList = (argListArg ("," argList)*)?
 argListArg = ("byval" | "byref")? identifier
 
 assignment = lvalue "=" expr

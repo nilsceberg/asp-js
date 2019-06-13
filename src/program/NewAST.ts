@@ -403,9 +403,11 @@ export namespace ast {
 
 	export class Argument {
 		name: string;
+		byRef: boolean;
 
-		constructor(name: string) {
+		constructor(name: string, byRef: boolean = false) {
 			this.name = name;
+			this.byRef = byRef;
 		}
 	}
 

@@ -250,14 +250,19 @@ export const redim: parser.Parser<ast.Block> =
 	.map(redims => new ast.Block(redims));
 
 export const argListArg: parser.Parser<ast.Argument> =
-	identifier.map(name => new ast.Argument(name));
+	parser.Default(
+		parser.Accept("byref")
+		.or(parser.Accept("byval"))
+		.map(s => strEqual(s, "byref")),
+		false)
+	.bind(byRef =>
+		identifier.map(name => new ast.Argument(name, byRef))
+	);
 
-export const argList: () => parser.Parser<ast.Argument[]> = () =>
+export const argList: parser.Parser<ast.Argument[]> =
 	argListArg
-	.first(parser.Accept(","))
-	.then(parser.Parser.lazy(argList))
-	.map(parser.cons)
-	.or(argListArg.map(x => [x]))
+	.then(parser.Accept(",").second(argListArg).repeat())
+	.map(cons)
 	.or(parser.Return([]));
 
 export const func: parser.Parser<ast.Function> =
@@ -266,7 +271,7 @@ export const func: parser.Parser<ast.Function> =
 		parser.Accept("function")
 		.second(identifier)
 		.then(parser.Default(
-			parser.Accept("(").second(argList().first(parser.Require(")"))),
+			parser.Accept("(").second(argList.first(parser.Require(")"))),
 			[]
 		))
 		.first(eol)
@@ -282,7 +287,7 @@ export const sub: parser.Parser<ast.Function> =
 		parser.Accept("sub")
 		.second(identifier)
 		.then(parser.Default(
-			parser.Accept("(").second(argList().first(parser.Require(")"))),
+			parser.Accept("(").second(argList.first(parser.Require(")"))),
 			[]
 		))
 		.first(eol)

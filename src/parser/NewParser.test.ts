@@ -444,25 +444,43 @@ describe("redim", () => {
 	});
 });
 
-test("argListArg", () => {
-	const s = src("arg1");
+describe("argListArg", () => {
+	test("simple", () => {
+		const s = src("arg1");
 
-	expect(argListArg.parse(s).from()[0]).toStrictEqual(new ast.Argument(
-		"arg1"
-	));
+		expect(argListArg.parse(s).from()[0]).toStrictEqual(new ast.Argument(
+			"arg1", false
+		));
+	});
+
+	test("byRef", () => {
+		const s = src("byRef arg1");
+
+		expect(argListArg.parse(s).from()[0]).toStrictEqual(new ast.Argument(
+			"arg1", true
+		));
+	});
+
+	test("byVal", () => {
+		const s = src("byVal arg1");
+
+		expect(argListArg.parse(s).from()[0]).toStrictEqual(new ast.Argument(
+			"arg1", false
+		));
+	});
 });
 
 test("argList", () => {
-	const s1 = src("arg1, arg2, arg3");
+	const s1 = src("arg1, byRef arg2, byVal arg3");
 
-	expect(argList().parse(s1).from()[0]).toStrictEqual([
+	expect(argList.parse(s1).from()[0]).toStrictEqual([
 		new ast.Argument("arg1"),
-		new ast.Argument("arg2"),
+		new ast.Argument("arg2", true),
 		new ast.Argument("arg3"),
 	]);
 
 	const s2 = src(")");
-	let [result, rest] = argList().parse(s2).from();
+	let [result, rest] = argList.parse(s2).from();
 	expect(result).toStrictEqual([]);
 	expect(rest.equals(")")).toBeTruthy();
 });
