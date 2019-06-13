@@ -31,7 +31,9 @@ test("parse", () => {
 			],
 			[]
 		),
-		new ast.Dim("x", -1)
+		new ast.Block([
+			new ast.Dim("x", null)
+		])
 	]);
 });
 
