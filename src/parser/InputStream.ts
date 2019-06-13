@@ -30,7 +30,7 @@ export abstract class InputStream implements Stream {
 		}
 
 		if (this.content[0] === "<") {
-			const includeMatch = this.content.match(/^<!--\s*#include\s+(file|virtual)\s*"([^"]+)"\s*-->/);
+			const includeMatch = this.content.match(/^<!--\s*#include\s+(file|virtual)\s*=\s*"([^"]+)"\s*-->/);
 			if (includeMatch) {
 				if (includeMatch[1] === "virtual") {
 					this.error("virtual includes are not yet supported");

@@ -8,7 +8,8 @@
     "test": "jest",
     "install": "tsc",
     "watch": "jest --watch",
-    "example": "tsc && cd example && npm test"
+    "example": "tsc && cd example && npm test",
+    "start": "cd example && npm test"
   },
   "author": "Nils Ceberg",
   "license": "ISC",
