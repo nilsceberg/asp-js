@@ -1,8 +1,9 @@
 import { StringSource, SourcePointer } from "parser-monad";
-import { expr, statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_, if_, set, printBlockCharacter, printBlockContent, printBlockContentString, printBlock, scriptAsp, inlinePrint, include } from "./NewParser";
+import { expr, statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_, if_, set, printBlockCharacter, printBlockContent, printBlockContentString, printBlock, scriptAsp, inlinePrint, include, redim } from "./NewParser";
 import { ast } from "../program/NewAST";
 import * as data from "../program/Data";
 import { Value } from "../program/Data";
+import { AccessLevel } from "../program/Access";
 
 function src(s: string): SourcePointer {
 	return new SourcePointer(new StringSource(s));
@@ -50,10 +51,12 @@ describe("line continuation", () => {
 	test("dim", () => {
 		const s = src("dim_\nhello");
 
-		expect(dim.parse(s).from()[0]).toStrictEqual(new ast.Dim(
-			"hello",
-			-1
-		));
+		expect(dim.parse(s).from()[0]).toStrictEqual(new ast.Block([
+			new ast.Dim(
+				"hello",
+				null
+			)
+		]));
 	});
 });
 
@@ -345,18 +348,99 @@ describe("dim", () => {
 	test("scalar", () => {
 		const s = src("dim hello");
 
-		expect(dim.parse(s).from()[0]).toStrictEqual(new ast.Dim(
-			"hello",
-			-1
-		));
+		expect(dim.parse(s).from()[0]).toStrictEqual(new ast.Block([
+			new ast.Dim(
+				"hello",
+				null,
+				AccessLevel.Public,
+			)
+		]));
 	});
 	test("array", () => {
-		const s = src("dim hello(4)");
+		const s = src("dim hello(4, 2)");
 
-		expect(dim.parse(s).from()[0]).toStrictEqual(new ast.Dim(
-			"hello",
-			4
-		));
+		expect(dim.parse(s).from()[0]).toStrictEqual(new ast.Block([
+			new ast.Dim(
+				"hello",
+				[4, 2],
+				AccessLevel.Public,
+			)
+		]));
+	});
+	test("dimensionless array", () => {
+		const s = src("dim hello()");
+
+		expect(dim.parse(s).from()[0]).toStrictEqual(new ast.Block([
+			new ast.Dim(
+				"hello",
+				[],
+				AccessLevel.Public,
+			)
+		]));
+	});
+	test("multiple", () => {
+		const s = src("dim a, b(), c(3)");
+
+		expect(dim.parse(s).from()[0]).toStrictEqual(new ast.Block([
+			new ast.Dim(
+				"a",
+				null,
+				AccessLevel.Public,
+			),
+			new ast.Dim(
+				"b",
+				[],
+				AccessLevel.Public,
+			),
+			new ast.Dim(
+				"c",
+				[3],
+				AccessLevel.Public,
+			),
+		]));
+	});
+	test("private", () => {
+		const s = src("private hello(4)");
+
+		expect(dim.parse(s).from()[0]).toStrictEqual(new ast.Block([
+			new ast.Dim(
+				"hello",
+				[4],
+				AccessLevel.Private,
+			)
+		]));
+	});
+	test("public", () => {
+		const s = src("public hello(4)");
+
+		expect(dim.parse(s).from()[0]).toStrictEqual(new ast.Block([
+			new ast.Dim(
+				"hello",
+				[4],
+				AccessLevel.Public,
+			)
+		]));
+	});
+});
+
+describe("redim", () => {
+	test("simple", () => {
+		const s = src("redim x(3)")
+		expect(redim.parse(s).from()[0]).toStrictEqual(
+			new ast.Block([
+				new ast.Redim("x", [3], false)
+			])
+		);
+	});
+
+	test("complex", () => {
+		const s = src("redim preserve x(3), y(5, 6)")
+		expect(redim.parse(s).from()[0]).toStrictEqual(
+			new ast.Block([
+				new ast.Redim("x", [3], true),
+				new ast.Redim("y", [5, 6], true),
+			])
+		);
 	});
 });
 
@@ -403,6 +487,17 @@ describe("function", () => {
 			[new ast.DummyStatement, new ast.DummyStatement]
 		));
 	});
+
+	test("with access modifier", () => {
+		const s = src("private function f\n\tstatement\n\tstatement\nend function");
+
+		expect(func.parse(s).from()[0]).toStrictEqual(new ast.Function(
+			"f",
+			[],
+			[new ast.DummyStatement, new ast.DummyStatement],
+			AccessLevel.Private
+		));
+	});
 });
 
 describe("sub", () => {
@@ -425,6 +520,17 @@ describe("sub", () => {
 			[new ast.DummyStatement, new ast.DummyStatement]
 		));
 	});
+
+	test("with access modifier", () => {
+		const s2 = src("private sub subroutine\n\tstatement\n\tstatement\nend sub");
+
+		expect(sub.parse(s2).from()[0]).toStrictEqual(new ast.Function(
+			"subroutine",
+			[],
+			[new ast.DummyStatement, new ast.DummyStatement],
+			AccessLevel.Private
+		));
+	});
 });
 
 test("class", () => {
@@ -433,7 +539,9 @@ test("class", () => {
 	expect(class_.parse(s1).from()[0]).toStrictEqual(new ast.Class(
 		"MyClass",
 		[
-			new ast.Dim("a", -1),
+			new ast.Block([
+				new ast.Dim("a", null),
+			]),
 			new ast.Function("test", [], [])
 		]
 	));
@@ -676,7 +784,7 @@ describe("script", () => {
 		expect(result).toStrictEqual([
 			new ast.Block([responseWrite("header")]),
 			new ast.FunctionCall(new ast.Variable(["doThing"]), []),
-			new ast.Dim("x", -1),
+			new ast.Block([new ast.Dim("x", null)]),
 			new ast.Block([responseWrite("footer")]),
 		]);
 	});

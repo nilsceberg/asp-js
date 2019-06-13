@@ -2,6 +2,7 @@ import { Context, Func, Box, Expr, DictObj } from "./NewContext";
 import { Value } from "./Data";
 import * as data from "./Data";
 import { RuntimeError } from "../runtime/Error";
+import { AccessLevel } from "./Access";
 
 export namespace ast {
 
@@ -362,11 +363,33 @@ export namespace ast {
 
 	export class Dim implements Statement {
 		name: string;
-		length: number;
+		length: number[];
+		access: AccessLevel;
 
-		constructor(name: string, length: number) {
+		constructor(name: string, length: number[], access: AccessLevel = AccessLevel.Public) {
 			this.name = name;
 			this.length = length;
+			this.access = access;
+		}
+
+		subStatements(): Statement[] {
+			return [];
+		}
+
+		execute(context: Context) {
+
+		}
+	}
+
+	export class Redim implements Statement {
+		name: string;
+		length: number[];
+		preserve: boolean;
+
+		constructor(name: string, length: number[], preserve: boolean) {
+			this.name = name;
+			this.length = length;
+			this.preserve = preserve;
 		}
 
 		subStatements(): Statement[] {
@@ -390,11 +413,13 @@ export namespace ast {
 		name: string;
 		args: Argument[];
 		body: Statement[];
+		access: AccessLevel;
 
-		constructor(name: string, args: Argument[], body: Statement[]) {
+		constructor(name: string, args: Argument[], body: Statement[], access: AccessLevel = AccessLevel.Public) {
 			this.name = name;
 			this.args = args;
 			this.body = body;
+			this.access = access;
 		}
 
 		subStatements(): Statement[] {

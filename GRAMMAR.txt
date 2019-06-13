@@ -15,20 +15,19 @@ statement = (class | function | sub | dim | redim | assignment | subCall | call 
 class = "class" identifier eol classDecl* "end" "class"
 classDecl = (dim | function | sub | getProperty | setProperty) eol
 
-# TODO
 access = "public" | "private" 
 function = access? "function" identifier ("(" argList ")")? eol statements "end" "function"
 sub = access? "sub" identifier ("(" argList ")")? eol statements "end" "sub"
 
+dimension = "(" ")" | ("(" integer ("," integer)* ")")
+dimDecl = identifier dimension?
+redimDecl = identifier dimension?
+dim = ("dim" | access) dimDecl ("," dimDecl)*
+redim = "redim" "preserve"? dimDecl ("," dimDecl)* 
+
 # TODO
 getProperty = access? "default"? "get" identifier ("(" ")")? eol statements "end" "property"
 setProperty = access? ("set" | "let") identifier "(" argListArg ")" eol statements "end" "property"
-
-# TODO
-dimension = "(" ")" | ("(" integer ("," integer)* ")")
-dimDecl = identifier dimension?
-dim = ("dim" | access) dimDecl ("," dimDecl)*
-redim = dimDecl ("," dimDecl)* 
 
 argList = argListArg "," argList | argListArg
 # TODO

@@ -6,6 +6,7 @@ import { Expr } from "../program/NewContext";
 import "./ParserSettings";
 import { cons } from "parser-monad";
 import { strEqual } from "./Util";
+import { AccessLevel } from "../program/Access";
 
 const EOL_CHARS = "\n:";
 
@@ -193,16 +194,60 @@ export const call: parser.Parser<ast.FunctionCall> =
 	))
 	.map(([v, a]) => new ast.FunctionCall(v, a));
 
-export const dim: parser.Parser<ast.Dim> =
-	parser.Accept("dim")
-	.second(identifier)
-	.then(
-		parser.Accept("(")
-		.second(parser.Integer)
-		.first(parser.Require(")"))
-		.or(parser.Return(-1))
+export const dimension: parser.Parser<number[]> =
+	parser.Accept("(")
+	.second(
+		parser.Integer
+		.then(
+			parser.Accept(",")
+			.second(parser.Integer)
+			.repeat())
+		.map(cons)
+		.or(parser.Return([]))
+	)
+	.first(parser.Require(")"));
+
+export const dimDecl: (access: AccessLevel) => parser.Parser<ast.Dim> =
+	access =>
+	identifier
+	.then(parser.Default(dimension, null))
+	.map(([id, dim]) => new ast.Dim(id, dim, access));
+
+export const access: parser.Parser<AccessLevel> =
+	parser.Accept("public")
+	.or(parser.Accept("private"))
+	.map(a => strEqual(a, "private") ? AccessLevel.Private : AccessLevel.Public);
+
+export const dim: parser.Parser<ast.Block> =
+	access.or(parser.Accept("dim").map(() => AccessLevel.Public))
+	.bind(
+		access =>
+		dimDecl(access)
+		.then(parser.Accept(",").second(dimDecl(access)).repeat())
+		.map(cons)
+	)
+	.map(dims => new ast.Block(dims));
+
+export const redimDecl: (preserve: boolean) => parser.Parser<ast.Redim> =
+	preserve =>
+	identifier
+	.then(parser.Default(dimension, null))
+	.map(([id, dim]) => new ast.Redim(id, dim, preserve));
+
+export const redim: parser.Parser<ast.Block> =
+	parser.Accept("redim")
+	.second(
+		parser.Default(
+			parser.Accept("preserve").map(() => true),
+			false
 		)
-	.map(([name, length]) => new ast.Dim(name, length));
+	)
+	.bind(preserve =>
+		redimDecl(preserve)
+		.then(parser.Accept(",").second(redimDecl(preserve)).repeat())
+		.map(cons)
+	)
+	.map(redims => new ast.Block(redims));
 
 export const argListArg: parser.Parser<ast.Argument> =
 	identifier.map(name => new ast.Argument(name));
@@ -216,30 +261,36 @@ export const argList: () => parser.Parser<ast.Argument[]> = () =>
 	.or(parser.Return([]));
 
 export const func: parser.Parser<ast.Function> =
-	parser.Accept("function")
-	.second(identifier)
-	.then(parser.Default(
-		parser.Accept("(").second(argList().first(parser.Require(")"))),
-		[]
-	))
-	.first(eol)
-	.then(statements)
-	.first(parser.Require("end"))
-	.first(parser.Require("function"))
-	.map(([[n, a], b]) => new ast.Function(n, a, b));
+	parser.Default(access, AccessLevel.Public)
+	.then(
+		parser.Accept("function")
+		.second(identifier)
+		.then(parser.Default(
+			parser.Accept("(").second(argList().first(parser.Require(")"))),
+			[]
+		))
+		.first(eol)
+		.then(statements)
+		.first(parser.Require("end"))
+		.first(parser.Require("function"))
+	)
+	.map(([access, [[n, a], b]]) => new ast.Function(n, a, b, access));
 
 export const sub: parser.Parser<ast.Function> =
-	parser.Accept("sub")
-	.second(identifier)
-	.then(parser.Default(
-		parser.Accept("(").second(argList().first(parser.Require(")"))),
-		[]
-	))
-	.first(eol)
-	.then(statements)
-	.first(parser.Require("end"))
-	.first(parser.Require("sub"))
-	.map(([[n, a], b]) => new ast.Function(n, a, b));
+	parser.Default(access, AccessLevel.Public)
+	.then(
+		parser.Accept("sub")
+		.second(identifier)
+		.then(parser.Default(
+			parser.Accept("(").second(argList().first(parser.Require(")"))),
+			[]
+		))
+		.first(eol)
+		.then(statements)
+		.first(parser.Require("end"))
+		.first(parser.Require("sub"))
+	)
+	.map(([access, [[n, a], b]]) => new ast.Function(n, a, b, access));
 
 export const classDecl: parser.Parser<ast.Statement> =
 	parser.Parser.orMany<ast.Statement>([
