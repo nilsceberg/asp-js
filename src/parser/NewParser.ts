@@ -113,6 +113,7 @@ export const statement: () => parser.Parser<ast.Statement> = () =>
 		subCall,
 		func,
 		sub,
+		redim,
 		dim,
 		class_,
 		if_,
