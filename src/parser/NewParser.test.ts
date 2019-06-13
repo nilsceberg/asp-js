@@ -238,6 +238,16 @@ test("statements", () => {
 	]);
 });
 
+test("keyword case insensitivity", () => {
+	const s = src("statement \n STATEMENT \nStateMent : STATEment");
+	expect(statements.parse(s).from()[0]).toStrictEqual([
+		new ast.DummyStatement(),
+		new ast.DummyStatement(),
+		new ast.DummyStatement(),
+		new ast.DummyStatement(),
+	]);
+});
+
 test("args", () => {
 	const s1 = src("3");
 	const s2 = src("3, 4 + 1, (4+2)*3, 0");
