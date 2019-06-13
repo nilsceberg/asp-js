@@ -311,6 +311,7 @@ export const include: parser.Parser<ast.Statement> =
 	parser.Accept("<!--")
 	.second(parser.Accept("#include"))
 	.second(parser.Accept("file"))
+	.second(parser.Accept("="))
 	.second(parser.Token(str))
 	.first(parser.Require("-->"))
 	.map(f => new ast.Include(f.value.value()));

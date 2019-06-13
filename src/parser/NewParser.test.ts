@@ -530,7 +530,7 @@ describe("literal print", () => {
 	});
 	
 	test("include", () => {
-		const s = src('<!-- #include file "something.asp" -->');
+		const s = src('<!-- #include file="something.asp" -->');
 		const [result, rest] = include.parse(s).from();
 		expect(result).toStrictEqual(
 			new ast.Include("something.asp")
@@ -539,7 +539,7 @@ describe("literal print", () => {
 	});
 
 	test("printBlockContent with include", () => {
-		const s = src('text <!-- #include file "something.asp" --><%= stuff %>more text');
+		const s = src('text <!-- #include file="something.asp" --><%= stuff %>more text');
 
 		const [result, rest] = printBlockContent.parse(s).from();
 
