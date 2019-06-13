@@ -8,17 +8,31 @@ These things *should* be marked with "TODO", but may not be.
 
 eol = ":" | "\n" | EOF
 
-statement = (class | function | sub | dim | assignment | subCall | call | exit) eol
+statement = (class | function | sub | dim | redim | assignment | subCall | call | singleIf | if | 
+    doWhileLoop | doLoopWhile | doUntilLoop | doLoopUntil | for | forEach | while | exit |
+    option | onError | select) eol
 
 class = "class" identifier eol classDecl* "end" "class"
-classDecl = (dim | function | sub) eol
+classDecl = (dim | function | sub | getProperty | setProperty) eol
 
-function = "function" identifier ("(" args ")")? eol statements "end" "function"
-sub = "sub" identifier ("(" args ")")? eol statements "end" "sub"
-dim = "dim" identifier ("(" integer ")")? ("," identifier ("(" integer ")")?)* # TODO
+# TODO
+access = "public" | "private" 
+function = access? "function" identifier ("(" argList ")")? eol statements "end" "function"
+sub = access? "sub" identifier ("(" argList ")")? eol statements "end" "sub"
+
+# TODO
+getProperty = access? "default"? "get" identifier ("(" ")")? eol statements "end" "property"
+setProperty = access? ("set" | "let") identifier "(" argListArg ")" eol statements "end" "property"
+
+# TODO
+dimension = "(" ")" | ("(" integer ("," integer)* ")")
+dimDecl = identifier dimension?
+dim = ("dim" | access) dimDecl ("," dimDecl)*
+redim = dimDecl ("," dimDecl)* 
 
 argList = argListArg "," argList | argListArg
-argListArg = identifier
+# TODO
+argListArg = ("byval" | "byref")? identifier
 
 assignment = lvalue "=" expr
 lvalue = variable | funcCall
@@ -30,19 +44,45 @@ call = "call" variable "(" args ")"
 
 subCall = variable args
 
-exit = "exit" ("function" | "sub") # TODO
-
-
 identifier = IDENTIFIER
 
-if = "if" expr "then" eol statements ("elseif" condition  "then" eol statements)* ("else" eol statements)? "end" "if"
+if = "if" expr "then" eol statements ("elseif" condition "then" eol statements)* ("else" eol statements)? "end" "if"
+
+# TODO
+singleIf = "if" expr "then" statement
+while = "while" expr eol statements "wend"
+
+# TODO
+doWhileLoop = "do" "while" expr eol statements "loop"
+doLoopWhile = "do" eol statements "loop" "while" expr
+
+# TODO
+doWhileUntil = "do" "until" expr eol statements "loop"
+doUntilWhile = "do" eol statements "loop" "until" expr
+
+# TODO
+for = "for" identifier "=" expr "to" expr ("step" expr)? eol statements "next"
+forEach = "for" "each" identifier "in" expr eol statements "next"
+
+# TODO
+exit = "exit" ("function" | "sub" | "do" | "for")
+
+# TODO
+option = "option" optionName
+optionName = "explicit"
+
+# TODO
+onError = "on" "error" ("resume" "next" | "goto" "0")
+
+# TODO
+select = "select" "case" expr eol selectCase+ "end" "case"
+selectCase = "case" ("else" | expr) eol statements            # this expr should probably be a literal
 
 statements = statement*
 
 variable = identifier | identifier "." variable
 
 new = "new" variable    # TODO: should this simply be identifier?
-
 
 ### Literals ###
 
