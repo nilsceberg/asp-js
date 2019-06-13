@@ -3,7 +3,6 @@ import { expr, statement, statements, args, identifier, variable, funcCall, assi
 import { ast } from "../program/NewAST";
 import * as data from "../program/Data";
 import { Value } from "../program/Data";
-import { response } from "express";
 
 function src(s: string): SourcePointer {
 	return new SourcePointer(new StringSource(s));

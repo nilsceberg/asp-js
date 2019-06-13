@@ -1,5 +1,3 @@
-import "jest";
-
 import { StringInputStream } from "./StringInputStream";
 import { TokenStream } from "./TokenStream";
 import { Parser } from "./Parser";
