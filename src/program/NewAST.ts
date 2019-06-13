@@ -193,6 +193,13 @@ export namespace ast {
 			}
 		}
 
+		export class Is extends Binary {
+			protected symbol = "is";
+			op(x: Value, y: Value): Value {
+				throw "is operator not implemented";
+			}
+		}
+
 		export class NotEqual extends Binary {
 			protected symbol = "<>";
 			op(x: Value, y: Value) {

@@ -49,6 +49,9 @@ function op (Binary: new (left: Expr, right: Expr) => Expr): (left: Expr, right:
 export const arithmeticAndComparison: parser.Parser<Expr> = parser.Parser.lazy(() => parser.exprParser(
 	[
 		{
+			"is": op(ast.expr.Is),
+		},
+		{
 			"^": op(ast.expr.Pow),
 		},
 		{
