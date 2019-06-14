@@ -64,7 +64,7 @@ for = "for" identifier "=" expr "to" expr ("step" expr)? eol statements "next"
 forEach = "for" "each" identifier "in" expr eol statements "next"
 
 # TODO
-exit = "exit" ("function" | "sub" | "do" | "for")
+exit = "exit" ("function" | "sub" | "do" | "for" | "loop")
 
 # TODO
 option = "option" optionName

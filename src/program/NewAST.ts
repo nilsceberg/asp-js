@@ -488,4 +488,162 @@ export namespace ast {
 			throw "includes not implemented";
 		}
 	}
+
+	export enum ExitType {
+		Function,
+		Sub,
+		Do,
+		For,
+		Loop
+	}
+
+	export class Exit implements Statement {
+		type: ExitType;
+
+		constructor(type: ExitType) {
+			this.type = type;
+		}
+
+		execute(context: Context) {
+			throw "exit not implemented";
+		}
+
+		subStatements(): Statement[] {
+			throw "exit not implemented";
+		}
+	}
+
+	export enum OptionType {
+		Explicit,
+	}
+
+	export class Option implements Statement {
+		type: OptionType;
+
+		constructor(type: OptionType) {
+			this.type = type;
+		}
+
+		execute(context: Context) {
+			throw "option not implemented";
+		}
+
+		subStatements(): Statement[] {
+			throw "option not implemented";
+		}
+	}
+
+	export enum ErrorHandling {
+		ResumeNext, Goto0
+	}
+
+	export class OnError implements Statement {
+		handling: ErrorHandling;
+
+		constructor(handling: ErrorHandling) {
+			this.handling = handling;
+		}
+
+		execute(context: Context) {
+			throw "on error not implemented";
+		}
+
+		subStatements(): Statement[] {
+			throw "on error not implemented";
+		}
+	}
+
+	export class SelectCase {
+		condition: Expr;
+		body: Statement[];
+
+		constructor(condition: Expr, body: Statement[]) {
+			this.condition = condition;
+			this.body = body;
+		}
+	}
+
+	export class Select implements Statement {
+		expr: Expr;
+		cases: SelectCase[];
+
+		constructor(expr: Expr, cases: SelectCase[]) {
+			this.expr = expr;
+			this.cases = cases;
+		}
+
+		execute(context: Context) {
+			throw "select not implemented";
+		}
+
+		subStatements(): Statement[] {
+			throw "select not implemented";
+		}
+	}
+
+	export class With implements Statement {
+		object: Expr;
+		body: Statement[];
+
+		constructor(object: Expr, body: Statement[]) {
+			this.object = object;
+			this.body = body;
+		}
+
+		execute(context: Context) {
+			throw "with not implemented";
+		}
+
+		subStatements(): Statement[] {
+			throw "with not implemented";
+		}
+	}
+
+	export class Loop implements Statement {
+		condition: Expr;
+		body: Statement[];
+		until: boolean;
+		post: boolean;
+
+		constructor(condition: Expr, body: Statement[], until: boolean, post: boolean) {
+			this.condition = condition;
+			this.body = body;
+			this.until = until;
+			this.post = post;
+		}
+
+		execute(context: Context) {
+			throw "loop not implemented";
+		}
+
+		subStatements(): Statement[] {
+			throw "loop not implemented";
+		}
+	}
+
+	export enum PropertyType {
+		Get, Let, Set
+	}
+
+	export class Property implements Statement {
+		type: PropertyType;
+		func: Func;
+		def: boolean;
+		access: AccessLevel;
+
+		constructor(type: PropertyType, func: Func, def: boolean, access: AccessLevel) {
+			this.type = type;
+			this.func = func;
+			this.def = def;
+			this.access = access;
+		}
+
+		execute(context: Context) {
+			throw "property not implemented";
+		}
+
+		subStatements(): Statement[] {
+			throw "property not implemented";
+		}
+	}
 }
