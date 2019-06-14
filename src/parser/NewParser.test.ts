@@ -470,6 +470,13 @@ describe("redim", () => {
 	});
 });
 
+test("const", () => {
+	const s = src("const thing = 123");
+	expect(statement.parse(s).from()[0]).toStrictEqual(
+		new ast.Const("thing", new ast.expr.Literal(new data.Number(123)))
+	);
+});
+
 describe("argListArg", () => {
 	test("simple", () => {
 		const s = src("arg1");

@@ -3,4 +3,5 @@ build/
 windows/
 npm-debug.log
 *.png
+coverage
 

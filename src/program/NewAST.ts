@@ -361,6 +361,24 @@ export namespace ast {
 		}
 	}
 
+	export class Const implements Statement {
+		name: string;
+		value: expr.Literal;
+
+		constructor(name: string, value: expr.Literal) {
+			this.name = name;
+			this.value = value;
+		}
+
+		subStatements(): Statement[] {
+			throw "const not implemented";
+		}
+
+		execute(context: Context) {
+			throw "const not implemented";
+		}
+	}
+
 	export class Dim implements Statement {
 		name: string;
 		length: number[];

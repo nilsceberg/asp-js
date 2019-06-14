@@ -11,7 +11,7 @@ eol = ":" | "\n" | EOF
 
 statement = (call | assignment | subCall | option | onError | class | function | sub | dim | redim |
     singleIf | if | doWhileLoop | doLoopWhile | doUntilLoop | doLoopUntil | for |
-    forEach | while | exit | select) eol
+    forEach | while | exit | select | const) eol
 
 class = "class" identifier eol classDecl* "end" "class"
 classDecl = (dim | function | sub | getProperty | setProperty) eol
@@ -75,6 +75,9 @@ variable = identifier? ("." identifier)+ | identifier
 with = "with" expr eol statements "end" "with"
 
 new = "new" variable    # TODO: should this simply be identifier?
+
+const = "const" identifier "=" literal
+
 ```
 
 

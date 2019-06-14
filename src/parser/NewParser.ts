@@ -1,6 +1,6 @@
 import * as parser from "parser-monad";
 import { ast } from "../program/NewAST";
-import { nothing, empty, null_, str, boolean } from "./LiteralParser";
+import { nothing, empty, null_, str, boolean, integer, literal } from "./LiteralParser";
 import * as data from "../program/Data";
 import { Expr } from "../program/NewContext";
 import "./ParserSettings";
@@ -29,17 +29,6 @@ export const eol =
 	.or(parser.Lookahead(2).matches(s => s === "%>"))
 	.or(eof)
 	.or(parser.Error("expected end of statement"));
-
-const id = (x: any) => x;
-const negate = (x: number) => -x;
-
-export const sign =
-	parser.Token(parser.Lit("-")).map(_ => negate)
-	.or(parser.Token(parser.Lit("+")).map(_ => id))
-	.or(parser.Return(id));
-
-export const integer: parser.Parser<ast.expr.Literal> =
-	sign.bind(f => parser.Token(parser.Integer).map(x => new ast.expr.Literal(new data.Number(f(x)))));
 	
 function op (Binary: new (left: Expr, right: Expr) => Expr): (left: Expr, right: Expr) => Expr {
 	return (left, right) => new Binary(left, right);
@@ -131,6 +120,7 @@ export const statement: parser.Parser<ast.Statement> =
 			onError,
 			select,
 			with_,
+			const_,
 		])
 		.first(eol)
 		.or(printBlock.first(optionalEol.repeat()))
@@ -162,6 +152,7 @@ export const KEYWORDS: string[] = [
 	"select",
 	"while",
 	"exit",
+	"const",
 ];
 
 export const isNotKeyword = (word: string): boolean =>
@@ -589,6 +580,13 @@ export const with_: parser.Parser<ast.Statement> =
 	.first(parser.Require("end"))
 	.first(parser.Require("with"))
 	.map(([obj, body]) => new ast.With(obj, body));
+
+export const const_: parser.Parser<ast.Statement> =
+	parser.Accept("const")
+	.second(identifier)
+	.first(parser.Require("="))
+	.then(literal)
+	.map(([name, literal]) => new ast.Const(name, literal));
 
 export const printBlockCharacter: parser.Parser<string> =
 	parser.RawLitSequence("<%")
