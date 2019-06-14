@@ -129,6 +129,7 @@ export const statement: parser.Parser<ast.Statement> =
 			forEach,
 			for_,
 			onError,
+			select,
 		])
 		.first(eol)
 		.or(printBlock.first(optionalEol.repeat()))
@@ -561,6 +562,23 @@ export const onError: parser.Parser<ast.Statement> =
 		])
 	)
 	.map(handling => new ast.OnError(handling));
+
+export const selectCase: parser.Parser<ast.SelectCase> =
+	parser.Accept("case")
+	.second(parser.Accept("else").map(() => null).or(expr))
+	.first(eol)
+	.then(statements)
+	.map(([cond, body]) => new ast.SelectCase(cond, body));
+
+export const select: parser.Parser<ast.Statement> =
+	parser.Accept("select")
+	.second(parser.Require("case"))
+	.second(expr)
+	.first(eol)
+	.then(selectCase.repeat()) // TODO: one ore more? at least an else (semantic verification)? not sure
+	.first(parser.Require("end"))
+	.first(parser.Require("case"))
+	.map(([expr, cases]) => new ast.Select(expr, cases));
 
 export const printBlockCharacter: parser.Parser<string> =
 	parser.RawLitSequence("<%")

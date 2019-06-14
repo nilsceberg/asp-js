@@ -65,7 +65,6 @@ optionName = "explicit"
 
 onError = "on" "error" ("resume" "next" | "goto" "0")
 
-# TODO
 select = "select" "case" expr eol selectCase+ "end" "case"
 selectCase = "case" ("else" | expr) eol statements            # this expr should probably be a literal
 
