@@ -492,6 +492,7 @@ export namespace ast {
 	export enum ExitType {
 		Function,
 		Sub,
+		Property,
 		Do,
 		For,
 		Loop
@@ -627,15 +628,13 @@ export namespace ast {
 
 	export class Property implements Statement {
 		type: PropertyType;
-		func: Func;
+		func: Function;
 		def: boolean;
-		access: AccessLevel;
 
-		constructor(type: PropertyType, func: Func, def: boolean, access: AccessLevel) {
+		constructor(type: PropertyType, func: Function, def: boolean) {
 			this.type = type;
 			this.func = func;
 			this.def = def;
-			this.access = access;
 		}
 
 		execute(context: Context) {

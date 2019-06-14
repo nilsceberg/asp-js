@@ -26,7 +26,6 @@ redimDecl = identifier dimension?
 dim = ("dim" | access) dimDecl ("," dimDecl)*
 redim = "redim" "preserve"? redimDecl ("," redimDecl)* 
 
-# TODO
 getProperty = access? "default"? "property" "get" identifier ("(" ")")? eol statements "end" "property"
 setProperty = access? "property" ("set" | "let") identifier "(" argListArg ")" eol statements "end" "property"
 

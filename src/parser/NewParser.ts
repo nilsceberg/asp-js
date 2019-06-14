@@ -310,8 +310,68 @@ export const sub: parser.Parser<ast.Function> =
 	)
 	.map(([access, [[n, a], b]]) => new ast.Function(n, a, b, access));
 
+export const getProperty: parser.Parser<ast.Statement> =
+	parser.Default(access, AccessLevel.Public)
+	.then(parser.Accept("default").map(() => true).or(parser.Return(false)))
+	.first(parser.Accept("property"))
+	.then(
+		parser.Accept("get")
+		.second(identifier)
+	)
+	.first(
+		parser.Accept("(").then(parser.Require(")")).or(parser.Return(["(", ")"]))
+	)
+	.first(eol)
+	.then(statements)
+	.first(parser.Require("end"))
+	.first(parser.Require("property"))
+	.map(([[[access, def], id], body]) =>
+		new ast.Property(
+			ast.PropertyType.Get,
+			new ast.Function(
+				id,
+				[],
+				body,
+				access
+			),
+			def
+		)
+	);
+
+export const setProperty: parser.Parser<ast.Statement> =
+	parser.Default(access, AccessLevel.Public)
+	.first(parser.Accept("property"))
+	.then(
+		parser.Accept("set").map(() => ast.PropertyType.Set)
+		.or(parser.Accept("let").map(() => ast.PropertyType.Let))
+	)
+	.then(identifier)
+	.then(
+		parser.Accept("(")
+		.second(argListArg)
+		.first(parser.Require(")"))
+	)
+	.first(eol)
+	.then(statements)
+	.first(parser.Require("end"))
+	.first(parser.Require("property"))
+	.map(([[[[access, type], id], arg], body]) =>
+		new ast.Property(
+			type,
+			new ast.Function(
+				id,
+				[arg],
+				body,
+				access
+			),
+			false
+		)
+	);
+
 export const classDecl: parser.Parser<ast.Statement> =
 	parser.Parser.orMany<ast.Statement>([
+		getProperty,
+		setProperty,
 		func,
 		sub,
 		dim,

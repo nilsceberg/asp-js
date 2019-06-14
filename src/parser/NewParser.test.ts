@@ -1,5 +1,5 @@
 import { StringSource, SourcePointer } from "parser-monad";
-import { expr, statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_, if_, set, printBlockCharacter, printBlockContent, printBlockContentString, printBlock, scriptAsp, inlinePrint, include, redim } from "./NewParser";
+import { expr, statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_, if_, set, printBlockCharacter, printBlockContent, printBlockContentString, printBlock, scriptAsp, inlinePrint, include, redim, classDecl } from "./NewParser";
 import { ast } from "../program/NewAST";
 import * as data from "../program/Data";
 import { Value } from "../program/Data";
@@ -635,6 +635,52 @@ describe("if", () => {
 					]
 				)
 			]
+		));
+	});
+});
+
+describe("properties", () => {
+	test("private get", () => {
+		const s = src("private property get myProp\nstatement\nend property");
+		expect(classDecl.parse(s).from()[0]).toStrictEqual(new ast.Property(
+			ast.PropertyType.Get,
+			new ast.Function(
+				"myProp", [], [new ast.DummyStatement], AccessLevel.Private
+			),
+			false
+		));
+	});
+
+	test("public default get", () => {
+		const s = src("public default property get myProp\nstatement\nend property");
+		expect(classDecl.parse(s).from()[0]).toStrictEqual(new ast.Property(
+			ast.PropertyType.Get,
+			new ast.Function(
+				"myProp", [], [new ast.DummyStatement], AccessLevel.Public
+			),
+			true
+		));
+	});
+
+	test("set", () => {
+		const s = src("property set myProp(x)\nstatement\nend property");
+		expect(classDecl.parse(s).from()[0]).toStrictEqual(new ast.Property(
+			ast.PropertyType.Set,
+			new ast.Function(
+				"myProp", [new ast.Argument("x")], [new ast.DummyStatement], AccessLevel.Public
+			),
+			false
+		));
+	});
+
+	test("private let", () => {
+		const s = src("private property let myProp(x)\nstatement\nend property");
+		expect(classDecl.parse(s).from()[0]).toStrictEqual(new ast.Property(
+			ast.PropertyType.Let,
+			new ast.Function(
+				"myProp", [new ast.Argument("x")], [new ast.DummyStatement], AccessLevel.Private
+			),
+			false
 		));
 	});
 });
