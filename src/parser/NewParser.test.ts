@@ -369,13 +369,24 @@ test("set", () => {
 	));
 });
 
-test("sub call", () => {
-	const s = src("obj.s (1), 2");
+describe("sub call", () => {
+	test("arguments", () => {
+		const s = src("obj.s (1), 2");
 
-	expect(subCall.parse(s).from()[0]).toStrictEqual(new ast.FunctionCall(
-		new ast.Variable(["obj", "s"]),
-		[new ast.expr.Literal(new data.Number(1)), new ast.expr.Literal(new data.Number(2))]
-	));
+		expect(statement.parse(s).from()[0]).toStrictEqual(new ast.FunctionCall(
+			new ast.Variable(["obj", "s"]),
+			[new ast.expr.Literal(new data.Number(1)), new ast.expr.Literal(new data.Number(2))]
+		));
+	});
+
+	test("empty parentheses", () => {
+		const s = src("someSub ()");
+
+		expect(statement.parse(s).from()[0]).toStrictEqual(new ast.FunctionCall(
+			new ast.Variable(["someSub"]),
+			[]
+		));
+	});
 });
 
 test("call", () => {

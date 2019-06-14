@@ -227,8 +227,11 @@ export const assignment: parser.Parser<ast.Assignment> =
 export const set: parser.Parser<ast.Assignment> =
 	parser.Accept("set").second(assignment);
 
+export const emptyParens: parser.Parser<any[]> =
+	parser.Accept("(").then(parser.Accept(")")).map(() => []);
+
 export const subCall: parser.Parser<ast.FunctionCall> =
-	variable.then(args()).map(([v, a]) => new ast.FunctionCall(v, a));
+	variable.then(emptyParens.or(args())).map(([v, a]) => new ast.FunctionCall(v, a));
 
 export const call: parser.Parser<ast.FunctionCall> =
 	parser.Accept("call").second(variable.then(

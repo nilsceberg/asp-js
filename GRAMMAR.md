@@ -42,7 +42,7 @@ funcCall = variable ("(" args ")")+
 args = expr | expr "," args
 call = "call" variable "(" args ")"
 
-subCall = variable args
+subCall = variable ("(" ")" | args)
 
 anyIdentifier = IDENTIFIER
 identifier = (anyIdentifier : not keyword)
