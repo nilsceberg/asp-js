@@ -9,9 +9,9 @@ These things *should* be marked with "TODO", but may not be.
 ```
 eol = ":" | "\n" | EOF
 
-statement = (class | function | sub | dim | redim | assignment | subCall | call | singleIf | if | 
-    doWhileLoop | doLoopWhile | doUntilLoop | doLoopUntil | for | forEach | while | exit |
-    option | onError | select) eol
+statement = (option | onError | class | function | sub | dim | redim | assignment | subCall |
+    singleIf | if | doWhileLoop | doLoopWhile | doUntilLoop | doLoopUntil | for |
+    forEach | while | exit | select | call) eol
 
 class = "class" identifier eol classDecl* "end" "class"
 classDecl = (dim | function | sub | getProperty | setProperty) eol
@@ -24,11 +24,11 @@ dimension = "(" ")" | ("(" integer ("," integer)* ")")
 dimDecl = identifier dimension?
 redimDecl = identifier dimension?
 dim = ("dim" | access) dimDecl ("," dimDecl)*
-redim = "redim" "preserve"? dimDecl ("," dimDecl)* 
+redim = "redim" "preserve"? redimDecl ("," redimDecl)* 
 
 # TODO
-getProperty = access? "default"? "get" identifier ("(" ")")? eol statements "end" "property"
-setProperty = access? ("set" | "let") identifier "(" argListArg ")" eol statements "end" "property"
+getProperty = access? "default"? "property" "get" identifier ("(" ")")? eol statements "end" "property"
+setProperty = access? "property" ("set" | "let") identifier "(" argListArg ")" eol statements "end" "property"
 
 argList = (argListArg ("," argList)*)?
 argListArg = ("byval" | "byref")? identifier
