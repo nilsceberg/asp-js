@@ -130,6 +130,7 @@ export const statement: parser.Parser<ast.Statement> =
 			for_,
 			onError,
 			select,
+			with_,
 		])
 		.first(eol)
 		.or(printBlock.first(optionalEol.repeat()))
@@ -579,6 +580,15 @@ export const select: parser.Parser<ast.Statement> =
 	.first(parser.Require("end"))
 	.first(parser.Require("case"))
 	.map(([expr, cases]) => new ast.Select(expr, cases));
+
+export const with_: parser.Parser<ast.Statement> =
+	parser.Accept("with")
+	.second(expr)
+	.first(eol)
+	.then(statements)
+	.first(parser.Require("end"))
+	.first(parser.Require("with"))
+	.map(([obj, body]) => new ast.With(obj, body));
 
 export const printBlockCharacter: parser.Parser<string> =
 	parser.RawLitSequence("<%")

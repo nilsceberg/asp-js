@@ -72,7 +72,6 @@ statements = statement*
 
 variable = identifier? ("." identifier)+ | identifier
 
-# TODO
 with = "with" expr eol statements "end" "with"
 
 new = "new" variable    # TODO: should this simply be identifier?
