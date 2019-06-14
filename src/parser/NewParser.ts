@@ -124,6 +124,7 @@ export const statement: parser.Parser<ast.Statement> =
 			doLoopWhile,
 			doLoopUntil,
 			set,
+			exit,
 		])
 		.first(eol)
 		.or(printBlock.first(optionalEol.repeat()))
@@ -154,6 +155,7 @@ export const KEYWORDS: string[] = [
 	"on",
 	"select",
 	"while",
+	"exit",
 ];
 
 export const isNotKeyword = (word: string): boolean =>
@@ -482,6 +484,20 @@ export const doLoopUntil: parser.Parser<ast.Statement> =
 	.first(parser.Accept("until"))
 	.then(expr.or(parser.Error("expected expression")))
 	.map(([body, cond]) => new ast.Loop(cond, body, true, true));
+
+export const exit: parser.Parser<ast.Statement> =
+	parser.Accept("exit")
+	.second(
+		parser.Parser.orMany([
+			parser.Accept("function").map(() => ast.ExitType.Function),
+			parser.Accept("sub").map(() => ast.ExitType.Sub),
+			parser.Accept("property").map(() => ast.ExitType.Property),
+			parser.Accept("do").map(() => ast.ExitType.Do),
+			parser.Accept("for").map(() => ast.ExitType.For),
+		])
+		.or(parser.Error("expected function, sub, do, for, or property"))
+	)
+	.map(t => new ast.Exit(t));
 
 export const printBlockCharacter: parser.Parser<string> =
 	parser.RawLitSequence("<%")
