@@ -641,10 +641,31 @@ describe("if", () => {
 		)
 	});
 
+	test("elseif", () => {
+		const s1 = src("if 1 then\nstatement\nelseif 2 then\nstatement\nend if");
+
+		expect(statement.parse(s1).from()[0]).toStrictEqual(new ast.If(
+			new ast.expr.Literal(new data.Number(1)),
+			[
+				new ast.DummyStatement
+			],
+			[
+				new ast.If(
+					new ast.expr.Literal(new data.Number(2)),
+					[
+						new ast.DummyStatement
+					],
+					[
+					]
+				)
+			]
+		));
+	});
+
 	test("elseif, else", () => {
 		const s1 = src("if 1 then\nstatement\nelseif 2 then\nelseif 3 then\nelse\nend if");
 
-		expect(if_.parse(s1).from()[0]).toStrictEqual(new ast.If(
+		expect(statement.parse(s1).from()[0]).toStrictEqual(new ast.If(
 			new ast.expr.Literal(new data.Number(1)),
 			[
 				new ast.DummyStatement

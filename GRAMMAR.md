@@ -46,6 +46,7 @@ subCall = variable args
 
 identifier = IDENTIFIER
 
+# This isn't actually how it's implemented - should probably be changed to reflect that.
 if = "if" expr "then" eol statements ("elseif" condition "then" eol statements)* ("else" eol statements)? "end" "if"
 singleIf = "if" expr "then" singleStatement
 

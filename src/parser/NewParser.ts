@@ -429,6 +429,7 @@ export const elseif: () => parser.Parser<ast.Statement[]> = () =>
 	.then(
 		parser.Parser.lazy(elseif)
 		.or(parser.Accept("else").first(eol).second(statements))
+		.or(parser.Return([]))
 	)
 	.map(([[c, b], e]) => [new ast.If(c, b, e)])
 
