@@ -125,6 +125,7 @@ export const statement: parser.Parser<ast.Statement> =
 			doLoopUntil,
 			set,
 			exit,
+			option,
 		])
 		.first(eol)
 		.or(printBlock.first(optionalEol.repeat()))
@@ -498,6 +499,20 @@ export const exit: parser.Parser<ast.Statement> =
 		.or(parser.Error("expected function, sub, do, for, or property"))
 	)
 	.map(t => new ast.Exit(t));
+
+export const option: parser.Parser<ast.Statement> =
+	parser.Accept("option")
+	.second(
+		parser.Parser.orMany([
+			parser.Accept("explicit").map(() => ast.OptionType.Explicit),
+			parser.Error("expected option")
+		])
+	)
+	.then(
+		parser.Accept("off").map(() => false)
+		.or(parser.Allow("on").map(() => true))
+	)
+	.map(([opt, on]) => new ast.Option(opt, on));
 
 export const printBlockCharacter: parser.Parser<string> =
 	parser.RawLitSequence("<%")
