@@ -63,7 +63,6 @@ exit = "exit" ("function" | "sub" | "do" | "for" | "property")
 option = "option" optionName ("on" | "off")?
 optionName = "explicit"
 
-# TODO
 onError = "on" "error" ("resume" "next" | "goto" "0")
 
 # TODO

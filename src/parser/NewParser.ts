@@ -128,6 +128,7 @@ export const statement: parser.Parser<ast.Statement> =
 			option,
 			forEach,
 			for_,
+			onError,
 		])
 		.first(eol)
 		.or(printBlock.first(optionalEol.repeat()))
@@ -548,6 +549,18 @@ export const forEach: parser.Parser<ast.Statement> =
 	.map(([[id, obj], body]) =>
 		new ast.ForEach(id, obj, body)
 	);
+
+export const onError: parser.Parser<ast.Statement> =
+	parser.Accept("on")
+	.second(parser.Require("error"))
+	.second(
+		parser.Parser.orMany([
+			parser.Accept("resume").second(parser.Require("next")).map(() => ast.ErrorHandling.ResumeNext),
+			parser.Accept("goto").second(parser.Require("0")).map(() => ast.ErrorHandling.Goto0),
+			parser.Error("expected 'resume next' or 'goto 0'")
+		])
+	)
+	.map(handling => new ast.OnError(handling));
 
 export const printBlockCharacter: parser.Parser<string> =
 	parser.RawLitSequence("<%")
