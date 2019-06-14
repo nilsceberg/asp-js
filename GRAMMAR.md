@@ -9,9 +9,9 @@ These things *should* be marked with "TODO", but may not be.
 ```
 eol = ":" | "\n" | EOF
 
-statement = (option | onError | class | function | sub | dim | redim | assignment | subCall |
+statement = (call | assignment | subCall | option | onError | class | function | sub | dim | redim |
     singleIf | if | doWhileLoop | doLoopWhile | doUntilLoop | doLoopUntil | for |
-    forEach | while | exit | select | call) eol
+    forEach | while | exit | select) eol
 
 class = "class" identifier eol classDecl* "end" "class"
 classDecl = (dim | function | sub | getProperty | setProperty) eol
@@ -49,11 +49,9 @@ singleIf = "if" expr "then" statement
 
 while = "while" expr eol statements "wend"
 
-# TODO
 doWhileLoop = "do" "while" expr eol statements "loop"
 doLoopWhile = "do" eol statements "loop" "while" expr
 
-# TODO
 doWhileUntil = "do" "until" expr eol statements "loop"
 doUntilWhile = "do" eol statements "loop" "until" expr
 

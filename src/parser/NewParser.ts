@@ -110,6 +110,8 @@ export const statement: parser.Parser<ast.Statement> =
 		parser.Parser.orMany([
 			parser.Accept("statement").map(() => new ast.DummyStatement),
 			call,
+			assignment,
+			subCall,
 			func,
 			sub,
 			redim,
@@ -117,9 +119,11 @@ export const statement: parser.Parser<ast.Statement> =
 			class_,
 			if_,
 			while_,
+			doWhileLoop,
+			doUntilLoop,
+			doLoopWhile,
+			doLoopUntil,
 			set,
-			assignment,
-			subCall,
 		])
 		.first(eol)
 		.or(printBlock.first(optionalEol.repeat()))
@@ -128,8 +132,6 @@ export const statement: parser.Parser<ast.Statement> =
 export const statements: parser.Parser<ast.Statement[]> =
 	statement.repeat()
 
-// This is used to avoid sub calls matching end of block statments, so most of these don't have to be included
-// (we should only need end, wend, loop, next, case)
 export const KEYWORDS: string[] = [
 	"if",
 	"elseif",
@@ -145,6 +147,13 @@ export const KEYWORDS: string[] = [
 	"loop",
 	"next",
 	"case",
+	"do",
+	"for",
+	"with",
+	"option",
+	"on",
+	"select",
+	"while",
 ];
 
 export const isNotKeyword = (word: string): boolean =>
@@ -436,6 +445,43 @@ export const while_: parser.Parser<ast.Statement> =
 	.then(statements)
 	.first(parser.Require("wend"))
 	.map(([cond, body]) => new ast.Loop(cond, body, false, false));
+
+// These four can probably be done in a prettier, more general way:
+export const doWhileLoop: parser.Parser<ast.Statement> =
+	parser.Accept("do")
+	.second(parser.Accept("while"))
+	.second(expr.or(parser.Error("expected expression")))
+	.first(eol)
+	.then(statements)
+	.first(parser.Require("loop"))
+	.map(([cond, body]) => new ast.Loop(cond, body, false, false));
+
+export const doUntilLoop: parser.Parser<ast.Statement> =
+	parser.Accept("do")
+	.second(parser.Accept("until"))
+	.second(expr.or(parser.Error("expected expression")))
+	.first(eol)
+	.then(statements)
+	.first(parser.Require("loop"))
+	.map(([cond, body]) => new ast.Loop(cond, body, true, false));
+
+export const doLoopWhile: parser.Parser<ast.Statement> =
+	parser.Accept("do")
+	.first(eol)
+	.second(statements)
+	.first(parser.Require("loop"))
+	.first(parser.Accept("while"))
+	.then(expr.or(parser.Error("expected expression")))
+	.map(([body, cond]) => new ast.Loop(cond, body, false, true));
+
+export const doLoopUntil: parser.Parser<ast.Statement> =
+	parser.Accept("do")
+	.first(eol)
+	.second(statements)
+	.first(parser.Require("loop"))
+	.first(parser.Accept("until"))
+	.then(expr.or(parser.Error("expected expression")))
+	.map(([body, cond]) => new ast.Loop(cond, body, true, true));
 
 export const printBlockCharacter: parser.Parser<string> =
 	parser.RawLitSequence("<%")
