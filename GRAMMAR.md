@@ -44,7 +44,8 @@ call = "call" variable "(" args ")"
 
 subCall = variable args
 
-identifier = IDENTIFIER
+anyIdentifier = IDENTIFIER
+identifier = (anyIdentifier : not keyword)
 
 # This isn't actually how it's implemented - should probably be changed to reflect that.
 if = "if" expr "then" eol statements ("elseif" condition "then" eol statements)* ("else" eol statements)? "end" "if"
@@ -73,7 +74,7 @@ selectCase = "case" ("else" | expr) eol statements            # this expr should
 
 statements = statement*
 
-variable = identifier? ("." identifier)+ | identifier
+variable = identifier? ("." anyIdentifier)+ | identifier
 
 with = "with" expr eol statements "end" "with"
 

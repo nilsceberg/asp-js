@@ -317,6 +317,13 @@ describe("variable", () => {
 			"", "write"
 		]));
 	})
+
+	test("keyword", () => {
+		const s = src("response.end");
+		expect(variable.parse(s).from()[0]).toStrictEqual(new ast.Variable([
+			"response", "end"
+		]));
+	})
 });
 
 describe("function call", () => {

@@ -163,33 +163,24 @@ export const KEYWORDS: string[] = [
 	"with",
 ];
 
-export const isNotKeyword = (word: string): boolean =>
-	!KEYWORDS.includes(word);
-
-export const identifier = 
+export const isNotKeyword = (word: string): boolean => !KEYWORDS.includes(word);
+	
+export const anyIdentifier = 
 	parser.Token(
 		parser.Letter
 		.then((parser.Alphanumeric.or(parser.Character.matches(c => c === "_")).repeat().map(x => x.join(""))))
 		.map(<(p: [string, string]) => string>parser.add)
-		.matches(isNotKeyword)
 	);
 
-//export const variable_: () => parser.Parser<string[]> = () =>
-//	identifier
-//	.first(parser.Accept("."))
-//	.then(parser.Parser.lazy(variable_))
-//	.map(parser.cons)
-//	.or(identifier.map(x => [x]))
-//
-//export const variable: parser.Parser<ast.Variable> =
-//	variable_().map(components => new ast.Variable(components));
+export const identifier = 
+	anyIdentifier.matches(isNotKeyword)
 
 const oneOrMore: <T>(p: parser.Parser<T>) => parser.Parser<T[]> =
 	p => p.then(p.repeat()).map(cons);
 
 export const variable: parser.Parser<ast.Variable> =
 	parser.Default(identifier, "")
-	.then(oneOrMore(parser.Accept(".").second(identifier)))
+	.then(oneOrMore(parser.Accept(".").second(anyIdentifier)))
 	.map(cons)
 	.or(identifier.map(x => [x]))
 	.map(comps => new ast.Variable(comps));
