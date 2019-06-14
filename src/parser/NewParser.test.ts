@@ -1,5 +1,5 @@
 import { StringSource, SourcePointer } from "parser-monad";
-import { expr, statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_, if_, set, printBlockCharacter, printBlockContent, printBlockContentString, printBlock, scriptAsp, inlinePrint, include, redim, classDecl } from "./NewParser";
+import { expr, statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_, if_, set, printBlockCharacter, printBlockContent, printBlockContentString, printBlock, scriptAsp, inlinePrint, include, redim, classDecl, isNotKeyword } from "./NewParser";
 import { ast } from "../program/NewAST";
 import * as data from "../program/Data";
 import { Value } from "../program/Data";
@@ -249,6 +249,8 @@ test("keyword case insensitivity", () => {
 		new ast.DummyStatement,
 		new ast.DummyStatement,
 	]);
+
+	expect(isNotKeyword("For")).toBeFalsy();
 });
 
 test("args", () => {
