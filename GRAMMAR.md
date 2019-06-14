@@ -6,6 +6,7 @@ These things *should* be marked with "TODO", but may not be.
 
 ### General Syntax ###
 
+```
 eol = ":" | "\n" | EOF
 
 statement = (class | function | sub | dim | redim | assignment | subCall | call | singleIf | if | 
@@ -84,9 +85,12 @@ variable = identifier? ("." identifier)+ | identifier
 with = "with" expr eol statements "end" "with"
 
 new = "new" variable    # TODO: should this simply be identifier?
+```
 
 
 ### Literals ###
 
+```
 string = "\"" stringChar* "\""
 stringChar = . | ("\"\"" -> "\"")
+```
