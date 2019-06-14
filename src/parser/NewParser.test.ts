@@ -682,9 +682,219 @@ describe("properties", () => {
 			),
 			false
 		));
+	}); 
+});
+
+describe("loops", () => {
+	test("while ... wend", () => {
+		const s = src("while 1 + 1\nstatement\nwend");
+		expect(statement.parse(s).from()[0]).toStrictEqual(
+			new ast.Loop(
+				new ast.expr.Add(
+					new ast.expr.Literal(new data.Number(1)),
+					new ast.expr.Literal(new data.Number(1)),
+				),
+				[new ast.DummyStatement],
+				false,
+				false
+			)
+		);
+	});
+
+	test("do while ... loop", () => {
+		const s = src("do while 1 + 1\nstatement\nloop");
+		expect(statement.parse(s).from()[0]).toStrictEqual(
+			new ast.Loop(
+				new ast.expr.Add(
+					new ast.expr.Literal(new data.Number(1)),
+					new ast.expr.Literal(new data.Number(1)),
+				),
+				[new ast.DummyStatement],
+				false,
+				false
+			)
+		);
+	});
+
+	test("do until ... loop", () => {
+		const s = src("do until 1 + 1\nstatement\nloop");
+		expect(statement.parse(s).from()[0]).toStrictEqual(
+			new ast.Loop(
+				new ast.expr.Add(
+					new ast.expr.Literal(new data.Number(1)),
+					new ast.expr.Literal(new data.Number(1)),
+				),
+				[new ast.DummyStatement],
+				true,
+				false
+			)
+		);
+	});
+
+	test("do ... loop while", () => {
+		const s = src("do\nstatement\nloop while 1 + 1");
+		expect(statement.parse(s).from()[0]).toStrictEqual(
+			new ast.Loop(
+				new ast.expr.Add(
+					new ast.expr.Literal(new data.Number(1)),
+					new ast.expr.Literal(new data.Number(1)),
+				),
+				[new ast.DummyStatement],
+				false,
+				true));
+			});
+
+	test("do ... loop until", () => {
+		const s = src("do\nstatement\nloop until 1 + 1");
+		expect(statement.parse(s).from()[0]).toStrictEqual(
+			new ast.Loop(
+				new ast.expr.Add(
+					new ast.expr.Literal(new data.Number(1)),
+					new ast.expr.Literal(new data.Number(1)),
+				),
+				[new ast.DummyStatement],
+				true,
+				true
+			)
+		);
 	});
 });
-	
+
+describe("for", () => {
+	test("simple", () => {
+		const s = src("for i=1 to 3\nstatement\nnext");
+		expect(statement.parse(s).from()[0]).toStrictEqual(
+			new ast.For(
+				new ast.expr.Literal(new data.Number(1)),
+				new ast.expr.Literal(new data.Number(3)),
+				new ast.expr.Literal(new data.Number(1)),
+				"i",
+				[new ast.DummyStatement]
+			)
+		);
+	});
+
+	test("step", () => {
+		const s = src("for i=0 to 6 step 2\nstatement\nnext");
+		expect(statement.parse(s).from()[0]).toStrictEqual(
+			new ast.For(
+				new ast.expr.Literal(new data.Number(0)),
+				new ast.expr.Literal(new data.Number(6)),
+				new ast.expr.Literal(new data.Number(2)),
+				"i",
+				[new ast.DummyStatement]
+			)
+		);
+	});
+});
+
+describe("for each", () => {
+	test("simple", () => {
+		const s = src("for each x in xs\nstatement\nnext");
+		expect(statement.parse(s).from()[0]).toStrictEqual(
+			new ast.ForEach(
+				"x",
+				new ast.Variable(["xs"]),
+				[new ast.DummyStatement]
+			)
+		);
+	});
+});
+
+describe("options", () => {
+	test("implied on", () => {
+		expect(statement.parse(src("option explicit")).from()[0]).toStrictEqual(
+			new ast.Option(ast.OptionType.Explicit, true)
+		);
+	});
+
+	test("on", () => {
+		expect(statement.parse(src("option explicit on")).from()[0]).toStrictEqual(
+			new ast.Option(ast.OptionType.Explicit, true)
+		);
+	});
+
+	test("off", () => {
+		expect(statement.parse(src("option explicit off")).from()[0]).toStrictEqual(
+			new ast.Option(ast.OptionType.Explicit, false)
+		);
+	});
+});
+
+describe("on error", () => {
+	test("resume next", () => {
+		expect(statement.parse(src("on error resume next")).from()[0]).toStrictEqual(
+			new ast.OnError(ast.ErrorHandling.ResumeNext)
+		);
+	});
+
+	test("goto 0", () => {
+		expect(statement.parse(src("on error goto 0")).from()[0]).toStrictEqual(
+			new ast.OnError(ast.ErrorHandling.Goto0)
+		);
+	});
+});
+
+describe("exit", () => {
+	test("function", () => {
+		expect(statement.parse(src("exit function")).from()[0]).toStrictEqual(
+			new ast.Exit(ast.ExitType.Function)
+		);
+	});
+
+	test("sub", () => {
+		expect(statement.parse(src("exit sub")).from()[0]).toStrictEqual(
+			new ast.Exit(ast.ExitType.Sub)
+		);
+	});
+
+	test("do", () => {
+		expect(statement.parse(src("exit do")).from()[0]).toStrictEqual(
+			new ast.Exit(ast.ExitType.Do)
+		);
+	});
+
+	test("for", () => {
+		expect(statement.parse(src("exit for")).from()[0]).toStrictEqual(
+			new ast.Exit(ast.ExitType.For)
+		);
+	});
+
+	test("property", () => {
+		expect(statement.parse(src("exit property")).from()[0]).toStrictEqual(
+			new ast.Exit(ast.ExitType.Property)
+		);
+	});
+});
+
+describe("with", () => {
+	test("simple", () => {
+		const s = src("with obj\nstatement\nend with");
+		expect(statement.parse(s).from()[0]).toStrictEqual(
+			new ast.With(
+				new ast.Variable(["obj"]),
+				[new ast.DummyStatement]
+			)
+		)
+	});
+});
+
+describe("select", () => {
+	test("simple", () => {
+		const s = src("select case val\ncase 4\nstatement\ncase 7\nstatement\ncase else\nstatement\nend case");
+		expect(statement.parse(s).from()[0]).toStrictEqual(
+			new ast.Select(
+				new ast.Variable(["val"]),
+				[
+					new ast.SelectCase(new ast.expr.Literal(new data.Number(4)), [new ast.DummyStatement]),
+					new ast.SelectCase(new ast.expr.Literal(new data.Number(7)), [new ast.DummyStatement]),
+					new ast.SelectCase(null, [new ast.DummyStatement]),
+				]
+			)
+		)
+	});
+});
+
 describe("include", () => {
 	test("file", () => {
 		const s = src('<!-- #include file="something.asp" -->');

@@ -495,7 +495,6 @@ export namespace ast {
 		Property,
 		Do,
 		For,
-		Loop
 	}
 
 	export class Exit implements Statement {
@@ -520,9 +519,11 @@ export namespace ast {
 
 	export class Option implements Statement {
 		type: OptionType;
+		on: boolean;
 
-		constructor(type: OptionType) {
+		constructor(type: OptionType, on: boolean) {
 			this.type = type;
+			this.on = on;
 		}
 
 		execute(context: Context) {
@@ -643,6 +644,50 @@ export namespace ast {
 
 		subStatements(): Statement[] {
 			throw "property not implemented";
+		}
+	}
+	
+	export class For implements Statement {
+		from: Expr;
+		to: Expr;
+		step: Expr;
+		id: string;
+		body: Statement[];
+
+		constructor(from: Expr, to: Expr, step: Expr, id: string, body: Statement[]) {
+			this.from = from;
+			this.to = to;
+			this.step = step;
+			this.id = id;
+			this.body = body;
+		}
+
+		execute(context: Context) {
+			throw "for not implemented";
+		}
+
+		subStatements(): Statement[] {
+			throw "for not implemented";
+		}
+	}
+	
+	export class ForEach implements Statement {
+		id: string;
+		obj: Expr;
+		body: Statement[];
+
+		constructor(id: string, obj: Expr, body: Statement[]) {
+			this.id = id;
+			this.obj = obj;
+			this.body = body;
+		}
+
+		execute(context: Context) {
+			throw "for each not implemented";
+		}
+
+		subStatements(): Statement[] {
+			throw "for each not implemented";
 		}
 	}
 }
