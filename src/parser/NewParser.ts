@@ -170,7 +170,7 @@ export const isNotKeyword = (word: string): boolean =>
 export const identifier = 
 	parser.Token(
 		parser.Letter
-		.then(parser.Alphanumeric.repeat().map(x => x.join("")))
+		.then((parser.Alphanumeric.or(parser.Character.matches(c => c === "_")).repeat().map(x => x.join(""))))
 		.map(<(p: [string, string]) => string>parser.add)
 		.matches(isNotKeyword)
 	);

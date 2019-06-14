@@ -271,14 +271,24 @@ test("args", () => {
 	expect(args().parse(s4).from()[0]).toEqual([]);
 });
 
-test("identifier", () => {
-	const s1 = src("abc123  ");
-	let [result, rest] = identifier.parse(s1).from();
-	expect(result).toStrictEqual("abc123");
-	expect(rest.equals("")).toBeTruthy();
+describe("identifier", () => {
+	test("alphanumeric", () => {
+		const s1 = src("abc123  ");
+		let [result, rest] = identifier.parse(s1).from();
+		expect(result).toStrictEqual("abc123");
+		expect(rest.equals("")).toBeTruthy();
+	});
 
-	const s2 = src("3abc123");
-	expect(identifier.parse(s2).isJust()).toBeFalsy();
+	test("underscore", () => {
+		const s = src("PROP_db_location");
+		let [result, rest] = identifier.parse(s).from();
+		expect(result).toStrictEqual("PROP_db_location");
+	})
+
+	test("invalid", () => {
+		const s2 = src("3abc123");
+		expect(identifier.parse(s2).isJust()).toBeFalsy();
+	});
 });
 
 describe("variable", () => {
