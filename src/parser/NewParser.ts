@@ -1,6 +1,6 @@
 import * as parser from "parser-monad";
 import { ast } from "../program/NewAST";
-import { nothing, empty, null_, str, boolean, integer, literal } from "./LiteralParser";
+import { nothing, empty, null_, str, boolean, integer, literal, number } from "./LiteralParser";
 import * as data from "../program/Data";
 import { Expr } from "../program/NewContext";
 import "./ParserSettings";
@@ -71,7 +71,7 @@ export const arithmeticAndComparison: parser.Parser<Expr> = parser.Parser.lazy((
 			">": op(ast.expr.GreaterThan),
 		},
 	],
-	[nothing, empty, null_, boolean, new_, str, funcCall, variable, integer],
+	[nothing, empty, null_, boolean, new_, str, funcCall, variable, number],
 	expr
 ));
 

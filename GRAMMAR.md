@@ -89,4 +89,6 @@ const = "const" identifier "=" literal
 ```
 string = "\"" stringChar* "\""
 stringChar = . | ("\"\"" -> "\"")
+
+number = INTEGER "." INTEGER? | "." INTEGER | INTEGER
 ```

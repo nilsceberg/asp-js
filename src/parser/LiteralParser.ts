@@ -19,6 +19,26 @@ export const sign =
 export const integer: parser.Parser<ast.expr.Literal> =
 	sign.bind(f => parser.Token(parser.Integer).map(x => new ast.expr.Literal(new data.Number(f(x)))));
 
+export const number: parser.Parser<ast.expr.Literal> =
+	sign.bind(f =>
+		parser.Token(parser.Integer)
+		.first(parser.Accept("."))
+		.then(parser.Default(parser.Token(parser.Integer), 0))
+		.map(([i, d]) => parseFloat(`${i}.${d}`))
+
+		.or(
+		parser.Accept(".")
+		.second(parser.Token(parser.Integer))
+		.map(d => parseFloat(`0.${d}`))
+		)
+
+		.or(
+		parser.Token(parser.Integer)
+		)
+		
+		.map(x => new ast.expr.Literal(new data.Number(f(x))))
+	);
+
 export const strChar: parser.Parser<parser.char> =
 	parser.RawCharacter.matches(not(isStringDelimiter))
 	.or(escapedStringDelimiter);
@@ -48,4 +68,4 @@ export const null_: parser.Parser<ast.expr.Literal> =
 	.map(() => new ast.expr.Literal(new data.Null));
 
 export const literal: parser.Parser<ast.expr.Literal> =
-	parser.Parser.orMany([nothing, empty, null_, boolean, str, integer]);
+	parser.Parser.orMany([nothing, empty, null_, boolean, str, number]);
