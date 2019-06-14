@@ -126,6 +126,8 @@ export const statement: parser.Parser<ast.Statement> =
 			set,
 			exit,
 			option,
+			forEach,
+			for_,
 		])
 		.first(eol)
 		.or(printBlock.first(optionalEol.repeat()))
@@ -513,6 +515,39 @@ export const option: parser.Parser<ast.Statement> =
 		.or(parser.Allow("on").map(() => true))
 	)
 	.map(([opt, on]) => new ast.Option(opt, on));
+
+export const for_: parser.Parser<ast.Statement> =
+	parser.Accept("for")
+	.second(identifier)
+	.first(parser.Require("="))
+	.then(expr)
+	.first(parser.Require("to"))
+	.then(expr)
+	.then(
+		parser.Default(
+			parser.Accept("step").second(expr),
+			new ast.expr.Literal(new data.Number(1))
+		)
+	)
+	.first(eol)
+	.then(statements)
+	.first(parser.Require("next"))
+	.map(([[[[id, from], to], step], body]) =>
+		new ast.For(from, to, step, id, body)
+	);
+
+export const forEach: parser.Parser<ast.Statement> =
+	parser.Accept("for")
+	.second(parser.Accept("each"))
+	.second(identifier)
+	.first(parser.Require("in"))
+	.then(expr)
+	.first(eol)
+	.then(statements)
+	.first(parser.Require("next"))
+	.map(([[id, obj], body]) =>
+		new ast.ForEach(id, obj, body)
+	);
 
 export const printBlockCharacter: parser.Parser<string> =
 	parser.RawLitSequence("<%")

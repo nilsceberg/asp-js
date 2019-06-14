@@ -55,7 +55,6 @@ doLoopWhile = "do" eol statements "loop" "while" expr
 doWhileUntil = "do" "until" expr eol statements "loop"
 doUntilWhile = "do" eol statements "loop" "until" expr
 
-# TODO
 for = "for" identifier "=" expr "to" expr ("step" expr)? eol statements "next"
 forEach = "for" "each" identifier "in" expr eol statements "next"
 
