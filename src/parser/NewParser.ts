@@ -95,7 +95,7 @@ export const expr: parser.Parser<Expr> = parser.Parser.lazy(() => parser.exprPar
 	[not, arithmeticAndComparison]
 ));
 
-export const statement: parser.Parser<ast.Statement> =
+export const singleStatement: parser.Parser<ast.Statement> =
 	parser.Parser.lazy(() =>
 		parser.Parser.orMany([
 			parser.Accept("statement").map(() => new ast.DummyStatement),
@@ -123,6 +123,11 @@ export const statement: parser.Parser<ast.Statement> =
 			with_,
 			const_,
 		])
+	);
+
+export const statement: parser.Parser<ast.Statement> =
+	parser.Parser.lazy(() =>
+		singleStatement
 		.first(eol)
 		.or(printBlock.first(optionalEol.repeat()))
 	);
@@ -431,7 +436,7 @@ const singleIf: parser.Parser<ast.If> =
 	parser.Accept("if")
 	.second(expr)
 	.first(parser.Require("then"))
-	.then(statement)
+	.then(singleStatement)
 	.map(([c, s]) => new ast.If(c, [s], []));
 
 export const if_: parser.Parser<ast.If> =

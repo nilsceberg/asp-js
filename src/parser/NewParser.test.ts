@@ -611,7 +611,7 @@ test("class", () => {
 describe("if", () => {
 	test("single-line", () => {
 		const s = src("if x < y then statement\nstatement");
-		expect(if_.parse(s).from()[0]).toStrictEqual(
+		expect(statement.parse(s).from()[0]).toStrictEqual(
 			new ast.If(
 				new ast.expr.LessThan(
 					new ast.Variable(["x"]),
@@ -627,7 +627,7 @@ describe("if", () => {
 
 	test("simple", () => {
 		const s = src("if x < y then\nstatement\nend if");
-		expect(if_.parse(s).from()[0]).toStrictEqual(
+		expect(statement.parse(s).from()[0]).toStrictEqual(
 			new ast.If(
 				new ast.expr.LessThan(
 					new ast.Variable(["x"]),
