@@ -91,6 +91,19 @@ Other than this, scope doesn't seem to be too confusing:
 * Names cannot be redefined in the same scope - there is no "undim".
 
 
+## runat="server"
+
+HTML `<script>` tags with `runat="server"` attributes can be used in ASP to run
+VBScript and JScript (ECMAScript 3?) on the server.
+
+This seems to work as follows:
+
+1. All JScript `<script>` tags are executed
+2. All VBScript `<script>` and `<% ... %>` tags are hoisted
+3. `<% ... %>` tags are executed
+4. VBScript `<script>` tags are executed
+
+
 ## Variables and assignment
 
 Variables are declared using the `dim` keyword, but this is not required

@@ -66,7 +66,7 @@ forEach = "for" "each" identifier "in" expr eol statements "next"
 exit = "exit" ("function" | "sub" | "do" | "for" | "loop")
 
 # TODO
-option = "option" optionName
+option = "option" optionName ("on" | "off")?
 optionName = "explicit"
 
 # TODO
