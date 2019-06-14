@@ -47,7 +47,6 @@ identifier = IDENTIFIER
 if = "if" expr "then" eol statements ("elseif" condition "then" eol statements)* ("else" eol statements)? "end" "if"
 singleIf = "if" expr "then" statement
 
-# TODO
 while = "while" expr eol statements "wend"
 
 # TODO

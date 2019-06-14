@@ -110,15 +110,16 @@ export const statement: parser.Parser<ast.Statement> =
 		parser.Parser.orMany([
 			parser.Accept("statement").map(() => new ast.DummyStatement),
 			call,
-			assignment,
-			subCall,
 			func,
 			sub,
 			redim,
 			dim,
 			class_,
 			if_,
+			while_,
 			set,
+			assignment,
+			subCall,
 		])
 		.first(eol)
 		.or(printBlock.first(optionalEol.repeat()))
@@ -127,6 +128,8 @@ export const statement: parser.Parser<ast.Statement> =
 export const statements: parser.Parser<ast.Statement[]> =
 	statement.repeat()
 
+// This is used to avoid sub calls matching end of block statments, so most of these don't have to be included
+// (we should only need end, wend, loop, next, case)
 export const KEYWORDS: string[] = [
 	"if",
 	"elseif",
@@ -138,6 +141,10 @@ export const KEYWORDS: string[] = [
 	"end",
 	"new",
 	"dim",
+	"wend",
+	"loop",
+	"next",
+	"case",
 ];
 
 export const isNotKeyword = (word: string): boolean =>
@@ -421,6 +428,14 @@ export const if_: parser.Parser<ast.If> =
 	.first(parser.Require("if"))
 	.map(([[c, s], e]) => new ast.If(c, s, e))
 	.or(singleIf);
+
+export const while_: parser.Parser<ast.Statement> =
+	parser.Accept("while")
+	.second(expr)
+	.first(eol)
+	.then(statements)
+	.first(parser.Require("wend"))
+	.map(([cond, body]) => new ast.Loop(cond, body, false, false));
 
 export const printBlockCharacter: parser.Parser<string> =
 	parser.RawLitSequence("<%")
