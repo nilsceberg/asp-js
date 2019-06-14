@@ -46,9 +46,9 @@ subCall = variable args
 identifier = IDENTIFIER
 
 if = "if" expr "then" eol statements ("elseif" condition "then" eol statements)* ("else" eol statements)? "end" "if"
+singleIf = "if" expr "then" statement
 
 # TODO
-singleIf = "if" expr "then" statement
 while = "while" expr eol statements "wend"
 
 # TODO

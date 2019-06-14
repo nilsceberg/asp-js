@@ -180,10 +180,10 @@ describe("expression", () => {
 
 test("statement", () => {
 	const s1 = src("statement");
-	expect(statement().parse(s1).from()[0]).toStrictEqual(new ast.DummyStatement);
+	expect(statement.parse(s1).from()[0]).toStrictEqual(new ast.DummyStatement);
 
 	const s2 = src("call s (1, 2)");
-	expect(statement().parse(s2).from()[0]).toStrictEqual(
+	expect(statement.parse(s2).from()[0]).toStrictEqual(
 		new ast.FunctionCall(
 			new ast.Variable(["s"]),
 			[new ast.expr.Literal(new data.Number(1)), new ast.expr.Literal(new data.Number(2))]
@@ -192,7 +192,7 @@ test("statement", () => {
 
 	// Fun ambiguity - let's see if it works!
 	const s3 = src("s (1), 2");
-	expect(statement().parse(s3).from()[0]).toStrictEqual(
+	expect(statement.parse(s3).from()[0]).toStrictEqual(
 		new ast.FunctionCall(
 			new ast.Variable(["s"]),
 			[new ast.expr.Literal(new data.Number(1)), new ast.expr.Literal(new data.Number(2))]
@@ -200,7 +200,7 @@ test("statement", () => {
 	);
 
 	const s4 = src("dict (1, 2) = 2");
-	expect(statement().parse(s4).from()[0]).toStrictEqual(
+	expect(statement.parse(s4).from()[0]).toStrictEqual(
 		new ast.Assignment(
 			new ast.FunctionCall(
 				new ast.Variable(["dict"]),
@@ -211,7 +211,7 @@ test("statement", () => {
 	);
 
 	const s5 = src("func (1)");
-	expect(statement().parse(s5).from()[0]).toStrictEqual(
+	expect(statement.parse(s5).from()[0]).toStrictEqual(
 		new ast.FunctionCall(
 			new ast.Variable(["func"]),
 			[new ast.expr.Literal(new data.Number(1))]
@@ -219,7 +219,7 @@ test("statement", () => {
 	);
 
 	const s6 = src("%>text<% func (1)");
-	expect(statement().parse(s6).from()[0]).toStrictEqual(new ast.Block([
+	expect(statement.parse(s6).from()[0]).toStrictEqual(new ast.Block([
 		new ast.FunctionCall(
 			new ast.Variable(["Response", "Write"]),
 			[new ast.expr.Literal(new data.String("text"))]
@@ -228,26 +228,26 @@ test("statement", () => {
 
 	// This is not allowed
 	const s7 = src("func (1, 3)");
-	expect(() => statement().parse(s7)).toThrow();
+	expect(() => statement.parse(s7)).toThrow();
 });
 
 test("statements", () => {
 	const s = src("statement \n statement \nstatement : statement");
 	expect(statements.parse(s).from()[0]).toStrictEqual([
-		new ast.DummyStatement(),
-		new ast.DummyStatement(),
-		new ast.DummyStatement(),
-		new ast.DummyStatement(),
+		new ast.DummyStatement,
+		new ast.DummyStatement,
+		new ast.DummyStatement,
+		new ast.DummyStatement,
 	]);
 });
 
 test("keyword case insensitivity", () => {
 	const s = src("statement \n STATEMENT \nStateMent : STATEment");
 	expect(statements.parse(s).from()[0]).toStrictEqual([
-		new ast.DummyStatement(),
-		new ast.DummyStatement(),
-		new ast.DummyStatement(),
-		new ast.DummyStatement(),
+		new ast.DummyStatement,
+		new ast.DummyStatement,
+		new ast.DummyStatement,
+		new ast.DummyStatement,
 	]);
 });
 
@@ -582,6 +582,22 @@ test("class", () => {
 });
 
 describe("if", () => {
+	test("single-line", () => {
+		const s = src("if x < y then statement\nstatement");
+		expect(if_.parse(s).from()[0]).toStrictEqual(
+			new ast.If(
+				new ast.expr.LessThan(
+					new ast.Variable(["x"]),
+					new ast.Variable(["y"])
+				),
+				[
+					new ast.DummyStatement
+				],
+				[]
+			)
+		)
+	});
+
 	test("simple", () => {
 		const s = src("if x < y then\nstatement\nend if");
 		expect(if_.parse(s).from()[0]).toStrictEqual(

@@ -105,25 +105,27 @@ export const expr: parser.Parser<Expr> = parser.Parser.lazy(() => parser.exprPar
 	[not, arithmeticAndComparison]
 ));
 
-export const statement: () => parser.Parser<ast.Statement> = () =>
-	parser.Parser.orMany([
-		parser.Accept("statement").map(() => new ast.DummyStatement),
-		call,
-		assignment,
-		subCall,
-		func,
-		sub,
-		redim,
-		dim,
-		class_,
-		if_,
-		set,
-	])
-	.first(eol)
-	.or(printBlock.first(optionalEol.repeat()));
+export const statement: parser.Parser<ast.Statement> =
+	parser.Parser.lazy(() =>
+		parser.Parser.orMany([
+			parser.Accept("statement").map(() => new ast.DummyStatement),
+			call,
+			assignment,
+			subCall,
+			func,
+			sub,
+			redim,
+			dim,
+			class_,
+			if_,
+			set,
+		])
+		.first(eol)
+		.or(printBlock.first(optionalEol.repeat()))
+	);
 
 export const statements: parser.Parser<ast.Statement[]> =
-	parser.Parser.lazy(statement).repeat()
+	statement.repeat()
 
 export const KEYWORDS: string[] = [
 	"if",
@@ -337,11 +339,18 @@ export const elseif: () => parser.Parser<ast.Statement[]> = () =>
 	)
 	.map(([[c, b], e]) => [new ast.If(c, b, e)])
 
+const singleIf: parser.Parser<ast.If> =
+	parser.Accept("if")
+	.second(expr)
+	.first(parser.Require("then"))
+	.then(statement)
+	.map(([c, s]) => new ast.If(c, [s], []));
+
 export const if_: parser.Parser<ast.If> =
 	parser.Accept("if")
 	.second(expr)
 	.first(parser.Require("then"))
-	.first(eol)
+	.first(optionalEol)
 	.then(statements)
 	.then(
 		elseif()
@@ -350,7 +359,8 @@ export const if_: parser.Parser<ast.If> =
 	)
 	.first(parser.Require("end"))
 	.first(parser.Require("if"))
-	.map(([[c, s], e]) => new ast.If(c, s, e));
+	.map(([[c, s], e]) => new ast.If(c, s, e))
+	.or(singleIf);
 
 export const printBlockCharacter: parser.Parser<string> =
 	parser.RawLitSequence("<%")
