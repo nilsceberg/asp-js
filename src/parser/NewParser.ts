@@ -7,6 +7,7 @@ import "./ParserSettings";
 import { cons } from "parser-monad";
 import { strEqual } from "./Util";
 import { AccessLevel } from "../program/Access";
+import { Arguments } from "yargs";
 
 const EOL_CHARS = "\n:";
 
@@ -199,9 +200,19 @@ export const args: () => parser.Parser<Expr[]> = () =>
 	.or(expr.map(x => [x]))
 	.or(parser.Return([]));
 
+function constructFunctionCallRecursive(callee: Expr, argLists: Expr[][]): ast.FunctionCall {
+	const left = new ast.FunctionCall(callee, argLists[0])
+	if (argLists.length === 1) {
+		return left;
+	}
+	else {
+		return constructFunctionCallRecursive(left, argLists.slice(1));
+	}
+}
+
 export const funcCall =
-	variable.then(parser.Accept("(").second(args()).first(parser.Require(")")))
-	.map(([v, a]) => new ast.FunctionCall(v, a));
+	variable.then(oneOrMore(parser.Accept("(").second(args()).first(parser.Require(")"))))
+	.map(([callee, argLists]) => constructFunctionCallRecursive(callee, argLists));
 
 export const lvalue: parser.Parser<ast.LValue> =
 	(funcCall as parser.Parser<ast.LValue>).or(variable);

@@ -36,7 +36,7 @@ assignment = lvalue "=" expr
 lvalue = variable | funcCall
 set = "set" assignment
 
-funcCall = variable "(" args ")"
+funcCall = variable ("(" args ")")+
 args = expr | expr "," args
 call = "call" variable "(" args ")"
 

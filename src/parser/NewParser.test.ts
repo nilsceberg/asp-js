@@ -319,12 +319,22 @@ describe("variable", () => {
 	})
 });
 
-test("function call", () => {
-	const s1 = src("obj.f(1, 2)");
-	expect(funcCall.parse(s1).from()[0]).toStrictEqual(new ast.FunctionCall(
-		new ast.Variable(["obj", "f"]),
-		[new ast.expr.Literal(new data.Number(1)), new ast.expr.Literal(new data.Number(2))]
-	));
+describe("function call", () => {
+	test("method", () => {
+		const s = src("obj.f(1, 2)");
+		expect(funcCall.parse(s).from()[0]).toStrictEqual(new ast.FunctionCall(
+			new ast.Variable(["obj", "f"]),
+			[new ast.expr.Literal(new data.Number(1)), new ast.expr.Literal(new data.Number(2))]
+		));
+	});
+
+	test("returned function", () => {
+		const s = src("split(something)(2)");
+		expect(funcCall.parse(s).from()[0]).toStrictEqual(new ast.FunctionCall(
+			new ast.FunctionCall(new ast.Variable(["split"]), [new ast.Variable(["something"])]),
+			[new ast.expr.Literal(new data.Number(2))]
+		));
+	});
 });
 
 test("assignment", () => {

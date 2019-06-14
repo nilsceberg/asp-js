@@ -307,19 +307,19 @@ export namespace ast {
 	}
 
 	export class FunctionCall extends Expr implements LValue, Statement {
-		variable: Variable;
+		callee: Expr;
 		args: Expr[];
 
-		constructor(variable: Variable, args: Expr[]) {
+		constructor(callee: Expr, args: Expr[]) {
 			super();
-			this.variable = variable;
+			this.callee = callee;
 			this.args = args;
 		}
 
 		evaluate(context: Context): Box {
 			//console.log(`Function call ${this}`);
 			const evaluatedArgs = this.args.map(a => a.evaluate(context));
-			const evaluatedFunction = this.variable.evaluate(context);
+			const evaluatedFunction = this.callee.evaluate(context);
 
 			const func = evaluatedFunction.get();
 			if (func instanceof Func) {
@@ -339,7 +339,7 @@ export namespace ast {
 		}
 
 		toString(): string {
-			return `${this.variable}(${this.args.map(x => x.toString()).join(", ")})`;
+			return `${this.callee}(${this.args.map(x => x.toString()).join(", ")})`;
 		}
 	}
 
