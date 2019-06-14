@@ -582,7 +582,7 @@ export const select: parser.Parser<ast.Statement> =
 	.first(eol)
 	.then(selectCase.repeat()) // TODO: one ore more? at least an else (semantic verification)? not sure
 	.first(parser.Require("end"))
-	.first(parser.Require("case"))
+	.first(parser.Require("select"))
 	.map(([expr, cases]) => new ast.Select(expr, cases));
 
 export const with_: parser.Parser<ast.Statement> =

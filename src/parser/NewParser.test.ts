@@ -908,7 +908,7 @@ describe("with", () => {
 
 describe("select", () => {
 	test("simple", () => {
-		const s = src("select case val\ncase 4\nstatement\ncase 7\nstatement\ncase else\nstatement\nend case");
+		const s = src("select case val\ncase 4\nstatement\ncase 7\nstatement\ncase else\nstatement\nend select");
 		expect(statement.parse(s).from()[0]).toStrictEqual(
 			new ast.Select(
 				new ast.Variable(["val"]),
