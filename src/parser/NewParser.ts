@@ -149,15 +149,25 @@ export const identifier =
 		.matches(isNotKeyword)
 	);
 
-export const variable_: () => parser.Parser<string[]> = () =>
-	identifier
-	.first(parser.Accept("."))
-	.then(parser.Parser.lazy(variable_))
-	.map(parser.cons)
-	.or(identifier.map(x => [x]))
+//export const variable_: () => parser.Parser<string[]> = () =>
+//	identifier
+//	.first(parser.Accept("."))
+//	.then(parser.Parser.lazy(variable_))
+//	.map(parser.cons)
+//	.or(identifier.map(x => [x]))
+//
+//export const variable: parser.Parser<ast.Variable> =
+//	variable_().map(components => new ast.Variable(components));
+
+const oneOrMore: <T>(p: parser.Parser<T>) => parser.Parser<T[]> =
+	p => p.then(p.repeat()).map(cons);
 
 export const variable: parser.Parser<ast.Variable> =
-	variable_().map(components => new ast.Variable(components));
+	parser.Default(identifier, "")
+	.then(oneOrMore(parser.Accept(".").second(identifier)))
+	.map(cons)
+	.or(identifier.map(x => [x]))
+	.map(comps => new ast.Variable(comps));
 
 export const new_: parser.Parser<ast.expr.New> =
 	parser.Accept("new")

@@ -78,13 +78,13 @@ selectCase = "case" ("else" | expr) eol statements            # this expr should
 
 statements = statement*
 
-# TODO
-variable = identifier | (identifier | "") ("." identifier)+
+variable = identifier? ("." identifier)+ | identifier
 
 # TODO
 with = "with" expr eol statements "end" "with"
 
 new = "new" variable    # TODO: should this simply be identifier?
+
 
 ### Literals ###
 

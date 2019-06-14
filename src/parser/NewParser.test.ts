@@ -281,16 +281,32 @@ test("identifier", () => {
 	expect(identifier.parse(s2).isJust()).toBeFalsy();
 });
 
-test("variable", () => {
-	const s1 = src("first.second.last");
-	expect(variable.parse(s1).from()[0]).toStrictEqual(new ast.Variable([
-		"first", "second", "last"
-	]));
+describe("variable", () => {
+	test("long", () => {
+		const s = src("first.second.last");
+		expect(variable.parse(s).from()[0]).toStrictEqual(new ast.Variable([
+			"first", "second", "last"
+		]));
+	});
 
-	const s2 = src("var");
-	expect(variable.parse(s2).from()[0]).toStrictEqual(new ast.Variable([
-		"var"
-	]));
+	test("single", () => {
+		const s = src("var");
+		expect(variable.parse(s).from()[0]).toStrictEqual(new ast.Variable([
+			"var"
+		]));
+	})
+
+	test("empty", () => {
+		const s = src("");
+		expect(variable.parse(s).isJust()).toBeFalsy();
+	})
+
+	test("unqualified", () => {
+		const s = src(".write");
+		expect(variable.parse(s).from()[0]).toStrictEqual(new ast.Variable([
+			"", "write"
+		]));
+	})
 });
 
 test("function call", () => {
