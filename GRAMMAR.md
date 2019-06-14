@@ -24,8 +24,10 @@ sub = access? "sub" identifier ("(" argList ")")? eol statements "end" "sub"
 
 dimension = "(" ")" | ("(" integer ("," integer)* ")")
 dimDecl = identifier dimension?
-redimDecl = identifier dimension?
 dim = ("dim" | access) dimDecl ("," dimDecl)*
+
+redimension = "(" ")" | ("(" expr ("," expr)* ")")
+redimDecl = identifier redimension?
 redim = "redim" "preserve"? redimDecl ("," redimDecl)* 
 
 getProperty = access? "default"? "property" "get" identifier ("(" ")")? eol statements "end" "property"

@@ -482,7 +482,7 @@ describe("redim", () => {
 		const s = src("redim x(3)")
 		expect(redim.parse(s).from()[0]).toStrictEqual(
 			new ast.Block([
-				new ast.Redim("x", [3], false)
+				new ast.Redim("x", [new ast.expr.Literal(new data.Number(3))], false)
 			])
 		);
 	});
@@ -491,8 +491,8 @@ describe("redim", () => {
 		const s = src("redim preserve x(3), y(5, 6)")
 		expect(redim.parse(s).from()[0]).toStrictEqual(
 			new ast.Block([
-				new ast.Redim("x", [3], true),
-				new ast.Redim("y", [5, 6], true),
+				new ast.Redim("x", [new ast.expr.Literal(new data.Number(3))], true),
+				new ast.Redim("y", [new ast.expr.Literal(new data.Number(5)), new ast.expr.Literal(new data.Number(6))], true),
 			])
 		);
 	});

@@ -401,10 +401,10 @@ export namespace ast {
 
 	export class Redim implements Statement {
 		name: string;
-		length: number[];
+		length: Expr[];
 		preserve: boolean;
 
-		constructor(name: string, length: number[], preserve: boolean) {
+		constructor(name: string, length: Expr[], preserve: boolean) {
 			this.name = name;
 			this.length = length;
 			this.preserve = preserve;

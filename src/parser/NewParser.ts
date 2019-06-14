@@ -273,10 +273,23 @@ export const dim: parser.Parser<ast.Block> =
 	)
 	.map(dims => new ast.Block(dims));
 
+export const redimension: parser.Parser<Expr[]> =
+	parser.Accept("(")
+	.second(
+		expr
+		.then(
+			parser.Accept(",")
+			.second(expr)
+			.repeat())
+		.map(cons)
+		.or(parser.Return([]))
+	)
+	.first(parser.Require(")"));
+
 export const redimDecl: (preserve: boolean) => parser.Parser<ast.Redim> =
 	preserve =>
 	identifier
-	.then(parser.Default(dimension, null))
+	.then(parser.Default(redimension, null))
 	.map(([id, dim]) => new ast.Redim(id, dim, preserve));
 
 export const redim: parser.Parser<ast.Block> =
