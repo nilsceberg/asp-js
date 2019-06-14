@@ -141,6 +141,7 @@ export const KEYWORDS: string[] = [
 	"end",
 	"new",
 	"dim",
+	"redim",
 	"wend",
 	"loop",
 	"next",
@@ -154,6 +155,7 @@ export const KEYWORDS: string[] = [
 	"while",
 	"exit",
 	"const",
+	"with",
 ];
 
 export const isNotKeyword = (word: string): boolean =>
