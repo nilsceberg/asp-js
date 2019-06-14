@@ -103,6 +103,17 @@ VBScript (citation needed), functions that return l-values are syntactically val
 and this fact is used for array and dictionary indexing: `myArray(3) = 123`.
 
 
+### Comments
+
+Comments begin with `'` or `rem`. In the real ASP,
+`rem` is a statement (and thus the line must begin with `rem`),
+while `'` is more flexible. I've seen it claimed on the internet
+that the line continuation character `_` can be used to continue
+comment lines, but that doesn't seem to be the case. In either case,
+ASP.JS implements `rem` and `'` identically - that is, on the
+character level - and so `rem` is just as flexible.
+
+
 ### Set
 
 **TODO**!
