@@ -4,4 +4,5 @@ windows/
 npm-debug.log
 *.png
 coverage
+test.asp
 

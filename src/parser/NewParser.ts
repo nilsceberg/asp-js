@@ -4,7 +4,7 @@ import { nothing, empty, null_, str, boolean, integer, literal, number } from ".
 import * as data from "../program/Data";
 import { Expr } from "../program/NewContext";
 import "./ParserSettings";
-import { cons } from "parser-monad";
+import { cons, RawCharacter } from "parser-monad";
 import { strEqual } from "./Util";
 import { AccessLevel } from "../program/Access";
 import { Arguments } from "yargs";
@@ -95,6 +95,9 @@ export const expr: parser.Parser<Expr> = parser.Parser.lazy(() => parser.exprPar
 	[not, arithmeticAndComparison]
 ));
 
+export const rem: parser.Parser<ast.Statement> =
+	parser.Accept("rem").first(RawCharacter.matches(c => c !== "\n").repeat()).map(() => new ast.DummyStatement);
+
 export const singleStatement: parser.Parser<ast.Statement> =
 	parser.Parser.lazy(() =>
 		parser.Parser.orMany([
@@ -122,6 +125,7 @@ export const singleStatement: parser.Parser<ast.Statement> =
 			select,
 			with_,
 			const_,
+			rem,
 		])
 	);
 
@@ -161,6 +165,7 @@ export const KEYWORDS: string[] = [
 	"exit",
 	"const",
 	"with",
+	"rem",
 ];
 
 export const isNotKeyword = (word: string): boolean => !KEYWORDS.includes(word);
