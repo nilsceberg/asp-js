@@ -566,9 +566,26 @@ describe("sub call", () => {
 	test("empty parentheses", () => {
 		const s = src("someSub ()");
 
+		expect(statement.parse(s).from()[0]).toStrictEqual(
+			new ast.FunctionCall(
+				new ast.Variable("someSub"),
+				[]
+			)
+		);
+	});
+
+	test("callee expression", () => {
+		const s = src("someFunc().s 123");
+
 		expect(statement.parse(s).from()[0]).toStrictEqual(new ast.FunctionCall(
-			new ast.Variable("someSub"),
-			[]
+			new ast.Access(
+				new ast.FunctionCall(
+					new ast.Variable("someFunc"),
+					[]
+				),
+				"s"
+			),
+			[new ast.expr.Literal(new data.Number(123))]
 		));
 	});
 });

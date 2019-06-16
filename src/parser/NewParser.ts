@@ -280,8 +280,42 @@ export const set: parser.Parser<ast.Assignment> =
 export const emptyParens: parser.Parser<any[]> =
 	parser.Accept("(").then(parser.Accept(")")).map(() => []);
 
+// TODO: This solution is really dumb and fragile, please fix!!!
+export const subApplications: (f: Expr) => parser.Parser<Expr> = f =>
+	parser.Accept("(")
+	.second(args())
+	.first(
+		parser.Require(")")
+		.first(
+			parser.Lookahead(1).matches(c => ![
+					",", ":", "\n", "%", "&", "+", "-", "*", "/", "\\" // this is not just bad, it's wrong
+				].includes(c)
+			)
+		)
+	)
+	.map(args => new ast.FunctionCall(f, args))
+	.bind(subApplications)
+	.or(parser.Return(f));
+
+export const subAccess_: (obj: Expr) => parser.Parser<Expr> = obj =>
+	parser.Accept(".")
+	.second(anyIdentifier)
+	.map(id => new ast.Access(obj, id))
+	.bind(subApplications)
+	.bind(subAccess_)
+	.or(parser.Return(obj));
+
+export const subAccess: parser.Parser<Expr> =
+	parser.Accept("(")
+	.second(expr)
+	.first(parser.Require(")"))
+	.or(variable_)
+	.bind(subApplications)
+	.or(parser.Lookahead(1).matches(c => c === '.').map(() => null))
+	.bind(subAccess_);
+
 export const subCall: parser.Parser<ast.FunctionCall> =
-	trivialVariable.then(emptyParens.or(args())).map(([v, a]) => new ast.FunctionCall(v, a));
+	subAccess.then(emptyParens.or(args())).map(([v, a]) => new ast.FunctionCall(v, a));
 
 export const call: parser.Parser<ast.FunctionCall> =
 	keyword("call").second(trivialVariable.then(
