@@ -7,7 +7,6 @@ import "./ParserSettings";
 import { cons, RawCharacter } from "parser-monad";
 import { strEqual } from "./Util";
 import { AccessLevel } from "../program/Access";
-import { Arguments } from "yargs";
 
 const EOL_CHARS = "\n:";
 
@@ -213,6 +212,39 @@ function constructFunctionCallRecursive(callee: Expr, argLists: Expr[][]): ast.F
 	}
 }
 
+export const variable_: parser.Parser<Expr> = identifier.map(id => new ast.Variable_(id));
+
+export const applications: (f: Expr) => parser.Parser<Expr> = f =>
+	parser.Accept("(")
+	.second(args())
+	.first(parser.Require(")"))
+	.map(args => new ast.FunctionCall(f, args))
+	.bind(applications)
+	.or(parser.Return(f));
+
+//export const component: parser.Parser<Expr> =
+//	parser.Accept("(")
+//	.second(expr)
+//	.first(parser.Require(")"))
+//	.or(anyIdentifier.map(id => new ast.Variable(id)))
+
+export const access_: (obj: Expr) => parser.Parser<Expr> = obj =>
+	parser.Accept(".")
+	.second(anyIdentifier)
+	.map(id => new ast.Access(obj, id))
+	.bind(applications)
+	.bind(access_)
+	.or(parser.Return(obj));
+
+export const access: parser.Parser<Expr> =
+	parser.Accept("(")
+	.second(expr)
+	.first(parser.Require(")"))
+	.or(variable_)
+	.bind(applications)
+	.or(parser.Lookahead(1).matches(c => c === '.').map(() => null))
+	.bind(access_);
+
 export const funcCall =
 	variable.then(oneOrMore(parser.Accept("(").second(args()).first(parser.Require(")"))))
 	.map(([callee, argLists]) => constructFunctionCallRecursive(callee, argLists));
@@ -258,13 +290,13 @@ export const dimDecl: (access: AccessLevel) => parser.Parser<ast.Dim> =
 	.then(parser.Default(dimension, null))
 	.map(([id, dim]) => new ast.Dim(id, dim, access));
 
-export const access: parser.Parser<AccessLevel> =
+export const accessLevel: parser.Parser<AccessLevel> =
 	parser.Accept("public")
 	.or(parser.Accept("private"))
 	.map(a => strEqual(a, "private") ? AccessLevel.Private : AccessLevel.Public);
 
 export const dim: parser.Parser<ast.Block> =
-	access.or(parser.Accept("dim").map(() => AccessLevel.Public))
+	accessLevel.or(parser.Accept("dim").map(() => AccessLevel.Public))
 	.bind(
 		access =>
 		dimDecl(access)
@@ -324,7 +356,7 @@ export const argList: parser.Parser<ast.Argument[]> =
 	.or(parser.Return([]));
 
 export const func: parser.Parser<ast.Function> =
-	parser.Default(access, AccessLevel.Public)
+	parser.Default(accessLevel, AccessLevel.Public)
 	.then(
 		parser.Accept("function")
 		.second(identifier)
@@ -340,7 +372,7 @@ export const func: parser.Parser<ast.Function> =
 	.map(([access, [[n, a], b]]) => new ast.Function(n, a, b, access));
 
 export const sub: parser.Parser<ast.Function> =
-	parser.Default(access, AccessLevel.Public)
+	parser.Default(accessLevel, AccessLevel.Public)
 	.then(
 		parser.Accept("sub")
 		.second(identifier)
@@ -356,7 +388,7 @@ export const sub: parser.Parser<ast.Function> =
 	.map(([access, [[n, a], b]]) => new ast.Function(n, a, b, access));
 
 export const getProperty: parser.Parser<ast.Statement> =
-	parser.Default(access, AccessLevel.Public)
+	parser.Default(accessLevel, AccessLevel.Public)
 	.then(parser.Accept("default").map(() => true).or(parser.Return(false)))
 	.first(parser.Accept("property"))
 	.then(
@@ -384,7 +416,7 @@ export const getProperty: parser.Parser<ast.Statement> =
 	);
 
 export const setProperty: parser.Parser<ast.Statement> =
-	parser.Default(access, AccessLevel.Public)
+	parser.Default(accessLevel, AccessLevel.Public)
 	.first(parser.Accept("property"))
 	.then(
 		parser.Accept("set").map(() => ast.PropertyType.Set)

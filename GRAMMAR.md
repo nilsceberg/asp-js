@@ -84,6 +84,12 @@ new = "new" variable    # TODO: should this simply be identifier?
 
 const = "const" identifier "=" literal
 
+# Binds explicit because this one is nontrivial
+variable' = identifier
+applications(f) = "(" args ")" >>= applications | f
+access'(obj) = "." anyIdentifier >>= applications >>= access' | obj
+access = ("(" expr ")" | variable') >>= applications) | "") >>= access'
+
 ```
 
 

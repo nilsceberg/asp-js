@@ -306,6 +306,42 @@ export namespace ast {
 		}
 	}
 
+	export class Variable_ extends Expr implements LValue {
+		name: string;
+
+		constructor(name: string) {
+			super();
+			this.name = name;
+		}
+
+		evaluate(context: Context): Box {
+			throw "access not implemented";
+		}
+
+		toString() {
+			return this.name;
+		}
+	}
+
+	export class Access extends Expr implements LValue {
+		object: Expr;
+		member: string;
+
+		constructor(object: Expr, member: string) {
+			super();
+			this.object = object;
+			this.member = member;
+		}
+
+		evaluate(context: Context): Box {
+			throw "access not implemented";
+		}
+
+		toString() {
+			return `${this.object}.${this.member}`;
+		}
+	}
+
 	export class FunctionCall extends Expr implements LValue, Statement {
 		callee: Expr;
 		args: Expr[];

@@ -1,9 +1,10 @@
 import { StringSource, SourcePointer } from "parser-monad";
-import { expr, statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_, if_, set, printBlockCharacter, printBlockContent, printBlockContentString, printBlock, scriptAsp, inlinePrint, include, redim, classDecl, isNotKeyword } from "./NewParser";
+import { expr, statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_, if_, set, printBlockCharacter, printBlockContent, printBlockContentString, printBlock, scriptAsp, inlinePrint, include, redim, classDecl, isNotKeyword, applications, access } from "./NewParser";
 import { ast } from "../program/NewAST";
 import * as data from "../program/Data";
 import { Value } from "../program/Data";
 import { AccessLevel } from "../program/Access";
+import { WSATYPE_NOT_FOUND } from "constants";
 
 function src(s: string): SourcePointer {
 	return new SourcePointer(new StringSource(s));
@@ -176,6 +177,162 @@ describe("expression", () => {
 			)
 		);
 	});
+});
+
+describe("access", () => {
+	test("applications", () => {
+		const s = src('(1, "hello")(51)()');
+		expect(applications(null).parse(s).from()[0]).toStrictEqual(
+			new ast.FunctionCall(
+				new ast.FunctionCall(
+					new ast.FunctionCall(
+						null,
+						[
+							new ast.expr.Literal(new data.Number(1)),
+							new ast.expr.Literal(new data.String("hello")),
+						]
+					),
+					[
+							new ast.expr.Literal(new data.Number(51)),
+					]
+				),
+				[]
+			)
+		)
+	});
+	
+	test("simple variable", () => {
+		const s = src("myThing");
+		expect(access.parse(s).from()[0]).toStrictEqual(
+			new ast.Variable_("myThing")
+		);
+	});
+	
+	test("simple function call", () => {
+		const s = src("myFunction(31, 4)");
+		expect(access.parse(s).from()[0]).toStrictEqual(
+			new ast.FunctionCall(
+				new ast.Variable_("myFunction"),
+				[
+					new ast.expr.Literal(new data.Number(31)),
+					new ast.expr.Literal(new data.Number(4)),
+				]
+			)
+		);
+	});
+	
+	test("3-level variable", () => {
+		const s = src("parent.child.grandChild");
+		expect(access.parse(s).from()[0]).toStrictEqual(
+			new ast.Access(
+				new ast.Access(
+					new ast.Variable_("parent"),
+					"child"
+				),
+				"grandChild"
+			)
+		);
+	});
+	
+	test("3-level function", () => {
+		const s = src("parent.child.grandChild(1337)");
+		expect(access.parse(s).from()[0]).toStrictEqual(
+			new ast.FunctionCall(
+				new ast.Access(
+					new ast.Access(
+						new ast.Variable_("parent"),
+						"child"
+					),
+					"grandChild"
+				),
+				[
+					new ast.expr.Literal(new data.Number(1337))
+				]
+			),
+		);
+	});
+	
+	test("unqualified", () => {
+		// We test with 'end' because keywords should be allowed as right-hand of '.'
+		const s = src(".child.grandChild");
+		expect(access.parse(s).from()[0]).toStrictEqual(
+			new ast.Access(
+				new ast.Access(
+					null,
+					"child"
+				),
+				"grandChild"
+			)
+		);
+	});
+	
+	test("initial keyword", () => {
+		const s = src("end.child.grandChild");
+		expect(access.parse(s).isJust()).toBeFalsy();
+	});
+	
+	test("initial expression", () => {
+		// Nonsensical but valid syntax (according to our grammar)
+		const s = src("(1 + 2).child");
+		expect(access.parse(s).from()[0]).toStrictEqual(
+			new ast.Access(
+				new ast.expr.Add(
+					new ast.expr.Literal(new data.Number(1)),
+					new ast.expr.Literal(new data.Number(2)),
+				),
+				"child"
+			)
+		);
+	});
+	
+	test("complex", () => {
+		const s = src('parent.someDict("key")(1, 2).what.f()');
+		expect(access.parse(s).from()[0]).toStrictEqual(
+			new ast.FunctionCall(
+				new ast.Access(
+					new ast.Access(
+						new ast.FunctionCall(
+							new ast.FunctionCall(
+								new ast.Access(
+									new ast.Variable_("parent"),
+									"someDict"
+								),
+								[
+									new ast.expr.Literal(new data.String("key"))
+								]
+							),
+							[
+								new ast.expr.Literal(new data.Number(1)),
+								new ast.expr.Literal(new data.Number(2)),
+							]
+						),
+						"what"
+					),
+					"f"
+				),
+				[]
+			)
+		);
+	});
+
+	//test("identifier component", () => {
+	//	// We test with 'end' because this should allow keywords
+	//	const s = src("end");
+	//	expect(component.parse(s).from()[0]).toStrictEqual(
+	//		new ast.Variable_("end")
+	//	);
+	//});
+
+	//test("expression component", () => {
+	//	// We test with 'end' because this should allow keywords
+	//	const s = src("(2 + 3)");
+	//	expect(component.parse(s).from()[0]).toStrictEqual(
+	//		new ast.expr.Add(
+	//			new ast.expr.Literal(new data.Number(2)),
+	//			new ast.expr.Literal(new data.Number(3)),
+	//		)
+	//	);
+	//});
 });
 
 test("statement", () => {
