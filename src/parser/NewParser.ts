@@ -500,20 +500,22 @@ const singleIf: parser.Parser<ast.If> =
 	.map(([c, s]) => new ast.If(c, [s], []));
 
 export const if_: parser.Parser<ast.If> =
-	parser.Accept("if")
-	.second(expr)
-	.first(parser.Require("then"))
-	.first(optionalEol)
-	.then(statements)
-	.then(
-		elseif()
-		.or(parser.Accept("else").first(eol).second(statements))
-		.or(parser.Return([]))
-	)
-	.first(parser.Require("end"))
-	.first(parser.Require("if"))
-	.map(([[c, s], e]) => new ast.If(c, s, e))
-	.or(singleIf);
+	singleIf
+	.or(
+		parser.Accept("if")
+		.second(expr)
+		.first(parser.Require("then"))
+		.first(eol)
+		.then(statements)
+		.then(
+			elseif()
+			.or(parser.Accept("else").first(eol).second(statements))
+			.or(parser.Return([]))
+		)
+		.first(parser.Require("end"))
+		.first(parser.Require("if"))
+		.map(([[c, s], e]) => new ast.If(c, s, e))
+	);
 
 export const while_: parser.Parser<ast.Statement> =
 	parser.Accept("while")
