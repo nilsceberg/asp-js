@@ -70,7 +70,7 @@ export const arithmeticAndComparison: parser.Parser<Expr> = parser.Parser.lazy((
 			">": op(ast.expr.GreaterThan),
 		},
 	],
-	[nothing, empty, null_, boolean, new_, str, funcCall, trivialVariable, number],
+	[nothing, empty, null_, boolean, new_, str, access, number],
 	expr
 ));
 
@@ -115,6 +115,7 @@ export const singleStatement: parser.Parser<ast.Statement> =
 			doUntilLoop,
 			doLoopWhile,
 			doLoopUntil,
+			doLoop,
 			set,
 			exit,
 			option,
@@ -253,12 +254,8 @@ export const access: parser.Parser<Expr> =
 	.or(parser.Lookahead(1).matches(c => c === '.').map(() => null))
 	.bind(access_);
 
-export const funcCall =
-	trivialVariable.then(oneOrMore(parser.Accept("(").second(args()).first(parser.Require(")"))))
-	.map(([callee, argLists]) => constructFunctionCallRecursive(callee, argLists));
-
 export const lvalue: parser.Parser<ast.LValue> =
-	(funcCall as parser.Parser<ast.LValue>).or(trivialVariable);
+	access as parser.Parser<ast.LValue>
 
 export const assignment: parser.Parser<ast.Assignment> =
 	lvalue.first(parser.Accept("=")).then(expr)
@@ -553,6 +550,13 @@ export const doLoopUntil: parser.Parser<ast.Statement> =
 	.then(expr.or(parser.Error("expected expression")))
 	.map(([body, cond]) => new ast.Loop(cond, body, true, true));
 
+export const doLoop: parser.Parser<ast.Statement> =
+	parser.Accept("do")
+	.first(eol)
+	.second(statements)
+	.first(parser.Require("loop"))
+	.map((body) => new ast.Loop(new ast.expr.Literal(new data.Boolean(true)), body, false, false));
+
 export const exit: parser.Parser<ast.Statement> =
 	parser.Accept("exit")
 	.second(
@@ -628,10 +632,10 @@ export const onError: parser.Parser<ast.Statement> =
 
 export const selectCase: parser.Parser<ast.SelectCase> =
 	parser.Accept("case")
-	.second(parser.Accept("else").map(() => null).or(expr))
+	.second(parser.Accept("else").map(() => null).or(args()))
 	.first(eol)
 	.then(statements)
-	.map(([cond, body]) => new ast.SelectCase(cond, body));
+	.map(([conds, body]) => new ast.SelectCase(conds, body));
 
 export const select: parser.Parser<ast.Statement> =
 	parser.Accept("select")

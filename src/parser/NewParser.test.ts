@@ -1,5 +1,5 @@
 import { StringSource, SourcePointer } from "parser-monad";
-import { expr, statement, statements, args, identifier, trivialVariable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_, if_, set, printBlockCharacter, printBlockContent, printBlockContentString, printBlock, scriptAsp, inlinePrint, include, redim, classDecl, isNotKeyword, applications, access } from "./NewParser";
+import { expr, statement, statements, args, identifier, trivialVariable, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_, if_, set, printBlockCharacter, printBlockContent, printBlockContentString, printBlock, scriptAsp, inlinePrint, include, redim, classDecl, isNotKeyword, applications, access } from "./NewParser";
 import { ast } from "../program/NewAST";
 import * as data from "../program/Data";
 import { Value } from "../program/Data";
@@ -971,6 +971,18 @@ describe("loops", () => {
 			)
 		);
 	});
+
+	test("do ... loop", () => {
+		const s = src("do\nstatement\nloop");
+		expect(statement.parse(s).from()[0]).toStrictEqual(
+			new ast.Loop(
+				new ast.expr.Literal(new data.Boolean(true)),
+				[new ast.DummyStatement],
+				false,
+				false
+			)
+		);
+	});
 });
 
 describe("for", () => {
@@ -1094,13 +1106,24 @@ describe("with", () => {
 
 describe("select", () => {
 	test("simple", () => {
-		const s = src("select case val\ncase 4\nstatement\ncase 7\nstatement\ncase else\nstatement\nend select");
+		const s = src("select case val\ncase 4\nstatement\ncase 7, 20\nstatement\ncase else\nstatement\nend select");
 		expect(statement.parse(s).from()[0]).toStrictEqual(
 			new ast.Select(
 				new ast.Variable("val"),
 				[
-					new ast.SelectCase(new ast.expr.Literal(new data.Number(4)), [new ast.DummyStatement]),
-					new ast.SelectCase(new ast.expr.Literal(new data.Number(7)), [new ast.DummyStatement]),
+					new ast.SelectCase(
+						[
+							new ast.expr.Literal(new data.Number(4))
+						],
+						[new ast.DummyStatement]
+					),
+					new ast.SelectCase(
+						[
+							new ast.expr.Literal(new data.Number(7)),
+							new ast.expr.Literal(new data.Number(20)),
+						],
+						[new ast.DummyStatement]
+					),
 					new ast.SelectCase(null, [new ast.DummyStatement]),
 				]
 			)

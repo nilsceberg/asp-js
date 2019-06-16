@@ -10,7 +10,7 @@ These things *should* be marked with "TODO", but may not be.
 eol = ":" | "\n" | EOF
 
 singleStatement = call | assignment | subCall | option | onError | class | function | sub | dim | redim |
-    singleIf | if | doWhileLoop | doLoopWhile | doUntilLoop | doLoopUntil | for |
+    singleIf | if | doWhileLoop | doLoopWhile | doUntilLoop | doLoopUntil | doLoop | for |
     forEach | while | exit | select | const
 
 statement = singleStatement eol
@@ -40,7 +40,6 @@ assignment = lvalue "=" expr
 lvalue = access
 set = "set" assignment
 
-#TODO del: funcCall = variable ("(" args ")")+
 args = expr | expr "," args
 call = "call" trivialVariable "(" args ")"                    # let's keep old variable for this one
 subCall = trivialVariable ("(" ")" | args)                    # probably this one too? VBScript is quirky
@@ -60,6 +59,8 @@ doLoopWhile = "do" eol statements "loop" "while" expr
 doWhileUntil = "do" "until" expr eol statements "loop"
 doUntilWhile = "do" eol statements "loop" "until" expr
 
+doLoop = "do" eol statements "loop"
+
 for = "for" identifier "=" expr "to" expr ("step" expr)? eol statements "next"
 forEach = "for" "each" identifier "in" expr eol statements "next"
 
@@ -71,7 +72,7 @@ optionName = "explicit"
 onError = "on" "error" ("resume" "next" | "goto" "0")
 
 select = "select" "case" expr eol selectCase+ "end" "select"
-selectCase = "case" ("else" | expr) eol statements            # this expr should probably be a literal
+selectCase = "case" ("else" | args) eol statements            # this expr should probably be a literal
 
 statements = statement*
 

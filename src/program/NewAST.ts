@@ -583,11 +583,11 @@ export namespace ast {
 	}
 
 	export class SelectCase {
-		condition: Expr;
+		conditions: Expr[];
 		body: Statement[];
 
-		constructor(condition: Expr, body: Statement[]) {
-			this.condition = condition;
+		constructor(conditions: Expr[], body: Statement[]) {
+			this.conditions = conditions;
 			this.body = body;
 		}
 	}
