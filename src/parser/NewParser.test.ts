@@ -49,7 +49,7 @@ test("eol", () => {
 
 describe("line continuation", () => {
 	test("dim", () => {
-		const s = src("dim_\nhello");
+		const s = src("dim_\n   \t\nhello");
 
 		expect(dim.parse(s).from()[0]).toStrictEqual(new ast.Block([
 			new ast.Dim(
@@ -153,15 +153,19 @@ describe("expression", () => {
 	});
 
 	test("literals", () => {
-		const s = src('1 + nothing + empty + null + "hello ""world"""');
+		// check that we can distinguish things like emptyThing from empty
+		const s = src('1 + nothing + emptyThing + empty + null + "hello ""world"""');
 		const [result, rest] = expr.parse(s).from();
 		expect(result).toStrictEqual(
 			new ast.expr.Add(
 				new ast.expr.Add(
 					new ast.expr.Add(
 						new ast.expr.Add(
-							new ast.expr.Literal(new data.Number(1)),
-							new ast.expr.Literal(new data.Nothing)
+							new ast.expr.Add(
+								new ast.expr.Literal(new data.Number(1)),
+								new ast.expr.Literal(new data.Nothing)
+							),
+							new ast.Variable("emptyThing")
 						),
 						new ast.expr.Literal(new data.Empty)
 					),

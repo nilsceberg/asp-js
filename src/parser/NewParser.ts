@@ -4,20 +4,12 @@ import { nothing, empty, null_, str, boolean, integer, literal, number } from ".
 import * as data from "../program/Data";
 import { Expr } from "../program/NewContext";
 import "./ParserSettings";
-import { cons, RawCharacter } from "parser-monad";
+import { cons, RawCharacter, Letter } from "parser-monad";
 import { strEqual } from "./Util";
 import { AccessLevel } from "../program/Access";
+import { keyword, oneOrMore } from "./ParserBase";
 
 const EOL_CHARS = "\n:";
-
-const oneOrMore: <T>(p: parser.Parser<T>) => parser.Parser<T[]> =
-	p => p.then(p.repeat()).map(cons);
-
-export const keyword: (word: string) => parser.Parser<string> =
-	word =>
-		parser.Sequence(word.length)
-		.matches(w => strEqual(w, word))
-		.first(oneOrMore(parser.Space));
 
 export const eof =
 	parser.Character.or(parser.Return("")).matches(s => s === "");
@@ -89,7 +81,7 @@ export const arithmeticAndComparison: parser.Parser<Expr> = parser.Parser.lazy((
 			">": op(ast.expr.GreaterThan),
 		},
 	],
-	[nothing, empty, null_, boolean, new_, str, negatable(access), number], // number is already negatable
+	[negatable(access), number, nothing, empty, null_, boolean, new_, str], // number is already negatable
 	negatable(expr)
 ));
 
@@ -119,7 +111,7 @@ export const rem: parser.Parser<ast.Statement> =
 export const singleStatement: parser.Parser<ast.Statement> =
 	parser.Parser.lazy(() =>
 		parser.Parser.orMany([
-			parser.Accept("statement").map(() => new ast.DummyStatement),
+			keyword("statement").map(() => new ast.DummyStatement),
 			call,
 			assignment,
 			subCall,
@@ -185,6 +177,11 @@ export const KEYWORDS: string[] = [
 	"CONST",
 	"WITH",
 	"REM",
+	"EMPTY",
+	"NULL",
+	"NOTHING",
+	"TRUE",
+	"FALSE",
 ];
 
 export const isNotKeyword = (word: string): boolean => !KEYWORDS.includes(word.toUpperCase());
@@ -493,7 +490,7 @@ export const elseif: () => parser.Parser<ast.Statement[]> = () =>
 	.then(statements)
 	.then(
 		parser.Parser.lazy(elseif)
-		.or(parser.Accept("else").first(eol).second(statements))
+		.or(keyword("else").first(eol).second(statements))
 		.or(parser.Return([]))
 	)
 	.map(([[c, b], e]) => [new ast.If(c, b, e)])
@@ -515,7 +512,7 @@ export const if_: parser.Parser<ast.If> =
 		.then(statements)
 		.then(
 			elseif()
-			.or(parser.Accept("else").first(eol).second(statements))
+			.or(keyword("else").first(eol).second(statements))
 			.or(parser.Return([]))
 		)
 		.first(parser.Require("end"))
@@ -551,7 +548,7 @@ export const doUntilLoop: parser.Parser<ast.Statement> =
 	.map(([cond, body]) => new ast.Loop(cond, body, true, false));
 
 export const doLoopWhile: parser.Parser<ast.Statement> =
-	parser.Accept("do")
+	keyword("do")
 	.first(eol)
 	.second(statements)
 	.first(parser.Require("loop"))
@@ -560,7 +557,7 @@ export const doLoopWhile: parser.Parser<ast.Statement> =
 	.map(([body, cond]) => new ast.Loop(cond, body, false, true));
 
 export const doLoopUntil: parser.Parser<ast.Statement> =
-	parser.Accept("do")
+	keyword("do")
 	.first(eol)
 	.second(statements)
 	.first(parser.Require("loop"))
@@ -569,7 +566,7 @@ export const doLoopUntil: parser.Parser<ast.Statement> =
 	.map(([body, cond]) => new ast.Loop(cond, body, true, true));
 
 export const doLoop: parser.Parser<ast.Statement> =
-	parser.Accept("do")
+	keyword("do")
 	.first(eol)
 	.second(statements)
 	.first(parser.Require("loop"))
@@ -579,11 +576,11 @@ export const exit: parser.Parser<ast.Statement> =
 	keyword("exit")
 	.second(
 		parser.Parser.orMany([
-			parser.Accept("function").map(() => ast.ExitType.Function),
-			parser.Accept("sub").map(() => ast.ExitType.Sub),
-			parser.Accept("property").map(() => ast.ExitType.Property),
-			parser.Accept("do").map(() => ast.ExitType.Do),
-			parser.Accept("for").map(() => ast.ExitType.For),
+			keyword("function").map(() => ast.ExitType.Function),
+			keyword("sub").map(() => ast.ExitType.Sub),
+			keyword("property").map(() => ast.ExitType.Property),
+			keyword("do").map(() => ast.ExitType.Do),
+			keyword("for").map(() => ast.ExitType.For),
 		])
 		.or(parser.Error("expected function, sub, do, for, or property"))
 	)
@@ -593,12 +590,12 @@ export const option: parser.Parser<ast.Statement> =
 	keyword("option")
 	.second(
 		parser.Parser.orMany([
-			parser.Accept("explicit").map(() => ast.OptionType.Explicit),
+			keyword("explicit").map(() => ast.OptionType.Explicit),
 			parser.Error("expected option")
 		])
 	)
 	.then(
-		parser.Accept("off").map(() => false)
+		keyword("off").map(() => false)
 		.or(parser.Allow("on").map(() => true))
 	)
 	.map(([opt, on]) => new ast.Option(opt, on));
@@ -650,7 +647,7 @@ export const onError: parser.Parser<ast.Statement> =
 
 export const selectCase: parser.Parser<ast.SelectCase> =
 	keyword("case")
-	.second(parser.Accept("else").map(() => null).or(args()))
+	.second(keyword("else").map(() => null).or(args()))
 	.first(eol)
 	.then(statements)
 	.map(([conds, body]) => new ast.SelectCase(conds, body));
@@ -683,7 +680,7 @@ export const const_: parser.Parser<ast.Statement> =
 
 export const printBlockCharacter: parser.Parser<string> =
 	parser.RawLitSequence("<%")
-	.or(parser.Accept("<!--").first(keyword("#include")))
+	.or(parser.Accept("<!--").first(parser.Lit("#").first(keyword("include"))))
 	.or(parser.RawCharacter)
 	.bind(x => x === "<%" || x === "<!--" ? parser.Fail : parser.Return(x));
 
@@ -707,10 +704,11 @@ export const printBlockContentString: parser.Parser<ast.Statement> =
 
 export const include: parser.Parser<ast.Statement> =
 	parser.Accept("<!--")
-	.second(keyword("#include"))
+	.second(parser.Lit("#"))
+	.second(keyword("include"))
 	.second(
-		parser.Accept("file")
-		.or(parser.Accept("virtual"))
+		keyword("file")
+		.or(keyword("virtual"))
 		.or(parser.Error("expected 'file' or 'virtual'"))
 	)
 	.then(
