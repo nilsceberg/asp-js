@@ -15,15 +15,15 @@ test("parse", () => {
 	`), false);
 
 	expect(script.ast).toStrictEqual([
-		new ast.Assignment(new ast.Variable(["x"]), new ast.expr.Literal(new data.Number(123))),
+		new ast.Assignment(new ast.Variable("x"), new ast.expr.Literal(new data.Number(123))),
 		new ast.If(
 			new ast.expr.GreaterThan(
-				new ast.Variable(["x"]),
+				new ast.Variable("x"),
 				new ast.expr.Literal(new data.Number(100))
 			),
 			[
 				new ast.FunctionCall(
-					new ast.Variable(["response", "write"]),
+					new ast.Access(new ast.Variable("response"), "write"),
 					[
 						new ast.expr.Literal(new data.String("hello!"))
 					]

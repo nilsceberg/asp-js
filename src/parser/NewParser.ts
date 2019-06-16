@@ -70,7 +70,7 @@ export const arithmeticAndComparison: parser.Parser<Expr> = parser.Parser.lazy((
 			">": op(ast.expr.GreaterThan),
 		},
 	],
-	[nothing, empty, null_, boolean, new_, str, funcCall, variable, number],
+	[nothing, empty, null_, boolean, new_, str, funcCall, trivialVariable, number],
 	expr
 ));
 
@@ -182,16 +182,30 @@ export const identifier =
 const oneOrMore: <T>(p: parser.Parser<T>) => parser.Parser<T[]> =
 	p => p.then(p.repeat()).map(cons);
 
-export const variable: parser.Parser<ast.Variable> =
+function constructTrivialVariableRecursive(parent: Expr, components: string[]): Expr {
+	if (components.length === 0) return parent;
+	return constructTrivialVariableRecursive(
+		new ast.Access(parent, components[0]),
+		components.slice(1));
+}
+
+function constructTrivialVariable(components: string[]): Expr {
+	return constructTrivialVariableRecursive(
+		components[0] === "" ? null : new ast.Variable(components[0]),
+		components.slice(1)
+	);
+}
+
+export const trivialVariable: parser.Parser<Expr> =
 	parser.Default(identifier, "")
 	.then(oneOrMore(parser.Accept(".").second(anyIdentifier)))
 	.map(cons)
 	.or(identifier.map(x => [x]))
-	.map(comps => new ast.Variable(comps));
+	.map(constructTrivialVariable);
 
 export const new_: parser.Parser<ast.expr.New> =
 	parser.Accept("new")
-	.second(variable)
+	.second(trivialVariable)
 	.map(v => new ast.expr.New(v));
 
 export const args: () => parser.Parser<Expr[]> = () =>
@@ -212,7 +226,7 @@ function constructFunctionCallRecursive(callee: Expr, argLists: Expr[][]): ast.F
 	}
 }
 
-export const variable_: parser.Parser<Expr> = identifier.map(id => new ast.Variable_(id));
+export const variable_: parser.Parser<Expr> = identifier.map(id => new ast.Variable(id));
 
 export const applications: (f: Expr) => parser.Parser<Expr> = f =>
 	parser.Accept("(")
@@ -221,12 +235,6 @@ export const applications: (f: Expr) => parser.Parser<Expr> = f =>
 	.map(args => new ast.FunctionCall(f, args))
 	.bind(applications)
 	.or(parser.Return(f));
-
-//export const component: parser.Parser<Expr> =
-//	parser.Accept("(")
-//	.second(expr)
-//	.first(parser.Require(")"))
-//	.or(anyIdentifier.map(id => new ast.Variable(id)))
 
 export const access_: (obj: Expr) => parser.Parser<Expr> = obj =>
 	parser.Accept(".")
@@ -246,11 +254,11 @@ export const access: parser.Parser<Expr> =
 	.bind(access_);
 
 export const funcCall =
-	variable.then(oneOrMore(parser.Accept("(").second(args()).first(parser.Require(")"))))
+	trivialVariable.then(oneOrMore(parser.Accept("(").second(args()).first(parser.Require(")"))))
 	.map(([callee, argLists]) => constructFunctionCallRecursive(callee, argLists));
 
 export const lvalue: parser.Parser<ast.LValue> =
-	(funcCall as parser.Parser<ast.LValue>).or(variable);
+	(funcCall as parser.Parser<ast.LValue>).or(trivialVariable);
 
 export const assignment: parser.Parser<ast.Assignment> =
 	lvalue.first(parser.Accept("=")).then(expr)
@@ -263,10 +271,10 @@ export const emptyParens: parser.Parser<any[]> =
 	parser.Accept("(").then(parser.Accept(")")).map(() => []);
 
 export const subCall: parser.Parser<ast.FunctionCall> =
-	variable.then(emptyParens.or(args())).map(([v, a]) => new ast.FunctionCall(v, a));
+	trivialVariable.then(emptyParens.or(args())).map(([v, a]) => new ast.FunctionCall(v, a));
 
 export const call: parser.Parser<ast.FunctionCall> =
-	parser.Accept("call").second(variable.then(
+	parser.Accept("call").second(trivialVariable.then(
 		parser.Accept("(").second(args()).first(parser.Require(")"))
 	))
 	.map(([v, a]) => new ast.FunctionCall(v, a));
@@ -659,7 +667,7 @@ export const printBlockCharacter: parser.Parser<string> =
 
 function responseWrite(e: Expr) {
 	return new ast.FunctionCall(
-		new ast.Variable(["Response", "Write"]),
+		new ast.Access(new ast.Variable("Response"), "Write"),
 		[e]
 	);
 }

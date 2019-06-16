@@ -1,10 +1,9 @@
 import { StringSource, SourcePointer } from "parser-monad";
-import { expr, statement, statements, args, identifier, variable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_, if_, set, printBlockCharacter, printBlockContent, printBlockContentString, printBlock, scriptAsp, inlinePrint, include, redim, classDecl, isNotKeyword, applications, access } from "./NewParser";
+import { expr, statement, statements, args, identifier, trivialVariable, funcCall, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_, if_, set, printBlockCharacter, printBlockContent, printBlockContentString, printBlock, scriptAsp, inlinePrint, include, redim, classDecl, isNotKeyword, applications, access } from "./NewParser";
 import { ast } from "../program/NewAST";
 import * as data from "../program/Data";
 import { Value } from "../program/Data";
 import { AccessLevel } from "../program/Access";
-import { WSATYPE_NOT_FOUND } from "constants";
 
 function src(s: string): SourcePointer {
 	return new SourcePointer(new StringSource(s));
@@ -121,8 +120,8 @@ describe("expression", () => {
 		const s = src("x + obj.myVar");
 		expect(expr.parse(s).from()[0]).toStrictEqual(
 			new ast.expr.Add(
-				new ast.Variable(["x"]),
-				new ast.Variable(["obj", "myVar"])
+				new ast.Variable("x"),
+				new ast.Access(new ast.Variable("obj"), "myVar")
 			)
 		)
 	});
@@ -134,7 +133,7 @@ describe("expression", () => {
 				new ast.expr.Literal(new data.Number(3)),
 				new ast.expr.Add(
 					new ast.FunctionCall(
-						new ast.Variable(["obj", "f"]),
+						new ast.Access(new ast.Variable("obj"), "f"),
 						[
 							new ast.expr.Literal(new data.Number(4)),
 							new ast.expr.Literal(new data.Number(1))
@@ -172,7 +171,7 @@ describe("expression", () => {
 			new ast.expr.Add(
 				new ast.expr.Literal(new data.Number(3)),
 				new ast.expr.New(
-					new ast.Variable(["ADODB", "Connection"])
+					new ast.Access(new ast.Variable("ADODB"), "Connection")
 				)
 			)
 		);
@@ -204,7 +203,7 @@ describe("access", () => {
 	test("simple variable", () => {
 		const s = src("myThing");
 		expect(access.parse(s).from()[0]).toStrictEqual(
-			new ast.Variable_("myThing")
+			new ast.Variable("myThing")
 		);
 	});
 	
@@ -212,7 +211,7 @@ describe("access", () => {
 		const s = src("myFunction(31, 4)");
 		expect(access.parse(s).from()[0]).toStrictEqual(
 			new ast.FunctionCall(
-				new ast.Variable_("myFunction"),
+				new ast.Variable("myFunction"),
 				[
 					new ast.expr.Literal(new data.Number(31)),
 					new ast.expr.Literal(new data.Number(4)),
@@ -226,7 +225,7 @@ describe("access", () => {
 		expect(access.parse(s).from()[0]).toStrictEqual(
 			new ast.Access(
 				new ast.Access(
-					new ast.Variable_("parent"),
+					new ast.Variable("parent"),
 					"child"
 				),
 				"grandChild"
@@ -240,7 +239,7 @@ describe("access", () => {
 			new ast.FunctionCall(
 				new ast.Access(
 					new ast.Access(
-						new ast.Variable_("parent"),
+						new ast.Variable("parent"),
 						"child"
 					),
 					"grandChild"
@@ -294,7 +293,7 @@ describe("access", () => {
 						new ast.FunctionCall(
 							new ast.FunctionCall(
 								new ast.Access(
-									new ast.Variable_("parent"),
+									new ast.Variable("parent"),
 									"someDict"
 								),
 								[
@@ -342,7 +341,7 @@ test("statement", () => {
 	const s2 = src("call s (1, 2)");
 	expect(statement.parse(s2).from()[0]).toStrictEqual(
 		new ast.FunctionCall(
-			new ast.Variable(["s"]),
+			new ast.Variable("s"),
 			[new ast.expr.Literal(new data.Number(1)), new ast.expr.Literal(new data.Number(2))]
 		)
 	);
@@ -351,7 +350,7 @@ test("statement", () => {
 	const s3 = src("s (1), 2");
 	expect(statement.parse(s3).from()[0]).toStrictEqual(
 		new ast.FunctionCall(
-			new ast.Variable(["s"]),
+			new ast.Variable("s"),
 			[new ast.expr.Literal(new data.Number(1)), new ast.expr.Literal(new data.Number(2))]
 		)
 	);
@@ -360,7 +359,7 @@ test("statement", () => {
 	expect(statement.parse(s4).from()[0]).toStrictEqual(
 		new ast.Assignment(
 			new ast.FunctionCall(
-				new ast.Variable(["dict"]),
+				new ast.Variable("dict"),
 				[new ast.expr.Literal(new data.Number(1)), new ast.expr.Literal(new data.Number(2))]
 			),
 			new ast.expr.Literal(new data.Number(2))
@@ -370,17 +369,14 @@ test("statement", () => {
 	const s5 = src("func (1)");
 	expect(statement.parse(s5).from()[0]).toStrictEqual(
 		new ast.FunctionCall(
-			new ast.Variable(["func"]),
+			new ast.Variable("func"),
 			[new ast.expr.Literal(new data.Number(1))]
 		)
 	);
 
 	const s6 = src("%>text<% func (1)");
 	expect(statement.parse(s6).from()[0]).toStrictEqual(new ast.Block([
-		new ast.FunctionCall(
-			new ast.Variable(["Response", "Write"]),
-			[new ast.expr.Literal(new data.String("text"))]
-		)
+		responseWrite("text")
 	]));
 
 	// This is not allowed
@@ -450,55 +446,47 @@ describe("identifier", () => {
 	});
 });
 
-describe("variable", () => {
+describe("trivial variable", () => {
 	test("long", () => {
 		const s = src("first.second.last");
-		expect(variable.parse(s).from()[0]).toStrictEqual(new ast.Variable([
-			"first", "second", "last"
-		]));
+		expect(trivialVariable.parse(s).from()[0]).toStrictEqual(
+			new ast.Access(
+				new ast.Access(
+					new ast.Variable(
+						"first"
+					),
+					"second",
+				),
+				"last"
+			)
+		);
 	});
 
 	test("single", () => {
 		const s = src("var");
-		expect(variable.parse(s).from()[0]).toStrictEqual(new ast.Variable([
+		expect(trivialVariable.parse(s).from()[0]).toStrictEqual(new ast.Variable(
 			"var"
-		]));
-	})
-
-	test("empty", () => {
-		const s = src("");
-		expect(variable.parse(s).isJust()).toBeFalsy();
-	})
-
-	test("unqualified", () => {
-		const s = src(".write");
-		expect(variable.parse(s).from()[0]).toStrictEqual(new ast.Variable([
-			"", "write"
-		]));
-	})
-
-	test("keyword", () => {
-		const s = src("response.end");
-		expect(variable.parse(s).from()[0]).toStrictEqual(new ast.Variable([
-			"response", "end"
-		]));
-	})
-});
-
-describe("function call", () => {
-	test("method", () => {
-		const s = src("obj.f(1, 2)");
-		expect(funcCall.parse(s).from()[0]).toStrictEqual(new ast.FunctionCall(
-			new ast.Variable(["obj", "f"]),
-			[new ast.expr.Literal(new data.Number(1)), new ast.expr.Literal(new data.Number(2))]
 		));
 	});
 
-	test("returned function", () => {
-		const s = src("split(something)(2)");
-		expect(funcCall.parse(s).from()[0]).toStrictEqual(new ast.FunctionCall(
-			new ast.FunctionCall(new ast.Variable(["split"]), [new ast.Variable(["something"])]),
-			[new ast.expr.Literal(new data.Number(2))]
+	test("empty", () => {
+		const s = src("");
+		expect(trivialVariable.parse(s).isJust()).toBeFalsy();
+	});
+
+	test("unqualified", () => {
+		const s = src(".write");
+		expect(trivialVariable.parse(s).from()[0]).toStrictEqual(new ast.Access(
+			null,
+			"write"
+		));
+	});
+
+	test("keyword", () => {
+		const s = src("response.end");
+		expect(trivialVariable.parse(s).from()[0]).toStrictEqual(new ast.Access(
+			new ast.Variable("response"),
+			"end"
 		));
 	});
 });
@@ -507,7 +495,7 @@ test("assignment", () => {
 	const s1 = src("obj.f(1, 2) = 3");
 	expect(assignment.parse(s1).from()[0]).toStrictEqual(new ast.Assignment(
 		new ast.FunctionCall(
-			new ast.Variable(["obj", "f"]),
+			new ast.Access(new ast.Variable("obj"), "f"),
 			[new ast.expr.Literal(new data.Number(1)), new ast.expr.Literal(new data.Number(2))]
 		),
 		new ast.expr.Literal(new data.Number(3))
@@ -515,7 +503,7 @@ test("assignment", () => {
 
 	const s2 = src("v = 3");
 	expect(assignment.parse(s2).from()[0]).toStrictEqual(new ast.Assignment(
-		new ast.Variable(["v"]),
+		new ast.Variable("v"),
 		new ast.expr.Literal(new data.Number(3)),
 	));
 });
@@ -523,8 +511,8 @@ test("assignment", () => {
 test("set", () => {
 	const s1 = src("set obj = new MyClass");
 	expect(set.parse(s1).from()[0]).toStrictEqual(new ast.Assignment(
-		new ast.Variable(["obj"]),
-		new ast.expr.New(new ast.Variable(["MyClass"]))
+		new ast.Variable("obj"),
+		new ast.expr.New(new ast.Variable("MyClass"))
 	));
 });
 
@@ -533,7 +521,7 @@ describe("sub call", () => {
 		const s = src("obj.s (1), 2");
 
 		expect(statement.parse(s).from()[0]).toStrictEqual(new ast.FunctionCall(
-			new ast.Variable(["obj", "s"]),
+			new ast.Access(new ast.Variable("obj"), "s"),
 			[new ast.expr.Literal(new data.Number(1)), new ast.expr.Literal(new data.Number(2))]
 		));
 	});
@@ -542,7 +530,7 @@ describe("sub call", () => {
 		const s = src("someSub ()");
 
 		expect(statement.parse(s).from()[0]).toStrictEqual(new ast.FunctionCall(
-			new ast.Variable(["someSub"]),
+			new ast.Variable("someSub"),
 			[]
 		));
 	});
@@ -552,7 +540,7 @@ test("call", () => {
 	const s = src("call obj.s ((1), 2)");
 
 	expect(call.parse(s).from()[0]).toStrictEqual(new ast.FunctionCall(
-		new ast.Variable(["obj", "s"]),
+		new ast.Access(new ast.Variable("obj"), "s"),
 		[new ast.expr.Literal(new data.Number(1)), new ast.expr.Literal(new data.Number(2))]
 	));
 });
@@ -791,8 +779,8 @@ describe("if", () => {
 		expect(statement.parse(s).from()[0]).toStrictEqual(
 			new ast.If(
 				new ast.expr.LessThan(
-					new ast.Variable(["x"]),
-					new ast.Variable(["y"])
+					new ast.Variable("x"),
+					new ast.Variable("y")
 				),
 				[
 					new ast.DummyStatement
@@ -807,8 +795,8 @@ describe("if", () => {
 		expect(statement.parse(s).from()[0]).toStrictEqual(
 			new ast.If(
 				new ast.expr.LessThan(
-					new ast.Variable(["x"]),
-					new ast.Variable(["y"])
+					new ast.Variable("x"),
+					new ast.Variable("y")
 				),
 				[
 					new ast.DummyStatement
@@ -1019,7 +1007,7 @@ describe("for each", () => {
 		expect(statement.parse(s).from()[0]).toStrictEqual(
 			new ast.ForEach(
 				"x",
-				new ast.Variable(["xs"]),
+				new ast.Variable("xs"),
 				[new ast.DummyStatement]
 			)
 		);
@@ -1097,7 +1085,7 @@ describe("with", () => {
 		const s = src("with obj\nstatement\nend with");
 		expect(statement.parse(s).from()[0]).toStrictEqual(
 			new ast.With(
-				new ast.Variable(["obj"]),
+				new ast.Variable("obj"),
 				[new ast.DummyStatement]
 			)
 		)
@@ -1109,7 +1097,7 @@ describe("select", () => {
 		const s = src("select case val\ncase 4\nstatement\ncase 7\nstatement\ncase else\nstatement\nend select");
 		expect(statement.parse(s).from()[0]).toStrictEqual(
 			new ast.Select(
-				new ast.Variable(["val"]),
+				new ast.Variable("val"),
 				[
 					new ast.SelectCase(new ast.expr.Literal(new data.Number(4)), [new ast.DummyStatement]),
 					new ast.SelectCase(new ast.expr.Literal(new data.Number(7)), [new ast.DummyStatement]),
@@ -1119,6 +1107,13 @@ describe("select", () => {
 		)
 	});
 });
+
+function responseWrite(str: string): ast.FunctionCall {
+	return new ast.FunctionCall(
+		new ast.Access(new ast.Variable("Response"), "Write"),
+		[new ast.expr.Literal(new data.String(str))]
+	);
+}
 
 describe("include", () => {
 	test("file", () => {
@@ -1157,10 +1152,7 @@ describe("literal print", () => {
 		const [result, rest] = printBlockContentString.parse(s).from();
 
 		expect(result).toStrictEqual(
-			new ast.FunctionCall(
-				new ast.Variable(["Response", "Write"]),
-				[new ast.expr.Literal(new data.String("some literal text' not a comment "))]
-			)
+			responseWrite("some literal text' not a comment ")
 		);
 		expect(rest.equals("<% code"))
 	});
@@ -1171,10 +1163,7 @@ describe("literal print", () => {
 		const [result, rest] = printBlockContent.parse(s).from();
 
 		expect(result).toStrictEqual(new ast.Block([
-			new ast.FunctionCall(
-				new ast.Variable(["Response", "Write"]),
-				[new ast.expr.Literal(new data.String("some literal text' not a comment "))]
-			)
+			responseWrite("some literal text' not a comment ")
 		]));
 		expect(rest.equals("<% code"))
 	});
@@ -1186,8 +1175,8 @@ describe("literal print", () => {
 
 		expect(result).toStrictEqual(
 			new ast.FunctionCall(
-				new ast.Variable(["Response", "Write"]),
-				[new ast.Variable(["expr"])]
+				new ast.Access(new ast.Variable("Response"), "Write"),
+				[new ast.Variable("expr")]
 			)
 		);
 
@@ -1202,12 +1191,12 @@ describe("literal print", () => {
 		expect(result).toStrictEqual(new ast.Block([
 			responseWrite("text "),
 			new ast.FunctionCall(
-				new ast.Variable(["Response", "Write"]),
-				[new ast.Variable(["stuff"])]
+				new ast.Access(new ast.Variable("Response"), "Write"),
+				[new ast.Variable("stuff")]
 			),
 			responseWrite("more text"),
 			new ast.FunctionCall(
-				new ast.Variable(["Response", "Write"]),
+				new ast.Access(new ast.Variable("Response"), "Write"),
 				[new ast.expr.Add(
 					new ast.expr.Literal(new data.Number(4)),
 					new ast.expr.Literal(new data.Number(3)),
@@ -1228,8 +1217,8 @@ describe("literal print", () => {
 			new ast.Include("something.asp", false),
 			responseWrite(""),
 			new ast.FunctionCall(
-				new ast.Variable(["Response", "Write"]),
-				[new ast.Variable(["stuff"])]
+				new ast.Access(new ast.Variable("Response"), "Write"),
+				[new ast.Variable("stuff")]
 			),
 			responseWrite("more text"),
 		]));
@@ -1242,10 +1231,7 @@ describe("literal print", () => {
 		const [result, rest] = printBlock.parse(s).from();
 
 		expect(result).toStrictEqual(new ast.Block([
-			new ast.FunctionCall(
-				new ast.Variable(["Response", "Write"]),
-				[new ast.expr.Literal(new data.String("some text"))]
-			)
+			responseWrite("some text")
 		]));
 		expect(rest.equals("code"))
 	});
@@ -1256,10 +1242,7 @@ describe("literal print", () => {
 		const [result, rest] = printBlock.parse(s).from();
 
 		expect(result).toStrictEqual(new ast.Block([
-			new ast.FunctionCall(
-				new ast.Variable(["Response", "Write"]),
-				[new ast.expr.Literal(new data.String("some text"))]
-			)
+			responseWrite("some text")
 		]));
 		expect(rest.equals(""))
 	});
@@ -1271,10 +1254,7 @@ describe("literal print", () => {
 
 		expect(result).toStrictEqual([
 			new ast.Block([
-				new ast.FunctionCall(
-					new ast.Variable(["Response", "Write"]),
-					[new ast.expr.Literal(new data.String(""))]
-				),
+				responseWrite("")
 			]),
 			new ast.DummyStatement
 		]);
@@ -1288,23 +1268,13 @@ describe("literal print", () => {
 
 		expect(result).toStrictEqual([
 			new ast.Block([
-				new ast.FunctionCall(
-					new ast.Variable(["Response", "Write"]),
-					[new ast.expr.Literal(new data.String(""))]
-				),
+				responseWrite("")
 			]),
 			new ast.DummyStatement
 		]);
 		expect(rest.equals(""));
 	});
 });
-
-function responseWrite(str: string): ast.FunctionCall {
-	return new ast.FunctionCall(
-		new ast.Variable(["Response", "Write"]),
-		[new ast.expr.Literal(new data.String(str))]
-	);
-}
 
 describe("script", () => {
 	test("asp", () => {
@@ -1314,7 +1284,7 @@ describe("script", () => {
 
 		expect(result).toStrictEqual([
 			new ast.Block([responseWrite("header")]),
-			new ast.FunctionCall(new ast.Variable(["doThing"]), []),
+			new ast.FunctionCall(new ast.Variable("doThing"), []),
 			new ast.Block([new ast.Dim("x", null)]),
 			new ast.Block([responseWrite("footer")]),
 		]);

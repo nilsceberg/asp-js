@@ -48,9 +48,9 @@ export namespace ast {
 		}
 
 		export class New extends Expr {
-			what: ast.Variable;
+			what: Expr;
 
-			constructor(what: ast.Variable) {
+			constructor(what: Expr) {
 				super();
 				this.what = what;
 			}
@@ -280,33 +280,6 @@ export namespace ast {
 	}
 
 	export class Variable extends Expr implements LValue {
-		components: string[];
-
-		constructor(components: string[]) {
-			super();
-			this.components = components;
-		}
-
-		evaluate(context: Context): Box {
-			let [first, ...rest] = this.components;
-			let box = context.resolve(first);
-
-			while (true) {
-				if (rest.length === 0) {
-					return box;
-				}
-
-				[first, ...rest] = rest;
-				box = (<DictObj>box.get()).get(first);
-			}
-		}
-
-		toString() {
-			return this.components.join(".");
-		}
-	}
-
-	export class Variable_ extends Expr implements LValue {
 		name: string;
 
 		constructor(name: string) {

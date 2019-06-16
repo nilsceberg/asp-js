@@ -37,14 +37,13 @@ argList = (argListArg ("," argList)*)?
 argListArg = ("byval" | "byref")? identifier
 
 assignment = lvalue "=" expr
-lvalue = variable | funcCall
+lvalue = access
 set = "set" assignment
 
-funcCall = variable ("(" args ")")+
+#TODO del: funcCall = variable ("(" args ")")+
 args = expr | expr "," args
-call = "call" variable "(" args ")"
-
-subCall = variable ("(" ")" | args)
+call = "call" trivialVariable "(" args ")"                    # let's keep old variable for this one
+subCall = trivialVariable ("(" ")" | args)                    # probably this one too? VBScript is quirky
 
 anyIdentifier = IDENTIFIER
 identifier = (anyIdentifier : not keyword)
@@ -76,11 +75,11 @@ selectCase = "case" ("else" | expr) eol statements            # this expr should
 
 statements = statement*
 
-variable = identifier? ("." anyIdentifier)+ | identifier
+trivialVariable = identifier? ("." anyIdentifier)+ | identifier
 
 with = "with" expr eol statements "end" "with"
 
-new = "new" variable    # TODO: should this simply be identifier?
+new = "new" trivialVariable                                   # TODO: should this simply be identifier?
 
 const = "const" identifier "=" literal
 

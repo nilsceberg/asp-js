@@ -50,29 +50,31 @@ describe("scope", () => {
 
 		const block = script.getScope();
 		
-		block.run();
-
+		// Todo: this is commented-out because the interpreter isn't implemented yet
+		//block.run();
 	});
 });
 
-test("vbscript function", () => {
-	const globalContext = new Context();
+// Remnant of old member access model:
 
-	const func = new VBFunc(new ast.Function(
-		"func", [], [
-			new ast.FunctionCall(
-				new ast.Variable(["success"]),
-				[]
-			)
-		]
-	), globalContext);
-
-	const successFn = jest.fn();
-	const success = new NodeFunc(successFn, globalContext);
-
-	globalContext.declare("success", success);
-
-	func.run([]);
-
-	expect(successFn).toHaveBeenCalled();
-});
+//test("vbscript function", () => {
+//	const globalContext = new Context();
+//
+//	const func = new VBFunc(new ast.Function(
+//		"func", [], [
+//			new ast.FunctionCall(
+//				new ast.Variable(["success"]),
+//				[]
+//			)
+//		]
+//	), globalContext);
+//
+//	const successFn = jest.fn();
+//	const success = new NodeFunc(successFn, globalContext);
+//
+//	globalContext.declare("success", success);
+//
+//	func.run([]);
+//
+//	expect(successFn).toHaveBeenCalled();
+//});
