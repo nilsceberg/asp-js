@@ -176,6 +176,32 @@ describe("expression", () => {
 			)
 		);
 	});
+	
+	test("negatable sub-expression", () => {
+		const s = src("-(1 + 1)");
+		expect(expr.parse(s).from()[0]).toStrictEqual(
+			new ast.expr.Sub(
+				new ast.expr.Literal(new data.Number(0)),
+				new ast.expr.Add(
+					new ast.expr.Literal(new data.Number(1)),
+					new ast.expr.Literal(new data.Number(1)),
+				)
+			)
+		);
+	});
+	
+	test("negatable access", () => {
+		const s = src("-func()");
+		expect(expr.parse(s).from()[0]).toStrictEqual(
+			new ast.expr.Sub(
+				new ast.expr.Literal(new data.Number(0)),
+				new ast.FunctionCall(
+					new ast.Variable("func"),
+					[],
+				)
+			)
+		);
+	});
 });
 
 describe("access", () => {

@@ -34,6 +34,15 @@ function op (Binary: new (left: Expr, right: Expr) => Expr): (left: Expr, right:
 	return (left, right) => new Binary(left, right);
 }
 
+const negatable: (p: parser.Parser<Expr>) => parser.Parser<Expr> = p =>
+	parser.Default(parser.Accept("-").map(() => true), false)
+	.then(p)
+	.map(([negate, e]) =>
+		!negate
+		? e
+		: new ast.expr.Sub(new ast.expr.Literal(new data.Number(0)), e)
+	);
+
 // The order of evaluation is from here: https://www.guru99.com/vbscript-operators-constants.html
 // Might not be the most credible of sources...
 export const arithmeticAndComparison: parser.Parser<Expr> = parser.Parser.lazy(() => parser.exprParser(
@@ -71,8 +80,8 @@ export const arithmeticAndComparison: parser.Parser<Expr> = parser.Parser.lazy((
 			">": op(ast.expr.GreaterThan),
 		},
 	],
-	[nothing, empty, null_, boolean, new_, str, access, number],
-	expr
+	[nothing, empty, null_, boolean, new_, str, negatable(access), number], // number is already negatable
+	negatable(expr)
 ));
 
 const not: parser.Parser<Expr> =
