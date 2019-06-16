@@ -126,6 +126,13 @@ describe("expression", () => {
 		)
 	});
 
+	test("variable that begins with new", () => {
+		const s = src("newThing");
+		expect(expr.parse(s).from()[0]).toStrictEqual(
+			new ast.Variable("newThing"),
+		)
+	});
+
 	test("function call", () => {
 		const s = src("3 * (obj.f(4, 1) + 2)");
 		expect(expr.parse(s).from()[0]).toStrictEqual(

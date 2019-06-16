@@ -10,6 +10,15 @@ import { AccessLevel } from "../program/Access";
 
 const EOL_CHARS = "\n:";
 
+const oneOrMore: <T>(p: parser.Parser<T>) => parser.Parser<T[]> =
+	p => p.then(p.repeat()).map(cons);
+
+export const keyword: (word: string) => parser.Parser<string> =
+	word =>
+		parser.Sequence(word.length)
+		.matches(w => strEqual(w, word))
+		.first(oneOrMore(parser.Space));
+
 export const eof =
 	parser.Character.or(parser.Return("")).matches(s => s === "");
 
@@ -85,7 +94,7 @@ export const arithmeticAndComparison: parser.Parser<Expr> = parser.Parser.lazy((
 ));
 
 const not: parser.Parser<Expr> =
-	parser.Accept("not")
+	keyword("not")
 	.second(arithmeticAndComparison)
 	.map(x => new ast.expr.Not(x));
 
@@ -105,7 +114,7 @@ export const expr: parser.Parser<Expr> = parser.Parser.lazy(() => parser.exprPar
 ));
 
 export const rem: parser.Parser<ast.Statement> =
-	parser.Accept("rem").first(RawCharacter.matches(c => c !== "\n").repeat()).map(() => new ast.DummyStatement);
+	keyword("rem").first(RawCharacter.matches(c => c !== "\n").repeat()).map(() => new ast.DummyStatement);
 
 export const singleStatement: parser.Parser<ast.Statement> =
 	parser.Parser.lazy(() =>
@@ -190,9 +199,6 @@ export const anyIdentifier =
 export const identifier = 
 	anyIdentifier.matches(isNotKeyword)
 
-const oneOrMore: <T>(p: parser.Parser<T>) => parser.Parser<T[]> =
-	p => p.then(p.repeat()).map(cons);
-
 function constructTrivialVariableRecursive(parent: Expr, components: string[]): Expr {
 	if (components.length === 0) return parent;
 	return constructTrivialVariableRecursive(
@@ -215,7 +221,7 @@ export const trivialVariable: parser.Parser<Expr> =
 	.map(constructTrivialVariable);
 
 export const new_: parser.Parser<ast.expr.New> =
-	parser.Accept("new")
+	keyword("new")
 	.second(trivialVariable)
 	.map(v => new ast.expr.New(v));
 
@@ -272,7 +278,7 @@ export const assignment: parser.Parser<ast.Assignment> =
 	.map(([l, r]) => new ast.Assignment(l, r));
 
 export const set: parser.Parser<ast.Assignment> =
-	parser.Accept("set").second(assignment);
+	keyword("set").second(assignment);
 
 export const emptyParens: parser.Parser<any[]> =
 	parser.Accept("(").then(parser.Accept(")")).map(() => []);
@@ -281,7 +287,7 @@ export const subCall: parser.Parser<ast.FunctionCall> =
 	trivialVariable.then(emptyParens.or(args())).map(([v, a]) => new ast.FunctionCall(v, a));
 
 export const call: parser.Parser<ast.FunctionCall> =
-	parser.Accept("call").second(trivialVariable.then(
+	keyword("call").second(trivialVariable.then(
 		parser.Accept("(").second(args()).first(parser.Require(")"))
 	))
 	.map(([v, a]) => new ast.FunctionCall(v, a));
@@ -306,12 +312,12 @@ export const dimDecl: (access: AccessLevel) => parser.Parser<ast.Dim> =
 	.map(([id, dim]) => new ast.Dim(id, dim, access));
 
 export const accessLevel: parser.Parser<AccessLevel> =
-	parser.Accept("public")
-	.or(parser.Accept("private"))
+	keyword("public")
+	.or(keyword("private"))
 	.map(a => strEqual(a, "private") ? AccessLevel.Private : AccessLevel.Public);
 
 export const dim: parser.Parser<ast.Block> =
-	accessLevel.or(parser.Accept("dim").map(() => AccessLevel.Public))
+	accessLevel.or(keyword("dim").map(() => AccessLevel.Public))
 	.bind(
 		access =>
 		dimDecl(access)
@@ -340,10 +346,10 @@ export const redimDecl: (preserve: boolean) => parser.Parser<ast.Redim> =
 	.map(([id, dim]) => new ast.Redim(id, dim, preserve));
 
 export const redim: parser.Parser<ast.Block> =
-	parser.Accept("redim")
+	keyword("redim")
 	.second(
 		parser.Default(
-			parser.Accept("preserve").map(() => true),
+			keyword("preserve").map(() => true),
 			false
 		)
 	)
@@ -356,8 +362,8 @@ export const redim: parser.Parser<ast.Block> =
 
 export const argListArg: parser.Parser<ast.Argument> =
 	parser.Default(
-		parser.Accept("byref")
-		.or(parser.Accept("byval"))
+		keyword("byref")
+		.or(keyword("byval"))
 		.map(s => strEqual(s, "byref")),
 		false)
 	.bind(byRef =>
@@ -373,7 +379,7 @@ export const argList: parser.Parser<ast.Argument[]> =
 export const func: parser.Parser<ast.Function> =
 	parser.Default(accessLevel, AccessLevel.Public)
 	.then(
-		parser.Accept("function")
+		keyword("function")
 		.second(identifier)
 		.then(parser.Default(
 			parser.Accept("(").second(argList.first(parser.Require(")"))),
@@ -389,7 +395,7 @@ export const func: parser.Parser<ast.Function> =
 export const sub: parser.Parser<ast.Function> =
 	parser.Default(accessLevel, AccessLevel.Public)
 	.then(
-		parser.Accept("sub")
+		keyword("sub")
 		.second(identifier)
 		.then(parser.Default(
 			parser.Accept("(").second(argList.first(parser.Require(")"))),
@@ -404,10 +410,10 @@ export const sub: parser.Parser<ast.Function> =
 
 export const getProperty: parser.Parser<ast.Statement> =
 	parser.Default(accessLevel, AccessLevel.Public)
-	.then(parser.Accept("default").map(() => true).or(parser.Return(false)))
-	.first(parser.Accept("property"))
+	.then(keyword("default").map(() => true).or(parser.Return(false)))
+	.first(keyword("property"))
 	.then(
-		parser.Accept("get")
+		keyword("get")
 		.second(identifier)
 	)
 	.first(
@@ -432,10 +438,10 @@ export const getProperty: parser.Parser<ast.Statement> =
 
 export const setProperty: parser.Parser<ast.Statement> =
 	parser.Default(accessLevel, AccessLevel.Public)
-	.first(parser.Accept("property"))
+	.first(keyword("property"))
 	.then(
-		parser.Accept("set").map(() => ast.PropertyType.Set)
-		.or(parser.Accept("let").map(() => ast.PropertyType.Let))
+		keyword("set").map(() => ast.PropertyType.Set)
+		.or(keyword("let").map(() => ast.PropertyType.Let))
 	)
 	.then(identifier)
 	.then(
@@ -471,7 +477,7 @@ export const classDecl: parser.Parser<ast.Statement> =
 	.first(eol);
 
 export const class_: parser.Parser<ast.Class> =
-	parser.Accept("class")
+	keyword("class")
 	.second(identifier)
 	.first(eol)
 	.then(classDecl.repeat())
@@ -480,7 +486,7 @@ export const class_: parser.Parser<ast.Class> =
 	.map(([n, d]) => new ast.Class(n, d));
 
 export const elseif: () => parser.Parser<ast.Statement[]> = () =>
-	parser.Accept("elseif")
+	keyword("elseif")
 	.second(expr)
 	.first(parser.Require("then"))
 	.first(eol)
@@ -493,7 +499,7 @@ export const elseif: () => parser.Parser<ast.Statement[]> = () =>
 	.map(([[c, b], e]) => [new ast.If(c, b, e)])
 
 const singleIf: parser.Parser<ast.If> =
-	parser.Accept("if")
+	keyword("if")
 	.second(expr)
 	.first(parser.Require("then"))
 	.then(singleStatement)
@@ -502,7 +508,7 @@ const singleIf: parser.Parser<ast.If> =
 export const if_: parser.Parser<ast.If> =
 	singleIf
 	.or(
-		parser.Accept("if")
+		keyword("if")
 		.second(expr)
 		.first(parser.Require("then"))
 		.first(eol)
@@ -518,7 +524,7 @@ export const if_: parser.Parser<ast.If> =
 	);
 
 export const while_: parser.Parser<ast.Statement> =
-	parser.Accept("while")
+	keyword("while")
 	.second(expr)
 	.first(eol)
 	.then(statements)
@@ -527,8 +533,8 @@ export const while_: parser.Parser<ast.Statement> =
 
 // These four can probably be done in a prettier, more general way:
 export const doWhileLoop: parser.Parser<ast.Statement> =
-	parser.Accept("do")
-	.second(parser.Accept("while"))
+	keyword("do")
+	.second(keyword("while"))
 	.second(expr.or(parser.Error("expected expression")))
 	.first(eol)
 	.then(statements)
@@ -536,8 +542,8 @@ export const doWhileLoop: parser.Parser<ast.Statement> =
 	.map(([cond, body]) => new ast.Loop(cond, body, false, false));
 
 export const doUntilLoop: parser.Parser<ast.Statement> =
-	parser.Accept("do")
-	.second(parser.Accept("until"))
+	keyword("do")
+	.second(keyword("until"))
 	.second(expr.or(parser.Error("expected expression")))
 	.first(eol)
 	.then(statements)
@@ -549,7 +555,7 @@ export const doLoopWhile: parser.Parser<ast.Statement> =
 	.first(eol)
 	.second(statements)
 	.first(parser.Require("loop"))
-	.first(parser.Accept("while"))
+	.first(keyword("while"))
 	.then(expr.or(parser.Error("expected expression")))
 	.map(([body, cond]) => new ast.Loop(cond, body, false, true));
 
@@ -558,7 +564,7 @@ export const doLoopUntil: parser.Parser<ast.Statement> =
 	.first(eol)
 	.second(statements)
 	.first(parser.Require("loop"))
-	.first(parser.Accept("until"))
+	.first(keyword("until"))
 	.then(expr.or(parser.Error("expected expression")))
 	.map(([body, cond]) => new ast.Loop(cond, body, true, true));
 
@@ -570,7 +576,7 @@ export const doLoop: parser.Parser<ast.Statement> =
 	.map((body) => new ast.Loop(new ast.expr.Literal(new data.Boolean(true)), body, false, false));
 
 export const exit: parser.Parser<ast.Statement> =
-	parser.Accept("exit")
+	keyword("exit")
 	.second(
 		parser.Parser.orMany([
 			parser.Accept("function").map(() => ast.ExitType.Function),
@@ -584,7 +590,7 @@ export const exit: parser.Parser<ast.Statement> =
 	.map(t => new ast.Exit(t));
 
 export const option: parser.Parser<ast.Statement> =
-	parser.Accept("option")
+	keyword("option")
 	.second(
 		parser.Parser.orMany([
 			parser.Accept("explicit").map(() => ast.OptionType.Explicit),
@@ -598,7 +604,7 @@ export const option: parser.Parser<ast.Statement> =
 	.map(([opt, on]) => new ast.Option(opt, on));
 
 export const for_: parser.Parser<ast.Statement> =
-	parser.Accept("for")
+	keyword("for")
 	.second(identifier)
 	.first(parser.Require("="))
 	.then(expr)
@@ -606,7 +612,7 @@ export const for_: parser.Parser<ast.Statement> =
 	.then(expr)
 	.then(
 		parser.Default(
-			parser.Accept("step").second(expr),
+			keyword("step").second(expr),
 			new ast.expr.Literal(new data.Number(1))
 		)
 	)
@@ -618,8 +624,8 @@ export const for_: parser.Parser<ast.Statement> =
 	);
 
 export const forEach: parser.Parser<ast.Statement> =
-	parser.Accept("for")
-	.second(parser.Accept("each"))
+	keyword("for")
+	.second(keyword("each"))
 	.second(identifier)
 	.first(parser.Require("in"))
 	.then(expr)
@@ -631,26 +637,26 @@ export const forEach: parser.Parser<ast.Statement> =
 	);
 
 export const onError: parser.Parser<ast.Statement> =
-	parser.Accept("on")
+	keyword("on")
 	.second(parser.Require("error"))
 	.second(
 		parser.Parser.orMany([
-			parser.Accept("resume").second(parser.Require("next")).map(() => ast.ErrorHandling.ResumeNext),
-			parser.Accept("goto").second(parser.Require("0")).map(() => ast.ErrorHandling.Goto0),
+			keyword("resume").second(parser.Require("next")).map(() => ast.ErrorHandling.ResumeNext),
+			keyword("goto").second(parser.Require("0")).map(() => ast.ErrorHandling.Goto0),
 			parser.Error("expected 'resume next' or 'goto 0'")
 		])
 	)
 	.map(handling => new ast.OnError(handling));
 
 export const selectCase: parser.Parser<ast.SelectCase> =
-	parser.Accept("case")
+	keyword("case")
 	.second(parser.Accept("else").map(() => null).or(args()))
 	.first(eol)
 	.then(statements)
 	.map(([conds, body]) => new ast.SelectCase(conds, body));
 
 export const select: parser.Parser<ast.Statement> =
-	parser.Accept("select")
+	keyword("select")
 	.second(parser.Require("case"))
 	.second(expr)
 	.first(eol)
@@ -660,7 +666,7 @@ export const select: parser.Parser<ast.Statement> =
 	.map(([expr, cases]) => new ast.Select(expr, cases));
 
 export const with_: parser.Parser<ast.Statement> =
-	parser.Accept("with")
+	keyword("with")
 	.second(expr)
 	.first(eol)
 	.then(statements)
@@ -669,7 +675,7 @@ export const with_: parser.Parser<ast.Statement> =
 	.map(([obj, body]) => new ast.With(obj, body));
 
 export const const_: parser.Parser<ast.Statement> =
-	parser.Accept("const")
+	keyword("const")
 	.second(identifier)
 	.first(parser.Require("="))
 	.then(literal)
@@ -677,7 +683,7 @@ export const const_: parser.Parser<ast.Statement> =
 
 export const printBlockCharacter: parser.Parser<string> =
 	parser.RawLitSequence("<%")
-	.or(parser.Accept("<!--").first(parser.Accept("#include")))
+	.or(parser.Accept("<!--").first(keyword("#include")))
 	.or(parser.RawCharacter)
 	.bind(x => x === "<%" || x === "<!--" ? parser.Fail : parser.Return(x));
 
@@ -701,7 +707,7 @@ export const printBlockContentString: parser.Parser<ast.Statement> =
 
 export const include: parser.Parser<ast.Statement> =
 	parser.Accept("<!--")
-	.second(parser.Accept("#include"))
+	.second(keyword("#include"))
 	.second(
 		parser.Accept("file")
 		.or(parser.Accept("virtual"))
