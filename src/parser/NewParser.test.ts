@@ -49,7 +49,7 @@ test("eol", () => {
 
 describe("line continuation", () => {
 	test("dim", () => {
-		const s = src("dim_\n   \t\nhello");
+		const s = src("dim_ \n   \t\nhello");
 
 		expect(dim.parse(s).from()[0]).toStrictEqual(new ast.Block([
 			new ast.Dim(
