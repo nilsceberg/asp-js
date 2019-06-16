@@ -692,7 +692,8 @@ function responseWrite(e: Expr) {
 }
 
 export const inlinePrint: parser.Parser<ast.Statement> =
-	parser.Accept("<%=")
+	parser.Accept("<%")
+	.second(parser.Accept("="))
 	.second(expr)
 	.first(parser.Require("%>"))
 	.map(responseWrite);

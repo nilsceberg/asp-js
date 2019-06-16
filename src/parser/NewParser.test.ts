@@ -1229,7 +1229,7 @@ describe("literal print", () => {
 	});
 
 	test("inline print", () => {
-		const s = src("<%= expr %>rest");
+		const s = src("<% = expr %>rest");
 
 		const [result, rest] = inlinePrint.parse(s).from();
 
