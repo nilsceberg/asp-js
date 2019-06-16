@@ -50,13 +50,14 @@ export const arithmeticAndComparison: parser.Parser<Expr> = parser.Parser.lazy((
 			// left-to-right.
 			"*": op(ast.expr.Mul),
 			"/": op(ast.expr.Div),
+			"\\": op(ast.expr.LongDiv),
 		},
 		{
 			"+": op(ast.expr.Add),
 			"-": op(ast.expr.Sub),
 		},
 		{
-			"%": op(ast.expr.Mod),
+			"mod": op(ast.expr.Mod),
 		},
 		{
 			"&": op(ast.expr.Concat),

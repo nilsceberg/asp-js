@@ -165,6 +165,13 @@ export namespace ast {
 			}
 		}
 
+		export class LongDiv extends NumericBinary {
+			protected symbol = "\\";
+			o(x: number, y: number) {
+				return Math.floor(x / y);
+			}
+		}
+
 		export class Pow extends NumericBinary {
 			protected symbol = "^";
 			o(x: number, y: number) {
