@@ -38,6 +38,11 @@ describe("string", () => {
 		expect(number.parse(s6).from()[0]).toStrictEqual(
 			new ast.expr.Literal(new data.Number(14.87))
 		);
+
+		const s7 = src('&H4e7');
+		expect(number.parse(s7).from()[0]).toStrictEqual(
+			new ast.expr.Literal(new data.Number(0x4e7))
+		);
 	});
 
 	test("char", () => {

@@ -3,6 +3,7 @@ import { ast } from "../program/NewAST";
 import { not } from "./Util";
 import * as data from "../program/Data";
 import "./ParserSettings";
+import { char, cons } from "parser-monad";
 
 const isStringDelimiter = (x: string) => x === "\"";
 const stringDelimiter = parser.Character.matches(isStringDelimiter);
@@ -19,23 +20,45 @@ export const sign =
 export const integer: parser.Parser<ast.expr.Literal> =
 	sign.bind(f => parser.Token(parser.Integer).map(x => new ast.expr.Literal(new data.Number(f(x)))));
 
+export const decimal: parser.Parser<number> =
+	parser.Token(parser.Integer)
+	.first(parser.Accept("."))
+	.then(parser.Default(parser.Token(parser.Integer), 0))
+	.map(([i, d]) => parseFloat(`${i}.${d}`))
+
+	.or(
+	parser.Accept(".")
+	.second(parser.Token(parser.Integer))
+	.map(d => parseFloat(`0.${d}`))
+	)
+
+	.or(
+	parser.Token(parser.Integer)
+	);
+
+const hexDigit: parser.Parser<char> =
+	parser.Character.matches(
+		c => /[0-9a-fA-F]/.test(c)
+	);
+
+export const hexadecimal: parser.Parser<number> =
+	parser.Lit("&")
+	.second(
+		parser.Lit("H")
+		.or(parser.Lit("h"))
+	)
+	.second(
+		hexDigit
+		.then(hexDigit.repeat())
+		.map(([x, xs]) => Number.parseInt(x + xs.join(""), 16))
+	);
+
 export const number: parser.Parser<ast.expr.Literal> =
 	sign.bind(f =>
-		parser.Token(parser.Integer)
-		.first(parser.Accept("."))
-		.then(parser.Default(parser.Token(parser.Integer), 0))
-		.map(([i, d]) => parseFloat(`${i}.${d}`))
-
-		.or(
-		parser.Accept(".")
-		.second(parser.Token(parser.Integer))
-		.map(d => parseFloat(`0.${d}`))
-		)
-
-		.or(
-		parser.Token(parser.Integer)
-		)
-		
+		parser.Parser.orMany([
+			decimal,
+			hexadecimal
+		])
 		.map(x => new ast.expr.Literal(new data.Number(f(x))))
 	);
 
