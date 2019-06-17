@@ -461,6 +461,13 @@ test("args", () => {
 
 	const s4= src("");
 	expect(args().parse(s4).from()[0]).toEqual([]);
+
+	const s5 = src("3,,2");
+	expect(args().parse(s5).from()[0]).toEqual([
+		new ast.expr.Literal(new data.Number(3)),
+		null,
+		new ast.expr.Literal(new data.Number(2)),
+	]);
 });
 
 describe("identifier", () => {

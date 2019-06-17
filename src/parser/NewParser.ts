@@ -223,7 +223,7 @@ export const new_: parser.Parser<ast.expr.New> =
 	.map(v => new ast.expr.New(v));
 
 export const args: () => parser.Parser<Expr[]> = () =>
-	expr
+	parser.Default(expr, null)
 	.first(parser.Accept(","))
 	.then(parser.Parser.lazy(args))
 	.map(parser.cons)
