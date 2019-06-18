@@ -44,6 +44,11 @@ const negatable: (p: parser.Parser<Expr>) => parser.Parser<Expr> = p =>
 		: new ast.expr.Sub(new ast.expr.Literal(new data.Number(0)), e)
 	);
 
+const parentheses: <T>(p: parser.Parser<T>) => parser.Parser<T> = p => 
+	parser.Accept("(")
+	.second(p)
+	.first(parser.Require(")"));
+
 // The order of evaluation is from here: https://www.guru99.com/vbscript-operators-constants.html
 // Might not be the most credible of sources...
 export const arithmeticAndComparison: parser.Parser<Expr> = parser.Parser.lazy(() => parser.exprParser(
@@ -81,8 +86,8 @@ export const arithmeticAndComparison: parser.Parser<Expr> = parser.Parser.lazy((
 			">": op(ast.expr.GreaterThan),
 		},
 	],
-	[negatable(access), number, nothing, empty, null_, boolean, new_, str], // number is already negatable
-	negatable(expr)
+	[negatable(access), number, nothing, empty, null_, boolean, new_, str, negatable(parentheses(expr))], // number is already negatable
+//	negatable(expr) // TODO: this is a nice idea, but since we want to be able to negate entire sub-expression, we need the above solution
 ));
 
 const not: parser.Parser<Expr> =
@@ -250,22 +255,33 @@ export const applications: (f: Expr) => parser.Parser<Expr> = f =>
 	.bind(applications)
 	.or(parser.Return(f));
 
-export const access_: (obj: Expr) => parser.Parser<Expr> = obj =>
+export const accessPrefix_: (obj: Expr) => parser.Parser<Expr> = obj =>
 	parser.Accept(".")
 	.second(anyIdentifier)
 	.map(id => new ast.Access(obj, id))
 	.bind(applications)
-	.bind(access_)
+	.first(parser.Lookahead(1).matches(c => c === "."))
+	.bind(accessPrefix_)
 	.or(parser.Return(obj));
 
-export const access: parser.Parser<Expr> =
+export const accessPrefix: parser.Parser<Expr> =
 	parser.Accept("(")
 	.second(expr)
 	.first(parser.Require(")"))
 	.or(variable_)
 	.bind(applications)
 	.or(parser.Lookahead(1).matches(c => c === '.').map(() => null))
-	.bind(access_);
+	.bind(accessPrefix_);
+
+export const accessTail: parser.Parser<Expr> =
+	accessPrefix
+	.first(parser.Accept("."))
+	.then(anyIdentifier)
+	.map(([prefix, last]) => <Expr>new ast.Access(prefix, last))
+	.or(variable_);
+
+export const access: parser.Parser<Expr> =
+	accessTail.bind(applications);
 
 export const lvalue: parser.Parser<ast.LValue> =
 	access as parser.Parser<ast.LValue>
@@ -280,39 +296,8 @@ export const set: parser.Parser<ast.Assignment> =
 export const emptyParens: parser.Parser<any[]> =
 	parser.Accept("(").then(parser.Accept(")")).map(() => []);
 
-// TODO: This solution is really dumb and fragile, please fix!!!
-export const subApplications: (f: Expr) => parser.Parser<Expr> = f =>
-	parser.Accept("(")
-	.second(args())
-	.first(
-		parser.Require(")")
-		.first(
-			parser.Lookahead(1).matches(c => ![
-					",", ":", "\n", "%", "&", "+", "-", "*", "/", "\\" // this is not just bad, it's wrong
-				].includes(c)
-			)
-		)
-	)
-	.map(args => new ast.FunctionCall(f, args))
-	.bind(subApplications)
-	.or(parser.Return(f));
-
-export const subAccess_: (obj: Expr) => parser.Parser<Expr> = obj =>
-	parser.Accept(".")
-	.second(anyIdentifier)
-	.map(id => new ast.Access(obj, id))
-	.bind(subApplications)
-	.bind(subAccess_)
-	.or(parser.Return(obj));
-
 export const subAccess: parser.Parser<Expr> =
-	parser.Accept("(")
-	.second(expr)
-	.first(parser.Require(")"))
-	.or(variable_)
-	.bind(subApplications)
-	.or(parser.Lookahead(1).matches(c => c === '.').map(() => null))
-	.bind(subAccess_);
+	accessTail;
 
 export const subCall: parser.Parser<ast.FunctionCall> =
 	subAccess.then(emptyParens.or(args())).map(([v, a]) => new ast.FunctionCall(v, a));

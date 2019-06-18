@@ -18,9 +18,9 @@ statement = singleStatement eol
 class = "class" identifier eol classDecl* "end" "class"
 classDecl = (dim | function | sub | getProperty | setProperty) eol
 
-access = "public" | "private" 
-function = access? "function" identifier ("(" argList ")")? eol statements "end" "function"
-sub = access? "sub" identifier ("(" argList ")")? eol statements "end" "sub"
+accessLevel = "public" | "private" 
+function = accessLevel? "function" identifier ("(" argList ")")? eol statements "end" "function"
+sub = accessLevel? "sub" identifier ("(" argList ")")? eol statements "end" "sub"
 
 dimension = "(" ")" | ("(" integer ("," integer)* ")")
 dimDecl = identifier dimension?
@@ -30,8 +30,8 @@ redimension = "(" ")" | ("(" expr ("," expr)* ")")
 redimDecl = identifier redimension?
 redim = "redim" "preserve"? redimDecl ("," redimDecl)* 
 
-getProperty = access? "default"? "property" "get" identifier ("(" ")")? eol statements "end" "property"
-setProperty = access? "property" ("set" | "let") identifier "(" argListArg ")" eol statements "end" "property"
+getProperty = accessLevel? "default"? "property" "get" identifier ("(" ")")? eol statements "end" "property"
+setProperty = accessLevel? "property" ("set" | "let") identifier "(" argListArg ")" eol statements "end" "property"
 
 argList = (argListArg ("," argList)*)?
 argListArg = ("byval" | "byref")? identifier
@@ -42,7 +42,7 @@ set = "set" assignment
 
 args = expr | expr "," args
 call = "call" trivialVariable "(" args ")"                    # let's keep old variable for this one
-subCall = trivialVariable ("(" ")" | args)                    # probably this one too? VBScript is quirky
+subCall = subAccess ("(" ")" | args)                    # probably this one too? VBScript is quirky
 
 anyIdentifier = IDENTIFIER
 identifier = (anyIdentifier : not keyword)
@@ -87,8 +87,10 @@ const = "const" identifier "=" literal
 # Binds explicit because this one is nontrivial
 variable' = identifier
 applications(f) = "(" args ")" >>= applications | f
-access'(obj) = "." anyIdentifier >>= applications >>= access' | obj
-access = ("(" expr ")" | variable') >>= applications) | "") >>= access'
+accessPrefix'(obj) = "." anyIdentifier >>= applications :"." >>= access' | obj
+accessPrefix = ("(" expr ")" | variable') >>= applications) | "") >>= access'
+access = (accessPrefix "." anyIdentifier) | variable' >>= applications
+subAccess = (accessPrefix "." anyIdentifier) | variable'
 
 ```
 

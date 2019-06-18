@@ -595,6 +595,12 @@ describe("sub call", () => {
 			[new ast.expr.Literal(new data.Number(123))]
 		));
 	});
+
+	test("function callee expression not allowed", () => {
+		const s = src("someFunc().s() 123");
+
+		expect(() => statement.parse(s)).toThrow();
+	});
 });
 
 test("call", () => {
