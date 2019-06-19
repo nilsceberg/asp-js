@@ -936,6 +936,17 @@ describe("properties", () => {
 		));
 	});
 
+	test("get with index", () => {
+		const s = src("property get myProp(index)\nstatement\nend property");
+		expect(classDecl.parse(s).from()[0]).toStrictEqual(new ast.Property(
+			ast.PropertyType.Get,
+			new ast.Function(
+				"myProp", [new ast.Argument("index")], [new ast.DummyStatement], AccessLevel.Public
+			),
+			false
+		));
+	});
+
 	test("set", () => {
 		const s = src("property set myProp(x)\nstatement\nend property");
 		expect(classDecl.parse(s).from()[0]).toStrictEqual(new ast.Property(

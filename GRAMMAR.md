@@ -30,7 +30,7 @@ redimension = "(" ")" | ("(" expr ("," expr)* ")")
 redimDecl = identifier redimension?
 redim = "redim" "preserve"? redimDecl ("," redimDecl)* 
 
-getProperty = access? "default"? "property" "get" identifier ("(" ")")? eol statements "end" "property"
+getProperty = access? "default"? "property" "get" identifier ("(" argListArg? ")")? eol statements "end" "property"
 setProperty = access? "property" ("set" | "let") identifier "(" argListArg ")" eol statements "end" "property"
 
 argList = (argListArg ("," argList)*)?

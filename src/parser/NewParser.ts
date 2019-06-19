@@ -447,19 +447,19 @@ export const getProperty: parser.Parser<ast.Statement> =
 		keyword("get")
 		.second(identifier)
 	)
-	.first(
-		parser.Accept("(").then(parser.Require(")")).or(parser.Return(["(", ")"]))
+	.then(
+		parser.Accept("(").second(argListArg.map(x => [x])).first(parser.Require(")")).or(parser.Return([]))
 	)
 	.first(eol)
 	.then(statements)
 	.first(parser.Require("end"))
 	.first(parser.Require("property"))
-	.map(([[[access, def], id], body]) =>
+	.map(([[[[access, def], id], args], body]) =>
 		new ast.Property(
 			ast.PropertyType.Get,
 			new ast.Function(
 				id,
-				[],
+				args,
 				body,
 				access
 			),
