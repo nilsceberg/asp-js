@@ -273,7 +273,7 @@ export namespace ast {
 	}
 
 	export interface LValue {
-
+		evaluate(context: Context): Box;
 	}
 
 	export class DummyStatement implements Statement {
@@ -375,7 +375,9 @@ export namespace ast {
 		}
 
 		execute(context: Context) {
-
+			const box = this.lvalue.evaluate(context);
+			const value = this.rvalue.evaluate(context).get();
+			box.set(value);
 		}
 	}
 

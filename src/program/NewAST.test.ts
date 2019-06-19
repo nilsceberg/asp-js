@@ -40,19 +40,35 @@ describe("access", () => {
 	});
 });
 
-//test("function call", () => {
-//	const context = new Context();
-//	context.declare("arg", new data.Number(1337));
-//	const f = jest.fn();
-//	context.declare("f", new NodeFunc(f, context));
-//
-//	const stmt = new ast.FunctionCall(
-//		new ast.Variable(["f"]),
-//		[new ast.Variable(["arg"])]
-//	);
-//
-//	stmt.execute(context);
-//
-//	expect(f).toHaveBeenCalledWith([context.resolve("arg")], context);
-//});
-//
+test("function call", () => {
+	const context = new Context();
+	context.declare("arg", new data.Number(1337));
+	const f = jest.fn();
+	context.declare("f", new NodeFunc(f, context));
+
+	const expression = new ast.FunctionCall(
+		new ast.Variable("f"),
+		[new ast.Variable("arg")]
+	);
+
+	expression.execute(context);
+
+	expect(f).toHaveBeenCalledWith([context.resolve("arg")], context);
+});
+
+describe("assignment", () => {
+	test("to simple variable", () => {
+		const v = new ast.Variable("v");
+		const context = new Context();
+		context.declare("v", new data.Number(1337));
+
+		const statement = new ast.Assignment(
+			new ast.Variable("v"),
+			new ast.expr.Literal(new data.Number(500))
+		);
+
+		statement.execute(context);
+		
+		expect(v.evaluate(context).get()).toStrictEqual(new data.Number(500));
+	});
+});

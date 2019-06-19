@@ -4,10 +4,7 @@ import { ast } from "../program/NewAST";
 import * as data from "../program/Data";
 import { Value } from "../program/Data";
 import { AccessLevel } from "../program/Access";
-
-function src(s: string): SourcePointer {
-	return new SourcePointer(new StringSource(s));
-}
+import { src } from "./Util";
 
 test("eof", () => {
 	const s1 = src("text");
