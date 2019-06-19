@@ -926,7 +926,7 @@ describe("properties", () => {
 	});
 
 	test("public default get", () => {
-		const s = src("public default property get myProp\nstatement\nend property");
+		const s = src("public default property get myProp()\nstatement\nend property");
 		expect(classDecl.parse(s).from()[0]).toStrictEqual(new ast.Property(
 			ast.PropertyType.Get,
 			new ast.Function(

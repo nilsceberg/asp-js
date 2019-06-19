@@ -448,7 +448,7 @@ export const getProperty: parser.Parser<ast.Statement> =
 		.second(identifier)
 	)
 	.then(
-		parser.Accept("(").second(argListArg.map(x => [x])).first(parser.Require(")")).or(parser.Return([]))
+		parser.Accept("(").second(parser.Default(argListArg.map(x => [x]), [])).first(parser.Require(")")).or(parser.Return([]))
 	)
 	.first(eol)
 	.then(statements)
