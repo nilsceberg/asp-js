@@ -1,4 +1,4 @@
-import { Context, Func, Box, Expr, DictObj } from "./NewContext";
+import { Context, Func, Box, Expr, DictObj, Obj } from "./NewContext";
 import { Value } from "./Data";
 import * as data from "./Data";
 import { RuntimeError } from "../runtime/Error";
@@ -295,7 +295,7 @@ export namespace ast {
 		}
 
 		evaluate(context: Context): Box {
-			throw "access not implemented";
+			return context.resolve(this.name);
 		}
 
 		toString() {
@@ -314,7 +314,9 @@ export namespace ast {
 		}
 
 		evaluate(context: Context): Box {
-			throw "access not implemented";
+			const parent = <Obj>this.object.evaluate(context).get();
+			const value = parent.get(this.member);
+			return value;
 		}
 
 		toString() {
