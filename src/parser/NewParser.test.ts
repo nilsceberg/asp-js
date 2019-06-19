@@ -1,5 +1,4 @@
-import { StringSource, SourcePointer } from "parser-monad";
-import { expr, statement, statements, args, identifier, trivialVariable, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_, if_, set, printBlockCharacter, printBlockContent, printBlockContentString, printBlock, scriptAsp, inlinePrint, include, redim, classDecl, isNotKeyword, applications, access } from "./NewParser";
+import { expr, statement, block, args, identifier, trivialVariable, assignment, subCall, call, dim, argListArg, argList, func, sub, eol, eof, class_, if_, set, printBlockCharacter, printBlockContent, printBlockContentString, printBlock, scriptAsp, inlinePrint, include, redim, classDecl, isNotKeyword, applications, access } from "./NewParser";
 import { ast } from "../program/NewAST";
 import * as data from "../program/Data";
 import { Value } from "../program/Data";
@@ -420,22 +419,22 @@ test("statement", () => {
 
 test("statements", () => {
 	const s = src("statement \n statement \nstatement : statement");
-	expect(statements.parse(s).from()[0]).toStrictEqual([
+	expect(block.parse(s).from()[0]).toStrictEqual(new ast.Block([
 		new ast.DummyStatement,
 		new ast.DummyStatement,
 		new ast.DummyStatement,
 		new ast.DummyStatement,
-	]);
+	]));
 });
 
 test("keyword case insensitivity", () => {
 	const s = src("statement \n STATEMENT \nStateMent : STATEment");
-	expect(statements.parse(s).from()[0]).toStrictEqual([
+	expect(block.parse(s).from()[0]).toStrictEqual(new ast.Block([
 		new ast.DummyStatement,
 		new ast.DummyStatement,
 		new ast.DummyStatement,
 		new ast.DummyStatement,
-	]);
+	]));
 
 	expect(isNotKeyword("For")).toBeFalsy();
 });
@@ -758,7 +757,7 @@ describe("function", () => {
 		expect(func.parse(s).from()[0]).toStrictEqual(new ast.Function(
 			"f",
 			[new ast.Argument("a"), new ast.Argument("b")],
-			[new ast.DummyStatement, new ast.DummyStatement]
+			new ast.Block([new ast.DummyStatement, new ast.DummyStatement])
 		));
 	});
 
@@ -768,7 +767,7 @@ describe("function", () => {
 		expect(func.parse(s).from()[0]).toStrictEqual(new ast.Function(
 			"f",
 			[],
-			[new ast.DummyStatement, new ast.DummyStatement]
+			new ast.Block([new ast.DummyStatement, new ast.DummyStatement])
 		));
 	});
 
@@ -778,7 +777,7 @@ describe("function", () => {
 		expect(func.parse(s).from()[0]).toStrictEqual(new ast.Function(
 			"f",
 			[],
-			[new ast.DummyStatement, new ast.DummyStatement],
+			new ast.Block([new ast.DummyStatement, new ast.DummyStatement]),
 			AccessLevel.Private
 		));
 	});
@@ -791,7 +790,7 @@ describe("sub", () => {
 		expect(sub.parse(s1).from()[0]).toStrictEqual(new ast.Function(
 			"f",
 			[new ast.Argument("a"), new ast.Argument("b")],
-			[new ast.DummyStatement, new ast.DummyStatement]
+			new ast.Block([new ast.DummyStatement, new ast.DummyStatement])
 		));
 	});
 
@@ -801,7 +800,7 @@ describe("sub", () => {
 		expect(sub.parse(s2).from()[0]).toStrictEqual(new ast.Function(
 			"subroutine",
 			[],
-			[new ast.DummyStatement, new ast.DummyStatement]
+			new ast.Block([new ast.DummyStatement, new ast.DummyStatement])
 		));
 	});
 
@@ -811,7 +810,7 @@ describe("sub", () => {
 		expect(sub.parse(s2).from()[0]).toStrictEqual(new ast.Function(
 			"subroutine",
 			[],
-			[new ast.DummyStatement, new ast.DummyStatement],
+			new ast.Block([new ast.DummyStatement, new ast.DummyStatement]),
 			AccessLevel.Private
 		));
 	});
@@ -826,7 +825,7 @@ test("class", () => {
 			new ast.Block([
 				new ast.Dim("a", null),
 			]),
-			new ast.Function("test", [], [])
+			new ast.Function("test", [], new ast.Block([]))
 		]
 	));
 });
@@ -840,10 +839,8 @@ describe("if", () => {
 					new ast.Variable("x"),
 					new ast.Variable("y")
 				),
-				[
-					new ast.DummyStatement
-				],
-				[]
+				new ast.DummyStatement,
+				new ast.Block([])
 			)
 		)
 	});
@@ -856,10 +853,10 @@ describe("if", () => {
 					new ast.Variable("x"),
 					new ast.Variable("y")
 				),
-				[
+				new ast.Block([
 					new ast.DummyStatement
-				],
-				[]
+				]),
+				new ast.Block([])
 			)
 		)
 	});
@@ -869,19 +866,17 @@ describe("if", () => {
 
 		expect(statement.parse(s1).from()[0]).toStrictEqual(new ast.If(
 			new ast.expr.Literal(new data.Number(1)),
-			[
+			new ast.Block([
 				new ast.DummyStatement
-			],
-			[
-				new ast.If(
-					new ast.expr.Literal(new data.Number(2)),
-					[
-						new ast.DummyStatement
-					],
-					[
-					]
-				)
-			]
+			]),
+			new ast.If(
+				new ast.expr.Literal(new data.Number(2)),
+				new ast.Block([
+					new ast.DummyStatement
+				]),
+				new ast.Block([
+				])
+			)
 		));
 	});
 
@@ -890,22 +885,18 @@ describe("if", () => {
 
 		expect(statement.parse(s1).from()[0]).toStrictEqual(new ast.If(
 			new ast.expr.Literal(new data.Number(1)),
-			[
+			new ast.Block([
 				new ast.DummyStatement
-			],
-			[
+			]),
+			new ast.If(
+				new ast.expr.Literal(new data.Number(2)),
+				new ast.Block([]),
 				new ast.If(
-					new ast.expr.Literal(new data.Number(2)),
-					[],
-					[
-						new ast.If(
-							new ast.expr.Literal(new data.Number(3)),
-							[],
-							[]
-						)
-					]
+					new ast.expr.Literal(new data.Number(3)),
+					new ast.Block([]),
+					new ast.Block([])
 				)
-			]
+			)
 		));
 	});
 });
@@ -916,7 +907,7 @@ describe("properties", () => {
 		expect(classDecl.parse(s).from()[0]).toStrictEqual(new ast.Property(
 			ast.PropertyType.Get,
 			new ast.Function(
-				"myProp", [], [new ast.DummyStatement], AccessLevel.Private
+				"myProp", [], new ast.Block([new ast.DummyStatement]), AccessLevel.Private
 			),
 			false
 		));
@@ -927,7 +918,7 @@ describe("properties", () => {
 		expect(classDecl.parse(s).from()[0]).toStrictEqual(new ast.Property(
 			ast.PropertyType.Get,
 			new ast.Function(
-				"myProp", [], [new ast.DummyStatement], AccessLevel.Public
+				"myProp", [], new ast.Block([new ast.DummyStatement]), AccessLevel.Public
 			),
 			true
 		));
@@ -938,7 +929,7 @@ describe("properties", () => {
 		expect(classDecl.parse(s).from()[0]).toStrictEqual(new ast.Property(
 			ast.PropertyType.Get,
 			new ast.Function(
-				"myProp", [new ast.Argument("index")], [new ast.DummyStatement], AccessLevel.Public
+				"myProp", [new ast.Argument("index")], new ast.Block([new ast.DummyStatement]), AccessLevel.Public
 			),
 			false
 		));
@@ -949,7 +940,7 @@ describe("properties", () => {
 		expect(classDecl.parse(s).from()[0]).toStrictEqual(new ast.Property(
 			ast.PropertyType.Set,
 			new ast.Function(
-				"myProp", [new ast.Argument("x")], [new ast.DummyStatement], AccessLevel.Public
+				"myProp", [new ast.Argument("x")], new ast.Block([new ast.DummyStatement]), AccessLevel.Public
 			),
 			false
 		));
@@ -960,7 +951,7 @@ describe("properties", () => {
 		expect(classDecl.parse(s).from()[0]).toStrictEqual(new ast.Property(
 			ast.PropertyType.Let,
 			new ast.Function(
-				"myProp", [new ast.Argument("x")], [new ast.DummyStatement], AccessLevel.Private
+				"myProp", [new ast.Argument("x")], new ast.Block([new ast.DummyStatement]), AccessLevel.Private
 			),
 			false
 		));
@@ -976,7 +967,7 @@ describe("loops", () => {
 					new ast.expr.Literal(new data.Number(1)),
 					new ast.expr.Literal(new data.Number(1)),
 				),
-				[new ast.DummyStatement],
+				new ast.Block([new ast.DummyStatement]),
 				false,
 				false
 			)
@@ -991,7 +982,7 @@ describe("loops", () => {
 					new ast.expr.Literal(new data.Number(1)),
 					new ast.expr.Literal(new data.Number(1)),
 				),
-				[new ast.DummyStatement],
+				new ast.Block([new ast.DummyStatement]),
 				false,
 				false
 			)
@@ -1006,7 +997,7 @@ describe("loops", () => {
 					new ast.expr.Literal(new data.Number(1)),
 					new ast.expr.Literal(new data.Number(1)),
 				),
-				[new ast.DummyStatement],
+				new ast.Block([new ast.DummyStatement]),
 				true,
 				false
 			)
@@ -1021,7 +1012,7 @@ describe("loops", () => {
 					new ast.expr.Literal(new data.Number(1)),
 					new ast.expr.Literal(new data.Number(1)),
 				),
-				[new ast.DummyStatement],
+				new ast.Block([new ast.DummyStatement]),
 				false,
 				true));
 			});
@@ -1034,7 +1025,7 @@ describe("loops", () => {
 					new ast.expr.Literal(new data.Number(1)),
 					new ast.expr.Literal(new data.Number(1)),
 				),
-				[new ast.DummyStatement],
+				new ast.Block([new ast.DummyStatement]),
 				true,
 				true
 			)
@@ -1046,7 +1037,7 @@ describe("loops", () => {
 		expect(statement.parse(s).from()[0]).toStrictEqual(
 			new ast.Loop(
 				new ast.expr.Literal(new data.Boolean(true)),
-				[new ast.DummyStatement],
+				new ast.Block([new ast.DummyStatement]),
 				false,
 				false
 			)
@@ -1063,7 +1054,7 @@ describe("for", () => {
 				new ast.expr.Literal(new data.Number(3)),
 				new ast.expr.Literal(new data.Number(1)),
 				"i",
-				[new ast.DummyStatement]
+				new ast.Block([new ast.DummyStatement])
 			)
 		);
 	});
@@ -1076,7 +1067,7 @@ describe("for", () => {
 				new ast.expr.Literal(new data.Number(6)),
 				new ast.expr.Literal(new data.Number(2)),
 				"i",
-				[new ast.DummyStatement]
+				new ast.Block([new ast.DummyStatement])
 			)
 		);
 	});
@@ -1089,7 +1080,7 @@ describe("for each", () => {
 			new ast.ForEach(
 				"x",
 				new ast.Variable("xs"),
-				[new ast.DummyStatement]
+				new ast.Block([new ast.DummyStatement])
 			)
 		);
 	});
@@ -1167,7 +1158,7 @@ describe("with", () => {
 		expect(statement.parse(s).from()[0]).toStrictEqual(
 			new ast.With(
 				new ast.Variable("obj"),
-				[new ast.DummyStatement]
+				new ast.Block([new ast.DummyStatement])
 			)
 		)
 	});
@@ -1184,16 +1175,16 @@ describe("select", () => {
 						[
 							new ast.expr.Literal(new data.Number(4))
 						],
-						[new ast.DummyStatement]
+						new ast.Block([new ast.DummyStatement])
 					),
 					new ast.SelectCase(
 						[
 							new ast.expr.Literal(new data.Number(7)),
 							new ast.expr.Literal(new data.Number(20)),
 						],
-						[new ast.DummyStatement]
+						new ast.Block([new ast.DummyStatement])
 					),
-					new ast.SelectCase(null, [new ast.DummyStatement]),
+					new ast.SelectCase(null, new ast.Block([new ast.DummyStatement])),
 				]
 			)
 		)
@@ -1342,28 +1333,28 @@ describe("literal print", () => {
 	test("printBlockNoEol", () => {
 		const s = src("%><% statement");
 
-		const [result, rest] = statements.parse(s).from();
+		const [result, rest] = block.parse(s).from();
 
-		expect(result).toStrictEqual([
+		expect(result).toStrictEqual(new ast.Block([
 			new ast.Block([
 				responseWrite("")
 			]),
 			new ast.DummyStatement
-		]);
+		]));
 		expect(rest.equals(""))
 	});
 
 	test("printBlockEol", () => {
 		const s = src("%><%\n\r statement");
 
-		const [result, rest] = statements.parse(s).from();
+		const [result, rest] = block.parse(s).from();
 
-		expect(result).toStrictEqual([
+		expect(result).toStrictEqual(new ast.Block([
 			new ast.Block([
 				responseWrite("")
 			]),
 			new ast.DummyStatement
-		]);
+		]));
 		expect(rest.equals(""));
 	});
 });
@@ -1374,11 +1365,11 @@ describe("script", () => {
 
 		const [result, rest] = scriptAsp.parse(s).from();
 
-		expect(result).toStrictEqual([
+		expect(result).toStrictEqual(new ast.Block([
 			new ast.Block([responseWrite("header")]),
 			new ast.FunctionCall(new ast.Variable("doThing"), []),
 			new ast.Block([new ast.Dim("x", null)]),
 			new ast.Block([responseWrite("footer")]),
-		]);
+		]));
 	});
 });

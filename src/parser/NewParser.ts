@@ -147,8 +147,8 @@ export const statement: parser.Parser<ast.Statement> =
 		.or(printBlock.first(optionalEol.repeat()))
 	);
 
-export const statements: parser.Parser<ast.Statement[]> =
-	statement.repeat()
+export const block: parser.Parser<ast.Block> =
+	statement.repeat().map(statements => new ast.Block(statements))
 
 export const KEYWORDS: string[] = [
 	"IF",
@@ -417,7 +417,7 @@ export const func: parser.Parser<ast.Function> =
 			[]
 		))
 		.first(eol)
-		.then(statements)
+		.then(block)
 		.first(parser.Require("end"))
 		.first(parser.Require("function"))
 	)
@@ -433,7 +433,7 @@ export const sub: parser.Parser<ast.Function> =
 			[]
 		))
 		.first(eol)
-		.then(statements)
+		.then(block)
 		.first(parser.Require("end"))
 		.first(parser.Require("sub"))
 	)
@@ -451,7 +451,7 @@ export const getProperty: parser.Parser<ast.Statement> =
 		parser.Accept("(").second(parser.Default(argListArg.map(x => [x]), [])).first(parser.Require(")")).or(parser.Return([]))
 	)
 	.first(eol)
-	.then(statements)
+	.then(block)
 	.first(parser.Require("end"))
 	.first(parser.Require("property"))
 	.map(([[[[access, def], id], args], body]) =>
@@ -481,7 +481,7 @@ export const setProperty: parser.Parser<ast.Statement> =
 		.first(parser.Require(")"))
 	)
 	.first(eol)
-	.then(statements)
+	.then(block)
 	.first(parser.Require("end"))
 	.first(parser.Require("property"))
 	.map(([[[[access, type], id], arg], body]) =>
@@ -516,25 +516,25 @@ export const class_: parser.Parser<ast.Class> =
 	.first(parser.Require("class"))
 	.map(([n, d]) => new ast.Class(n, d));
 
-export const elseif: () => parser.Parser<ast.Statement[]> = () =>
+export const elseif: () => parser.Parser<ast.Statement> = () =>
 	keyword("elseif")
 	.second(expr)
 	.first(parser.Require("then"))
 	.first(eol)
-	.then(statements)
+	.then(block)
 	.then(
 		parser.Parser.lazy(elseif)
-		.or(keyword("else").first(eol).second(statements))
-		.or(parser.Return([]))
+		.or(keyword("else").first(eol).second(block))
+		.or(parser.Return(new ast.Block([])))
 	)
-	.map(([[c, b], e]) => [new ast.If(c, b, e)])
+	.map(([[c, b], e]) => new ast.If(c, b, e))
 
 const singleIf: parser.Parser<ast.If> =
 	keyword("if")
 	.second(expr)
 	.first(parser.Require("then"))
 	.then(singleStatement)
-	.map(([c, s]) => new ast.If(c, [s], []));
+	.map(([c, s]) => new ast.If(c, s, new ast.Block([])));
 
 export const if_: parser.Parser<ast.If> =
 	singleIf
@@ -543,11 +543,11 @@ export const if_: parser.Parser<ast.If> =
 		.second(expr)
 		.first(parser.Require("then"))
 		.first(eol)
-		.then(statements)
+		.then(block)
 		.then(
 			elseif()
-			.or(keyword("else").first(eol).second(statements))
-			.or(parser.Return([]))
+			.or(keyword("else").first(eol).second(block))
+			.or(parser.Return(new ast.Block([])))
 		)
 		.first(parser.Require("end"))
 		.first(parser.Require("if"))
@@ -558,7 +558,7 @@ export const while_: parser.Parser<ast.Statement> =
 	keyword("while")
 	.second(expr)
 	.first(eol)
-	.then(statements)
+	.then(block)
 	.first(parser.Require("wend"))
 	.map(([cond, body]) => new ast.Loop(cond, body, false, false));
 
@@ -568,7 +568,7 @@ export const doWhileLoop: parser.Parser<ast.Statement> =
 	.second(keyword("while"))
 	.second(expr.or(parser.Error("expected expression")))
 	.first(eol)
-	.then(statements)
+	.then(block)
 	.first(parser.Require("loop"))
 	.map(([cond, body]) => new ast.Loop(cond, body, false, false));
 
@@ -577,14 +577,14 @@ export const doUntilLoop: parser.Parser<ast.Statement> =
 	.second(keyword("until"))
 	.second(expr.or(parser.Error("expected expression")))
 	.first(eol)
-	.then(statements)
+	.then(block)
 	.first(parser.Require("loop"))
 	.map(([cond, body]) => new ast.Loop(cond, body, true, false));
 
 export const doLoopWhile: parser.Parser<ast.Statement> =
 	keyword("do")
 	.first(eol)
-	.second(statements)
+	.second(block)
 	.first(parser.Require("loop"))
 	.first(keyword("while"))
 	.then(expr.or(parser.Error("expected expression")))
@@ -593,7 +593,7 @@ export const doLoopWhile: parser.Parser<ast.Statement> =
 export const doLoopUntil: parser.Parser<ast.Statement> =
 	keyword("do")
 	.first(eol)
-	.second(statements)
+	.second(block)
 	.first(parser.Require("loop"))
 	.first(keyword("until"))
 	.then(expr.or(parser.Error("expected expression")))
@@ -602,7 +602,7 @@ export const doLoopUntil: parser.Parser<ast.Statement> =
 export const doLoop: parser.Parser<ast.Statement> =
 	keyword("do")
 	.first(eol)
-	.second(statements)
+	.second(block)
 	.first(parser.Require("loop"))
 	.map((body) => new ast.Loop(new ast.expr.Literal(new data.Boolean(true)), body, false, false));
 
@@ -648,7 +648,7 @@ export const for_: parser.Parser<ast.Statement> =
 		)
 	)
 	.first(eol)
-	.then(statements)
+	.then(block)
 	.first(parser.Require("next"))
 	.map(([[[[id, from], to], step], body]) =>
 		new ast.For(from, to, step, id, body)
@@ -661,7 +661,7 @@ export const forEach: parser.Parser<ast.Statement> =
 	.first(parser.Require("in"))
 	.then(expr)
 	.first(eol)
-	.then(statements)
+	.then(block)
 	.first(parser.Require("next"))
 	.map(([[id, obj], body]) =>
 		new ast.ForEach(id, obj, body)
@@ -683,7 +683,7 @@ export const selectCase: parser.Parser<ast.SelectCase> =
 	keyword("case")
 	.second(keyword("else").map(() => null).or(args()))
 	.first(eol)
-	.then(statements)
+	.then(block)
 	.map(([conds, body]) => new ast.SelectCase(conds, body));
 
 export const select: parser.Parser<ast.Statement> =
@@ -700,7 +700,7 @@ export const with_: parser.Parser<ast.Statement> =
 	keyword("with")
 	.second(expr)
 	.first(eol)
-	.then(statements)
+	.then(block)
 	.first(parser.Require("end"))
 	.first(parser.Require("with"))
 	.map(([obj, body]) => new ast.With(obj, body));
@@ -770,16 +770,16 @@ export const printBlock: parser.Parser<ast.Block> =
 	.second(printBlockContent)
 	.first(parser.Accept("<%").or(eof));
 
-export const script: parser.Parser<ast.Statement[]> =
+export const script: parser.Parser<ast.Block> =
 	parser.Spaces
 	.then(optionalEol.repeat())
-	.second(statements)
+	.second(block)
 	.first(eof.or(parser.Error("expected end of file")));
 
-export const scriptAsp: parser.Parser<ast.Statement[]> =
+export const scriptAsp: parser.Parser<ast.Block> =
 	printBlockContent.first(parser.Accept("<%"))
 	.then(parser.Spaces
 		.then(optionalEol.repeat())
-		.second(statements)
+		.second(block)
 		.first(eof.or(parser.Error("expected end of file")))
-	).map(cons);
+	).map(ast.Block.blockCons);

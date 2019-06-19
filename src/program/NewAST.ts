@@ -3,6 +3,7 @@ import { Value } from "./Data";
 import * as data from "./Data";
 import { RuntimeError } from "../runtime/Error";
 import { AccessLevel } from "./Access";
+import { cons } from "parser-monad";
 
 export namespace ast {
 
@@ -26,6 +27,10 @@ export namespace ast {
 			for (const stmt of this.body) {
 				stmt.execute(context);
 			}
+		}
+
+		static blockCons([x, xs]: [Statement, Block]): Block {
+			return new Block(cons([x, xs.body]));
 		}
 	}
 
@@ -452,10 +457,10 @@ export namespace ast {
 	export class Function implements Statement {
 		name: string;
 		args: Argument[];
-		body: Statement[];
+		body: Statement;
 		access: AccessLevel;
 
-		constructor(name: string, args: Argument[], body: Statement[], access: AccessLevel = AccessLevel.Public) {
+		constructor(name: string, args: Argument[], body: Statement, access: AccessLevel = AccessLevel.Public) {
 			this.name = name;
 			this.args = args;
 			this.body = body;
@@ -491,17 +496,17 @@ export namespace ast {
 
 	export class If implements Statement {
 		condition: Expr;
-		body: Statement[];
-		elseBody: Statement[];
+		body: Statement;
+		elseBody: Statement;
 
-		constructor(condition: Expr, body: Statement[], elseBody: Statement[]) {
+		constructor(condition: Expr, body: Statement, elseBody: Statement) {
 			this.condition = condition;
 			this.body = body;
 			this.elseBody = elseBody;
 		}
 
 		subStatements(): Statement[] {
-			return this.body.concat(this.elseBody);
+			return this.body.subStatements();//this.body.concat(this.elseBody);
 		}
 
 		execute(context: Context) {
@@ -595,9 +600,9 @@ export namespace ast {
 
 	export class SelectCase {
 		conditions: Expr[];
-		body: Statement[];
+		body: Statement;
 
-		constructor(conditions: Expr[], body: Statement[]) {
+		constructor(conditions: Expr[], body: Statement) {
 			this.conditions = conditions;
 			this.body = body;
 		}
@@ -623,9 +628,9 @@ export namespace ast {
 
 	export class With implements Statement {
 		object: Expr;
-		body: Statement[];
+		body: Statement;
 
-		constructor(object: Expr, body: Statement[]) {
+		constructor(object: Expr, body: Statement) {
 			this.object = object;
 			this.body = body;
 		}
@@ -641,11 +646,11 @@ export namespace ast {
 
 	export class Loop implements Statement {
 		condition: Expr;
-		body: Statement[];
+		body: Statement;
 		until: boolean;
 		post: boolean;
 
-		constructor(condition: Expr, body: Statement[], until: boolean, post: boolean) {
+		constructor(condition: Expr, body: Statement, until: boolean, post: boolean) {
 			this.condition = condition;
 			this.body = body;
 			this.until = until;
@@ -690,9 +695,9 @@ export namespace ast {
 		to: Expr;
 		step: Expr;
 		id: string;
-		body: Statement[];
+		body: Statement;
 
-		constructor(from: Expr, to: Expr, step: Expr, id: string, body: Statement[]) {
+		constructor(from: Expr, to: Expr, step: Expr, id: string, body: Statement) {
 			this.from = from;
 			this.to = to;
 			this.step = step;
@@ -712,9 +717,9 @@ export namespace ast {
 	export class ForEach implements Statement {
 		id: string;
 		obj: Expr;
-		body: Statement[];
+		body: Statement;
 
-		constructor(id: string, obj: Expr, body: Statement[]) {
+		constructor(id: string, obj: Expr, body: Statement) {
 			this.id = id;
 			this.obj = obj;
 			this.body = body;

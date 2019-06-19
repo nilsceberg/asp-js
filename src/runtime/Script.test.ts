@@ -14,27 +14,27 @@ test("parse", () => {
 	dim x\n
 	`), false);
 
-	expect(script.ast).toStrictEqual([
+	expect(script.ast).toStrictEqual(new ast.Block([
 		new ast.Assignment(new ast.Variable("x"), new ast.expr.Literal(new data.Number(123))),
 		new ast.If(
 			new ast.expr.GreaterThan(
 				new ast.Variable("x"),
 				new ast.expr.Literal(new data.Number(100))
 			),
-			[
+			new ast.Block([
 				new ast.FunctionCall(
 					new ast.Access(new ast.Variable("response"), "write"),
 					[
 						new ast.expr.Literal(new data.String("hello!"))
 					]
 				)
-			],
-			[]
+			]),
+			new ast.Block([])
 		),
 		new ast.Block([
 			new ast.Dim("x", null)
 		])
-	]);
+	]));
 });
 
 test("execute test-simple.vbs", () => {

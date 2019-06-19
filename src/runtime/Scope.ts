@@ -20,7 +20,7 @@ export class VBFunc extends Func {
 			scope.context.set(name, args[i]);
 		}
 
-		scope.run();
+		//scope.run();
 
 		return scope.context.returnValue;
 	}
@@ -28,52 +28,52 @@ export class VBFunc extends Func {
 
 export class Scope {
 	context: Context;
-	statements: ast.Statement[];
+	body: ast.Statement;
 
-	constructor(statements: ast.Statement[], parentContext: Context = null) {
-		this.statements = statements;
+	constructor(body: ast.Statement, parentContext: Context = null) {
+		this.body = body;
 		this.context = new Context(parentContext);
 	}
 
-	hoist(statements: ast.Statement[] = this.statements) {
-		for (const statement of statements) {
-			if (statement instanceof ast.Dim) {
-				this.context.declare(statement.name);
-			}
-			else if (statement instanceof ast.Function) {
-				this.context.declare(statement.name,
-					new VBFunc(statement, this.context));
-			}
-			else if (statement instanceof ast.Class) {
-				throw "classes not implemented";
-			}
-			else {
-				this.hoist(statement.subStatements());
-			}
-		}
-	}
+//	hoist(statements: ast.Block = this.statements) {
+//		for (const statement of statements) {
+//			if (statement instanceof ast.Dim) {
+//				this.context.declare(statement.name);
+//			}
+//			else if (statement instanceof ast.Function) {
+//				this.context.declare(statement.name,
+//					new VBFunc(statement, this.context));
+//			}
+//			else if (statement instanceof ast.Class) {
+//				throw "classes not implemented";
+//			}
+//			else {
+//				this.hoist(statement.subStatements());
+//			}
+//		}
+//	}
+//
+//	run() {
+//		this.hoist();
+//		//console.log(util.inspect(this.context, {
+//		//	depth: null,
+//		//	colors: true,
+//		//	compact: false,
+//		//	customInspect: false,
+//		//}));
+//
+//		this.execute(this.statements);
+//	}
 
-	run() {
-		this.hoist();
-		//console.log(util.inspect(this.context, {
-		//	depth: null,
-		//	colors: true,
-		//	compact: false,
-		//	customInspect: false,
-		//}));
-
-		this.execute(this.statements);
-	}
-
-	private execute(statements: ast.Statement[]) {
-		for (const statement of statements) {
-			//console.log("EXECUTING:", util.inspect(statement, {
-			//	depth: null,
-			//	colors: true,
-			//	compact: false,
-			//	customInspect: false,
-			//}));
-			statement.execute(this.context);
-		}
-	}
+//	private execute(statements: ast.Statement[]) {
+//		for (const statement of statements) {
+//			//console.log("EXECUTING:", util.inspect(statement, {
+//			//	depth: null,
+//			//	colors: true,
+//			//	compact: false,
+//			//	customInspect: false,
+//			//}));
+//			statement.execute(this.context);
+//		}
+//	}
 }
