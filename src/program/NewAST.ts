@@ -8,7 +8,7 @@ import { cons } from "parser-monad";
 export namespace ast {
 
 	export interface Statement {
-		subStatements(): Statement[];
+		hoist(context: Context): void;
 		execute(context: Context): void;
 	}
 
@@ -19,13 +19,15 @@ export namespace ast {
 			this.body = body;
 		}
 
-		subStatements() {
-			return this.body;
-		}
-
 		execute(context: Context): void {
 			for (const stmt of this.body) {
 				stmt.execute(context);
+			}
+		}
+
+		hoist(context: Context): void {
+			for (const stmt of this.body) {
+				stmt.hoist(context);
 			}
 		}
 
@@ -289,6 +291,10 @@ export namespace ast {
 		execute(context: Context) {
 
 		}
+
+		hoist(context: Context) {
+
+		}
 	}
 
 	export class Variable extends Expr implements LValue {
@@ -353,8 +359,8 @@ export namespace ast {
 			}
 		}
 
-		subStatements(): Statement[] {
-			return [];
+		hoist(context: Context) {
+
 		}
 
 		execute(context: Context) {
@@ -375,14 +381,14 @@ export namespace ast {
 			this.rvalue = rvalue;
 		}
 
-		subStatements(): Statement[] {
-			return [];
-		}
-
 		execute(context: Context) {
 			const box = this.lvalue.evaluate(context);
 			const value = this.rvalue.evaluate(context).get();
 			box.set(value);
+		}
+
+		hoist(context: Context) {
+
 		}
 	}
 
@@ -395,7 +401,7 @@ export namespace ast {
 			this.value = value;
 		}
 
-		subStatements(): Statement[] {
+		hoist(): void {
 			throw "const not implemented";
 		}
 
@@ -415,12 +421,12 @@ export namespace ast {
 			this.access = access;
 		}
 
-		subStatements(): Statement[] {
-			return [];
+		hoist(): void {
+			throw "dim not implemented";
 		}
 
 		execute(context: Context) {
-
+			throw "dim not implemented";
 		}
 	}
 
@@ -435,8 +441,8 @@ export namespace ast {
 			this.preserve = preserve;
 		}
 
-		subStatements(): Statement[] {
-			return [];
+		hoist(): void {
+			throw "redim not implemented";
 		}
 
 		execute(context: Context) {
@@ -467,8 +473,8 @@ export namespace ast {
 			this.access = access;
 		}
 
-		subStatements(): Statement[] {
-			return [];
+		hoist(): void {
+			throw "function not implemented";
 		}
 
 		execute(context: Context) {
@@ -485,8 +491,8 @@ export namespace ast {
 			this.declarations = declarations;
 		}
 
-		subStatements(): Statement[] {
-			return [];
+		hoist(): void {
+			throw "class not implemented";
 		}
 
 		execute(context: Context) {
@@ -505,8 +511,9 @@ export namespace ast {
 			this.elseBody = elseBody;
 		}
 
-		subStatements(): Statement[] {
-			return this.body.subStatements();//this.body.concat(this.elseBody);
+		hoist(context: Context): void {
+			this.body.hoist(context);
+			this.elseBody.hoist(context);
 		}
 
 		execute(context: Context) {
@@ -527,7 +534,7 @@ export namespace ast {
 			throw "includes not implemented";
 		}
 
-		subStatements(): Statement[] {
+		hoist(): void {
 			throw "includes not implemented";
 		}
 	}
@@ -551,7 +558,7 @@ export namespace ast {
 			throw "exit not implemented";
 		}
 
-		subStatements(): Statement[] {
+		hoist(): void {
 			throw "exit not implemented";
 		}
 	}
@@ -573,7 +580,7 @@ export namespace ast {
 			throw "option not implemented";
 		}
 
-		subStatements(): Statement[] {
+		hoist(): void {
 			throw "option not implemented";
 		}
 	}
@@ -593,7 +600,7 @@ export namespace ast {
 			throw "on error not implemented";
 		}
 
-		subStatements(): Statement[] {
+		hoist(): void {
 			throw "on error not implemented";
 		}
 	}
@@ -621,7 +628,7 @@ export namespace ast {
 			throw "select not implemented";
 		}
 
-		subStatements(): Statement[] {
+		hoist(): void {
 			throw "select not implemented";
 		}
 	}
@@ -639,7 +646,7 @@ export namespace ast {
 			throw "with not implemented";
 		}
 
-		subStatements(): Statement[] {
+		hoist(): void {
 			throw "with not implemented";
 		}
 	}
@@ -661,7 +668,7 @@ export namespace ast {
 			throw "loop not implemented";
 		}
 
-		subStatements(): Statement[] {
+		hoist(): void {
 			throw "loop not implemented";
 		}
 	}
@@ -685,7 +692,7 @@ export namespace ast {
 			throw "property not implemented";
 		}
 
-		subStatements(): Statement[] {
+		hoist(): void {
 			throw "property not implemented";
 		}
 	}
@@ -709,7 +716,7 @@ export namespace ast {
 			throw "for not implemented";
 		}
 
-		subStatements(): Statement[] {
+		hoist(): void {
 			throw "for not implemented";
 		}
 	}
@@ -729,7 +736,7 @@ export namespace ast {
 			throw "for each not implemented";
 		}
 
-		subStatements(): Statement[] {
+		hoist(): void {
 			throw "for each not implemented";
 		}
 	}
