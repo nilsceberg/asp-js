@@ -9,53 +9,51 @@ describe("scope", () => {
 	test("dummy", () => {
 
 	});
-//	test("hoist", () => {
-//		const script = new Script;
-//		script.parse(new StringSource(`
-//		x = 123\n
-//		if x < 100 then\n
-//			response.write "hello!"\n
-//			dim y\n
-//
-//			function f
-//			end function
-//		end if\n
-//		dim x\n
-//		`), false);
-//
-//		const block = script.getScope();
-//		block.context.explicit = true;
-//		block.hoist();
-//
-//		expect(block.context.resolve("x")).toStrictEqual(new Box(new data.Empty));
-//		expect(block.context.resolve("y")).toStrictEqual(new Box(new data.Empty));
-//		expect(block.context.resolve("f")).toStrictEqual(new Box(
-//			new VBFunc(new ast.Function("f", [], new ast.Block([])), block.context)));
-//	});
-//	
-//	test("run", () => {
-//		const globalContext = new Context();
-//
-//		const responseObject = new DictObj();
-//		responseObject.fields["write"] = new Box(new NodeFunc(
-//			([str]) => {
-//				return new Box(new data.Empty);
-//			},
-//			globalContext
-//		));
-//
-//		globalContext.declare("response", responseObject);
-//
-//		const script = new Script(globalContext);
-//		script.parse(new StringSource(`
-//		response.write "hello!"\n
-//		`), false);
-//
-//		const block = script.getScope();
-//		
-//		// Todo: this is commented-out because the interpreter isn't implemented yet
-//		//block.run();
-//	});
+
+	test("hoist", () => {
+		const script = new Script;
+		script.parse(new StringSource(`
+		x = 123\n
+		if x < 100 then\n
+			response.write "hello!"\n
+			dim y\n
+
+			function f
+			end function
+		end if\n
+		dim x\n
+		`), false);
+
+		script.globalContext.explicit = true;
+		script.execute();
+
+		expect(script.globalContext.resolve("x")).toStrictEqual(new Box(new data.Empty));
+		expect(script.globalContext.resolve("y")).toStrictEqual(new Box(new data.Empty));
+		expect(script.globalContext.resolve("f")).toStrictEqual(new Box(
+			new VBFunc(new ast.Function("f", [], new ast.Block([])), script.globalContext)));
+	});
+	
+	test("run", () => {
+		const globalContext = new Context();
+
+		const responseObject = new DictObj();
+		responseObject.fields["write"] = new Box(new NodeFunc(
+			([str]) => {
+				return new Box(new data.Empty);
+			},
+			globalContext
+		));
+
+		globalContext.declare("response", responseObject);
+
+		const script = new Script(globalContext);
+		script.parse(new StringSource(`
+		response.write "hello!"\n
+		`), false);
+
+		// Todo: this is commented-out because the interpreter isn't implemented yet
+		//script.execute();
+	});
 });
 
 // Remnant of old member access model:

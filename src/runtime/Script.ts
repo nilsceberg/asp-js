@@ -2,11 +2,10 @@ import { ast } from "../program/NewAST";
 import { Context } from "../program/NewContext";
 import { Source, SourcePointer, StringSource } from "parser-monad";
 import { script, scriptAsp } from "../parser/NewParser";
-import { Scope } from "./Scope";
 import { readFileSync } from "fs";
 
 export class Script {
-	ast: ast.Statement[];
+	ast: ast.Block;
 	globalContext: Context;
 
 	constructor(globalContext: Context = new Context()) {
@@ -36,12 +35,8 @@ export class Script {
 		//}));
 	}
 
-	getScope(): Scope {
-		return new Scope(this.ast, this.globalContext);
-	}
-
 	execute() {
-		const root = this.getScope();
-		root.run();
+		this.ast.hoist(this.globalContext);
+		this.ast.execute(this.globalContext);
 	}
 }
