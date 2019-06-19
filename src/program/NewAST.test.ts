@@ -2,10 +2,6 @@ import { ast } from "./NewAST";
 import { Context, DictObj, Box, NodeFunc } from "./NewContext";
 import * as data from "./Data";
 
-test("dummy", () => {
-	// success!
-});
-
 // These are left here for future reference, but are remnants of the
 // old way of modelling member access:
 
@@ -70,5 +66,16 @@ describe("assignment", () => {
 		statement.execute(context);
 		
 		expect(v.evaluate(context).get()).toStrictEqual(new data.Number(500));
+	});
+});
+
+describe("dim", () => {
+	test("variable is declared", () => {
+		const dim = new ast.Dim("myVar", null);
+		const context = new Context();
+		context.explicit = true;
+		dim.hoist(context);
+		expect(() => context.resolve("myVar")).not.toBeNull();
+
 	});
 });

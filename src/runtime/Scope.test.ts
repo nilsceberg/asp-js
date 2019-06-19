@@ -25,7 +25,7 @@ describe("scope", () => {
 		`), false);
 
 		script.globalContext.explicit = true;
-		script.execute();
+		script.ast.hoist(script.globalContext);
 
 		expect(script.globalContext.resolve("x")).toStrictEqual(new Box(new data.Empty));
 		expect(script.globalContext.resolve("y")).toStrictEqual(new Box(new data.Empty));

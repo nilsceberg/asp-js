@@ -4,6 +4,7 @@ import * as data from "./Data";
 import { RuntimeError } from "../runtime/Error";
 import { AccessLevel } from "./Access";
 import { cons } from "parser-monad";
+import { VBFunc } from "../runtime/Scope";
 
 export namespace ast {
 
@@ -421,12 +422,12 @@ export namespace ast {
 			this.access = access;
 		}
 
-		hoist(): void {
-			throw "dim not implemented";
+		hoist(context: Context): void {
+			context.declare(this.name);
 		}
 
 		execute(context: Context) {
-			throw "dim not implemented";
+			// do nothing
 		}
 	}
 
@@ -473,8 +474,8 @@ export namespace ast {
 			this.access = access;
 		}
 
-		hoist(): void {
-			throw "function not implemented";
+		hoist(context: Context): void {
+			context.declare(this.name, new VBFunc(this, context));
 		}
 
 		execute(context: Context) {
