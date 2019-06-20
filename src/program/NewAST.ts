@@ -402,8 +402,8 @@ export namespace ast {
 			this.value = value;
 		}
 
-		hoist(): void {
-			throw "const not implemented";
+		hoist(context: Context): void {
+			context.declare(this.name, this.value.value);
 		}
 
 		execute(context: Context) {

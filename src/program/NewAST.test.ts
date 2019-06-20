@@ -75,7 +75,19 @@ describe("dim", () => {
 		const context = new Context();
 		context.explicit = true;
 		dim.hoist(context);
-		expect(() => context.resolve("myVar")).not.toBeNull();
+		expect(context.resolve("myVar")).not.toBeNull();
+	});
+});
+
+describe("const", () => {
+	test("const is declared", () => {
+		const dim = new ast.Const("myVar", new ast.expr.Literal(new data.Number(1337)));
+		const context = new Context();
+
+		context.explicit = true;
+		dim.hoist(context);
+
+		expect(context.resolve("myVar").get()).toStrictEqual(new data.Number(1337));
 
 	});
 });
