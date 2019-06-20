@@ -5,10 +5,15 @@ import { RuntimeError } from "../runtime/Error";
 import { AccessLevel } from "./Access";
 import { cons } from "parser-monad";
 import { VBFunc } from "../runtime/Scope";
+import { Script } from "../runtime/Script";
 
 export namespace ast {
+	export interface Metadata {
+		filename: string;
+	}
 
 	export interface Statement {
+		preprocess(metadata: Metadata): void;
 		hoist(context: Context): void;
 		execute(context: Context): void;
 	}
@@ -29,6 +34,12 @@ export namespace ast {
 		hoist(context: Context): void {
 			for (const stmt of this.body) {
 				stmt.hoist(context);
+			}
+		}
+
+		preprocess(metadata: Metadata): void {
+			for (const stmt of this.body) {
+				stmt.preprocess(metadata);
 			}
 		}
 
@@ -296,6 +307,10 @@ export namespace ast {
 		hoist(context: Context) {
 
 		}
+
+		preprocess(): void {
+
+		}
 	}
 
 	export class Variable extends Expr implements LValue {
@@ -360,6 +375,10 @@ export namespace ast {
 			}
 		}
 
+		preprocess(): void {
+
+		}
+
 		hoist(context: Context) {
 
 		}
@@ -391,6 +410,10 @@ export namespace ast {
 		hoist(context: Context) {
 
 		}
+
+		preprocess(): void {
+
+		}
 	}
 
 	export class Const implements Statement {
@@ -402,12 +425,15 @@ export namespace ast {
 			this.value = value;
 		}
 
+		preprocess(): void {
+
+		}
+
 		hoist(context: Context): void {
 			context.declare(this.name, this.value.value);
 		}
 
 		execute(context: Context) {
-			throw "const not implemented";
 		}
 	}
 
@@ -420,6 +446,10 @@ export namespace ast {
 			this.name = name;
 			this.length = length;
 			this.access = access;
+		}
+
+		preprocess(): void {
+
 		}
 
 		hoist(context: Context): void {
@@ -440,6 +470,10 @@ export namespace ast {
 			this.name = name;
 			this.length = length;
 			this.preserve = preserve;
+		}
+
+		preprocess(): void {
+
 		}
 
 		hoist(): void {
@@ -474,6 +508,10 @@ export namespace ast {
 			this.access = access;
 		}
 
+		preprocess(metadata: Metadata): void {
+			this.body.preprocess(metadata);
+		}
+
 		hoist(context: Context): void {
 			context.declare(this.name, new VBFunc(this, context));
 		}
@@ -490,6 +528,12 @@ export namespace ast {
 		constructor(name: string, declarations: Statement[]) {
 			this.name = name;
 			this.declarations = declarations;
+		}
+
+		preprocess(metadata: Metadata): void {
+			for (let declaration of this.declarations) {
+				declaration.preprocess(metadata);
+			}
 		}
 
 		hoist(): void {
@@ -512,6 +556,11 @@ export namespace ast {
 			this.elseBody = elseBody;
 		}
 
+		preprocess(metadata: Metadata): void {
+			this.body.preprocess(metadata);
+			this.elseBody.preprocess(metadata);
+		}
+
 		hoist(context: Context): void {
 			this.body.hoist(context);
 			this.elseBody.hoist(context);
@@ -525,10 +574,17 @@ export namespace ast {
 	export class Include implements Statement {
 		file: string;
 		virtual: boolean;
+		included: Statement;
 
 		constructor(file: string, virtual: boolean) {
 			this.file = file;
 			this.virtual = virtual;
+		}
+
+		preprocess(metadata: Metadata): void {
+//			const script = Script.fromFile(this.file, true);
+//			this.included = script.ast;
+//			this.included.preprocess(metadata);
 		}
 
 		execute(context: Context) {
@@ -555,6 +611,10 @@ export namespace ast {
 			this.type = type;
 		}
 
+		preprocess(): void {
+
+		}
+
 		execute(context: Context) {
 			throw "exit not implemented";
 		}
@@ -577,6 +637,10 @@ export namespace ast {
 			this.on = on;
 		}
 
+		preprocess(): void {
+
+		}
+
 		execute(context: Context) {
 			throw "option not implemented";
 		}
@@ -597,6 +661,10 @@ export namespace ast {
 			this.handling = handling;
 		}
 
+		preprocess(): void {
+
+		}
+
 		execute(context: Context) {
 			throw "on error not implemented";
 		}
@@ -606,13 +674,25 @@ export namespace ast {
 		}
 	}
 
-	export class SelectCase {
+	export class SelectCase implements Statement {
 		conditions: Expr[];
 		body: Statement;
 
 		constructor(conditions: Expr[], body: Statement) {
 			this.conditions = conditions;
 			this.body = body;
+		}
+
+		preprocess(metadata: Metadata): void {
+			this.body.preprocess(metadata);
+		}
+
+		hoist(context: Context) {
+
+		}
+
+		execute(context: Context) {
+
 		}
 	}
 
@@ -623,6 +703,12 @@ export namespace ast {
 		constructor(expr: Expr, cases: SelectCase[]) {
 			this.expr = expr;
 			this.cases = cases;
+		}
+
+		preprocess(metadata: Metadata): void {
+			for (let kase of this.cases) {
+				kase.preprocess(metadata);
+			}
 		}
 
 		execute(context: Context) {
@@ -641,6 +727,10 @@ export namespace ast {
 		constructor(object: Expr, body: Statement) {
 			this.object = object;
 			this.body = body;
+		}
+
+		preprocess(metadata: Metadata): void {
+			this.body.preprocess(metadata);
 		}
 
 		execute(context: Context) {
@@ -663,6 +753,10 @@ export namespace ast {
 			this.body = body;
 			this.until = until;
 			this.post = post;
+		}
+
+		preprocess(metadata: Metadata): void {
+			this.body.preprocess(metadata);
 		}
 
 		execute(context: Context) {
@@ -689,6 +783,10 @@ export namespace ast {
 			this.def = def;
 		}
 
+		preprocess(metadata: Metadata): void {
+			this.func.preprocess(metadata);
+		}
+
 		execute(context: Context) {
 			throw "property not implemented";
 		}
@@ -713,6 +811,10 @@ export namespace ast {
 			this.body = body;
 		}
 
+		preprocess(metadata: Metadata): void {
+			this.body.preprocess(metadata);
+		}
+
 		execute(context: Context) {
 			throw "for not implemented";
 		}
@@ -731,6 +833,10 @@ export namespace ast {
 			this.id = id;
 			this.obj = obj;
 			this.body = body;
+		}
+
+		preprocess(metadata: Metadata): void {
+			this.body.preprocess(metadata);
 		}
 
 		execute(context: Context) {

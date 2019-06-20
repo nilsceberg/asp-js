@@ -1,9 +1,151 @@
 import { ast } from "./NewAST";
 import { Context, DictObj, Box, NodeFunc } from "./NewContext";
 import * as data from "./Data";
+import { Script } from "../runtime/Script";
 
 // These are left here for future reference, but are remnants of the
 // old way of modelling member access:
+
+describe("preprocess", () => {
+	let stmt: ast.Statement;
+	const someExpr = new ast.expr.Literal(new data.Null);
+
+	const metadata: ast.Metadata = {
+		filename: "test.asp"
+	};
+
+	beforeEach(() => {
+		stmt = <any>{
+			preprocess: jest.fn()
+		};
+	})
+
+	test("block", () => {
+		new ast.Block([
+			stmt,
+			stmt
+		]).preprocess(metadata);
+		expect(stmt.preprocess).toHaveBeenCalledTimes(2);
+		expect(stmt.preprocess).toHaveBeenCalledWith(metadata);
+	});
+
+	test("if", () => {
+		new ast.If(
+			someExpr,
+			stmt,
+			stmt
+		).preprocess(metadata);
+		expect(stmt.preprocess).nthCalledWith(1, metadata);
+		expect(stmt.preprocess).nthCalledWith(2, metadata);
+	});
+
+	test("loop", () => {
+		new ast.Loop(
+			someExpr,
+			stmt,
+			false,
+			false
+		).preprocess(metadata);
+		expect(stmt.preprocess).nthCalledWith(1, metadata);
+	});
+
+	test("with", () => {
+		new ast.With(
+			someExpr,
+			stmt
+		).preprocess(metadata);
+		expect(stmt.preprocess).nthCalledWith(1, metadata);
+	});
+
+	test("function", () => {
+		new ast.Function(
+			"name",
+			[],
+			stmt
+		).preprocess(metadata);
+		expect(stmt.preprocess).nthCalledWith(1, metadata);
+	});
+
+	test("class", () => {
+		new ast.Class(
+			"name",
+			[stmt, stmt]
+		).preprocess(metadata);
+		expect(stmt.preprocess).nthCalledWith(1, metadata);
+		expect(stmt.preprocess).nthCalledWith(2, metadata);
+	});
+
+	test("for", () => {
+		new ast.For(
+			someExpr,
+			someExpr,
+			someExpr,
+			"i",
+			stmt
+		).preprocess(metadata);
+		expect(stmt.preprocess).nthCalledWith(1, metadata);
+	});
+
+	test("for each", () => {
+		new ast.ForEach(
+			"x",
+			someExpr,
+			stmt
+		).preprocess(metadata);
+		expect(stmt.preprocess).nthCalledWith(1, metadata);
+	});
+
+	test("case", () => {
+		new ast.Select(
+			someExpr,
+			[<ast.SelectCase>stmt]
+		).preprocess(metadata);
+		expect(stmt.preprocess).nthCalledWith(1, metadata);
+	});
+
+	test("select case", () => {
+		new ast.SelectCase(
+			[someExpr],
+			stmt
+		).preprocess(metadata);
+		expect(stmt.preprocess).nthCalledWith(1, metadata);
+	});
+
+	test("property", () => {
+		new ast.Property(
+			ast.PropertyType.Get,
+			new ast.Function(
+				"prop",
+				[],
+				stmt
+			),
+			false
+		).preprocess(metadata);
+		expect(stmt.preprocess).nthCalledWith(1, metadata);
+	});
+
+	//test("include", () => {
+	//	const oldFromFile = Script.fromFile;
+	//	Script.fromFile = jest.fn(() => (<any>{
+	//		ast: new ast.Block([stmt, stmt]),
+	//	}));
+
+	//	const script = new ast.Include("functions.asp", false);
+	//	script.preprocess(metadata);
+
+	//	expect(script.included).toStrictEqual(
+	//		new ast.Block([
+	//			stmt, stmt
+	//		])
+	//	);
+
+	//	expect(Script.fromFile).toHaveBeenCalledWith("functions.asp");
+	//	expect(stmt.preprocess).nthCalledWith(1, metadata);
+	//	expect(stmt.preprocess).nthCalledWith(2, metadata);
+
+	//	Script.fromFile = oldFromFile;
+	//});
+});
 
 describe("variable", () => {
 	test("scalar", () => {
