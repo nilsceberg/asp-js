@@ -211,7 +211,7 @@ describe("assignment", () => {
 });
 
 describe("dim", () => {
-	test("variable is declared", () => {
+	test("hoist: variable is declared", () => {
 		const dim = new ast.Dim("myVar", null);
 		const context = new Context();
 		context.explicit = true;
@@ -221,7 +221,7 @@ describe("dim", () => {
 });
 
 describe("const", () => {
-	test("const is declared", () => {
+	test("hoist: const hou declared", () => {
 		const dim = new ast.Const("myVar", new ast.expr.Literal(new data.Number(1337)));
 		const context = new Context();
 
@@ -230,5 +230,47 @@ describe("const", () => {
 
 		expect(context.resolve("myVar").get()).toStrictEqual(new data.Number(1337));
 
+	});
+});
+
+function mockStatement() {
+	return <ast.Statement>{
+		execute: jest.fn(),
+		hoist: jest.fn(),
+		preprocess: jest.fn(),
+	};
+};
+
+describe("block", () => {
+	let block: ast.Block;
+	let a: ast.Statement;
+	let b: ast.Statement;
+	let context: Context;
+
+	beforeEach(() => {
+		a = mockStatement();
+		b = mockStatement();
+		block = new ast.Block([a, b]);
+		context = new Context();
+	});
+
+	test("hoist: hoists sub-statements (todo: in order)", () => {
+		block.hoist(context);
+
+		expect(a.hoist).toHaveBeenCalled();
+		expect(b.hoist).toHaveBeenCalled();
+
+		expect(a.execute).not.toHaveBeenCalled();
+		expect(b.execute).not.toHaveBeenCalled();
+	});
+
+	test("execute: executes sub-statements (todo: in order)", () => {
+		block.execute(context);
+
+		expect(a.execute).toHaveBeenCalled();
+		expect(b.execute).toHaveBeenCalled();
+
+		expect(a.hoist).not.toHaveBeenCalled();
+		expect(b.hoist).not.toHaveBeenCalled();
 	});
 });
