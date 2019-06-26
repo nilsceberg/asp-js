@@ -5,11 +5,11 @@ import { RuntimeError } from "../runtime/Error";
 import { AccessLevel } from "./Access";
 import { cons } from "parser-monad";
 import { VBFunc } from "../runtime/Scope";
-import { Script } from "../runtime/Script";
 
 export namespace ast {
 	export interface Metadata {
 		filename: string;
+		include: (filename: string) => Statement;
 	}
 
 	export interface Statement {
@@ -582,9 +582,8 @@ export namespace ast {
 		}
 
 		preprocess(metadata: Metadata): void {
-//			const script = Script.fromFile(this.file, true);
-//			this.included = script.ast;
-//			this.included.preprocess(metadata);
+			this.included = metadata.include(this.file);
+			this.included.preprocess(metadata);
 		}
 
 		execute(context: Context) {

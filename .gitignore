@@ -6,4 +6,5 @@ npm-debug.log
 coverage
 test.asp
 *.casp
+yarn-error.log
 

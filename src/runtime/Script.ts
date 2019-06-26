@@ -21,6 +21,11 @@ export class Script {
 		return script;
 	}
 
+	static astFromFile(filename: string, asp: boolean = true): ast.Statement {
+		const script = Script.fromFile(filename, asp);
+		return script.ast;
+	}
+
 	parse(source: Source, asp: boolean) {
 		const sourcePointer = new SourcePointer(source);
 		let trailer: SourcePointer;

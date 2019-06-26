@@ -2,6 +2,7 @@ import { ast } from "./NewAST";
 import { Context, DictObj, Box, NodeFunc } from "./NewContext";
 import * as data from "./Data";
 import { Script } from "../runtime/Script";
+import * as util from "util";
 
 // These are left here for future reference, but are remnants of the
 // old way of modelling member access:
@@ -10,13 +11,16 @@ describe("preprocess", () => {
 	let stmt: ast.Statement;
 	const someExpr = new ast.expr.Literal(new data.Null);
 
-	const metadata: ast.Metadata = {
-		filename: "test.asp"
-	};
+	let metadata: ast.Metadata;
 
 	beforeEach(() => {
 		stmt = <any>{
 			preprocess: jest.fn()
+		};
+
+		metadata = {
+			filename: "test.asp",
+			include: Script.astFromFile
 		};
 	})
 
@@ -124,27 +128,22 @@ describe("preprocess", () => {
 		expect(stmt.preprocess).nthCalledWith(1, metadata);
 	});
 
-	//test("include", () => {
-	//	const oldFromFile = Script.fromFile;
-	//	Script.fromFile = jest.fn(() => (<any>{
-	//		ast: new ast.Block([stmt, stmt]),
-	//	}));
+	test("include", () => {
+		metadata.include = jest.fn(() => new ast.Block([stmt, stmt]));
 
-	//	const script = new ast.Include("functions.asp", false);
-	//	script.preprocess(metadata);
+		const script = new ast.Include("functions.asp", false);
+		script.preprocess(metadata);
 
-	//	expect(script.included).toStrictEqual(
-	//		new ast.Block([
-	//			stmt, stmt
-	//		])
-	//	);
+		expect(script.included).toStrictEqual(
+			new ast.Block([
+				stmt, stmt
+			])
+		);
 
-	//	expect(Script.fromFile).toHaveBeenCalledWith("functions.asp");
-	//	expect(stmt.preprocess).nthCalledWith(1, metadata);
-	//	expect(stmt.preprocess).nthCalledWith(2, metadata);
-
-	//	Script.fromFile = oldFromFile;
-	//});
+		expect(metadata.include).toHaveBeenCalledWith("functions.asp");
+		expect(stmt.preprocess).nthCalledWith(1, metadata);
+		expect(stmt.preprocess).nthCalledWith(2, metadata);
+	});
 });
 
 describe("variable", () => {
