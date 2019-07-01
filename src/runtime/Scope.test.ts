@@ -11,7 +11,7 @@ describe("scope", () => {
 	});
 
 	test("hoist", () => {
-		const script = new Script;
+		const script = new Script();
 		script.parse(new StringSource(`
 		x = 123\n
 		if x < 100 then\n

@@ -17,7 +17,7 @@ export class Script {
 		const source = new StringSource(contents);
 
 		const script = new Script();
-		script.parse(source, asp);
+		script.parse(source, asp, filename);
 		return script;
 	}
 
@@ -26,12 +26,17 @@ export class Script {
 		return script.ast;
 	}
 
-	parse(source: Source, asp: boolean) {
+	parse(source: Source, asp: boolean, filename: string = null) {
 		const sourcePointer = new SourcePointer(source);
 		let trailer: SourcePointer;
 
 		const parser = asp ? scriptAsp : script;
 		[this.ast, trailer] = parser.parse(sourcePointer).from();
+
+		this.ast.preprocess({
+			filename: filename,
+			include: Script.astFromFile,
+		});
 		//console.log(util.inspect(this.ast, {
 		//	depth: null,
 		//	colors: true,

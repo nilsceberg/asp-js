@@ -1,5 +1,5 @@
 import * as Koa from "koa";
-import { KoaAspJs } from "asp-js";
+import { NewKoaAspJs } from "asp-js";
 
 const app = new Koa();
 
@@ -12,7 +12,7 @@ app.use((ctx, next) => {
 });
 
 // ASP.JS middleware, serving ASP files from the asp/ directory
-app.use(KoaAspJs("asp", {}));
+//app.use(NewKoaAspJs("asp", {}));
+app.use(NewKoaAspJs("asp"));
 
-app.listen(8080);
-
+app.listen(8080, () => console.log("Listenint on port 8080"));

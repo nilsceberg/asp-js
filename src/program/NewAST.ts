@@ -5,6 +5,7 @@ import { RuntimeError } from "../runtime/Error";
 import { AccessLevel } from "./Access";
 import { cons } from "parser-monad";
 import { VBFunc } from "../runtime/Scope";
+import * as path from "path";
 
 export namespace ast {
 	export interface Metadata {
@@ -380,7 +381,7 @@ export namespace ast {
 		}
 
 		hoist(context: Context) {
-
+			// Do nothing
 		}
 
 		execute(context: Context) {
@@ -408,7 +409,7 @@ export namespace ast {
 		}
 
 		hoist(context: Context) {
-
+			// Do nothing
 		}
 
 		preprocess(): void {
@@ -426,7 +427,7 @@ export namespace ast {
 		}
 
 		preprocess(): void {
-
+			// do nothing
 		}
 
 		hoist(context: Context): void {
@@ -434,6 +435,7 @@ export namespace ast {
 		}
 
 		execute(context: Context) {
+			// do nothing
 		}
 	}
 
@@ -449,7 +451,7 @@ export namespace ast {
 		}
 
 		preprocess(): void {
-
+			// do nothing
 		}
 
 		hoist(context: Context): void {
@@ -473,15 +475,15 @@ export namespace ast {
 		}
 
 		preprocess(): void {
-
+			// Do nothing
 		}
 
 		hoist(): void {
-			throw "redim not implemented";
+			// Do nothing
 		}
 
 		execute(context: Context) {
-
+			throw "redim not implemented";
 		}
 	}
 
@@ -568,6 +570,14 @@ export namespace ast {
 
 		execute(context: Context) {
 			console.log(`if ${this.condition} ...`);
+			const bool = this.condition.evaluate(context).get();
+
+			if (bool instanceof data.Boolean && bool.value() !== 0) {
+				this.body.execute(context);
+			}
+			else {
+				this.elseBody.execute(context);
+			}
 		}
 	}
 
@@ -582,16 +592,31 @@ export namespace ast {
 		}
 
 		preprocess(metadata: Metadata): void {
-			this.included = metadata.include(this.file);
+			let filename: string;
+			if (this.virtual) {
+				throw "virtual includes not implemented";
+			}
+			else {
+				const parentPath = metadata.filename ? path.dirname(metadata.filename) : "./";
+				filename = path.join(parentPath, this.file);
+				console.log(filename);
+			}
+
+			const nestedMetadata: Metadata = {
+				filename: filename,
+				include: metadata.include,
+			};
+
+			this.included = metadata.include(filename);
 			this.included.preprocess(metadata);
 		}
 
 		execute(context: Context) {
-			throw "includes not implemented";
+			this.included.execute(context);
 		}
 
-		hoist(): void {
-			throw "includes not implemented";
+		hoist(context: Context): void {
+			this.included.hoist(context);
 		}
 	}
 
@@ -619,7 +644,7 @@ export namespace ast {
 		}
 
 		hoist(): void {
-			throw "exit not implemented";
+			// do nothing
 		}
 	}
 
@@ -682,16 +707,26 @@ export namespace ast {
 			this.body = body;
 		}
 
+		matches(context: Context, value: data.Value): boolean {
+			for (const cond of this.conditions) {
+				// TODO: values need some sort of comparison method
+				if (cond.evaluate(context).get().value() === value.value()) {
+					return true;
+				}
+			}
+			return false;
+		}
+
 		preprocess(metadata: Metadata): void {
 			this.body.preprocess(metadata);
 		}
 
 		hoist(context: Context) {
-
+			this.body.hoist(context);
 		}
 
 		execute(context: Context) {
-
+			this.body.execute(context);
 		}
 	}
 
@@ -711,11 +746,23 @@ export namespace ast {
 		}
 
 		execute(context: Context) {
-			throw "select not implemented";
+			const value = this.expr.evaluate(context).get();
+
+			// Find first case that matches the value
+			let i = 0;
+			while (!this.cases[i].matches(context, value)) {
+				++i;
+			}
+
+			// Then execute from there
+			while (i < this.cases.length) {
+				this.cases[i].execute(context);
+				++i;
+			}
 		}
 
-		hoist(): void {
-			throw "select not implemented";
+		hoist(context: Context): void {
+			this.cases.forEach(c => c.hoist(context));
 		}
 	}
 
@@ -736,8 +783,8 @@ export namespace ast {
 			throw "with not implemented";
 		}
 
-		hoist(): void {
-			throw "with not implemented";
+		hoist(context: Context): void {
+			this.body.hoist(context);
 		}
 	}
 
@@ -758,12 +805,23 @@ export namespace ast {
 			this.body.preprocess(metadata);
 		}
 
+		// TODO: this is in dire need of unit testing
 		execute(context: Context) {
-			throw "loop not implemented";
+			const xor = (a: any, b: any) => a !== b;
+			const condition = () => this.condition.evaluate(context).get().value() !== 0;
+
+			// TODO: Truthy and falsy and stuff should be implemented on the data types!
+			while (true) {
+				if (!this.post && !xor(condition(), this.until)) break;
+
+				this.body.execute(context);
+
+				if (this.post && !xor(condition(), this.until)) break;
+			}
 		}
 
-		hoist(): void {
-			throw "loop not implemented";
+		hoist(context: Context): void {
+			this.body.hoist(context);
 		}
 	}
 
