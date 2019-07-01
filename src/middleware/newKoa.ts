@@ -7,6 +7,7 @@ import { Context, DictObj, Box, NodeFunc } from "../program/NewContext";
 import * as data from "../program/Data";
 
 let renderStartTime: number;
+let parseTime: number;
 
 function createGlobalContext(ctx: Koa.Context): Context {
     ctx.body = "";
@@ -59,6 +60,13 @@ function createGlobalContext(ctx: Koa.Context): Context {
 
     globalContext.declare("Request", requestObject);
 
+    globalContext.declare("GetParseTime", new NodeFunc(
+        () => {
+            return new Box(new data.Number(parseTime));
+        },
+        globalContext
+    ));
+
     globalContext.declare("GetRenderTime", new NodeFunc(
         () => {
             return new Box(new data.Number(Date.now() - renderStartTime));
@@ -79,12 +87,15 @@ export function NewKoaAspJs(root: string): Koa.Middleware {
             console.log(`Starting render of file ${filename} at ${renderStartTime}`);
             // This should totally be async
             const script = Script.fromFile(filename, true, globalContext);
-            console.log(`Parsed in ${Date.now() - renderStartTime} ms.`)
+            parseTime = Date.now() - renderStartTime;
+            console.log(`Parsed in ${parseTime} ms.`)
 
             console.log(util.inspect(script, {
                 depth: null,
                 colors: true,
             }));
+
+            console.log(`Rendered in in ${Date.now() - renderStartTime} ms.`)
 
             script.execute();
         }
