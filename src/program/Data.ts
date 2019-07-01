@@ -62,7 +62,8 @@ export class Boolean extends Value {
 
 export class Nothing extends Value {
 	value() {
-		throw "'nothing' not implemented";
+		//throw "'nothing' not implemented";
+		return 0;
 	}
 
 	toString(): string {
@@ -72,7 +73,8 @@ export class Nothing extends Value {
 
 export class Empty extends Value {
 	value() {
-		throw "'empty' not implemented";
+		//throw "'empty' not implemented";
+		return 0;
 	}
 
 	toString(): string {

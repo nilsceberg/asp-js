@@ -12,11 +12,11 @@ export class Script {
 		this.globalContext = globalContext;
 	}
 
-	static fromFile(filename: string, asp: boolean = true): Script {
+	static fromFile(filename: string, asp: boolean = true, globalContext: Context = new Context()): Script {
 		const contents = readFileSync(filename).toString("utf-8");
 		const source = new StringSource(contents);
 
-		const script = new Script();
+		const script = new Script(globalContext);
 		script.parse(source, asp, filename);
 		return script;
 	}

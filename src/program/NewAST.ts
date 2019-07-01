@@ -102,6 +102,8 @@ export namespace ast {
 				const left = this.left.evaluate(context).get();
 				const right = this.right.evaluate(context).get();
 
+				console.log(typeof left, typeof right);
+
 				if (left instanceof Value && right instanceof Value) {
 					return new Box(this.op(left, right), true);
 				}
@@ -210,7 +212,7 @@ export namespace ast {
 			protected symbol = "&";
 			op(x: Value, y: Value) {
 				// TODO: type checking
-				return x.value() + y.value();
+				return new data.String(x.value() + y.value());
 			}
 		}
 
@@ -367,9 +369,13 @@ export namespace ast {
 			const evaluatedArgs = this.args.map(a => a.evaluate(context));
 			const evaluatedFunction = this.callee.evaluate(context);
 
+			console.log(`Calling ${this.callee}: ${evaluatedFunction}`);
+
 			const func = evaluatedFunction.get();
 			if (func instanceof Func) {
-				return func.run(evaluatedArgs);
+				const returnValue = func.run(evaluatedArgs);
+				console.log(`${this.callee} returned ${returnValue.get()}`);
+				return returnValue;
 			}
 			else {
 				throw new RuntimeError("type mismatch: expected function");
@@ -572,7 +578,7 @@ export namespace ast {
 			console.log(`if ${this.condition} ...`);
 			const bool = this.condition.evaluate(context).get();
 
-			if (bool instanceof data.Boolean && bool.value() !== 0) {
+			if (bool.value() !== 0) {
 				this.body.execute(context);
 			}
 			else {
