@@ -5,8 +5,8 @@
 
 ASP.JS brings classic Active Server Pages using VBScript
 to the world of Node.
-This project is as of yet a quick-and-dirty proof-of-concept, but just you
-wait...!
+This project is as of yet a quick-and-dirty proof-of-concept, ~but just you
+wait...!~ and will probably never be anything more.
 
 
 ## Scribbles
@@ -16,13 +16,6 @@ wait...!
 
 * ~The lexer needs to be able to differentiate between real newlines and : when
   handling comments~
-
-* ~Solve ambiguity:
-  ```
-  obj(1234689), 4
-  obj(4) = 9
-  ```~
-  (This is a non-issue with the new parser!)
 
 * evalFunction isn't quite how the namespaces are handled in VBScript,
   as it allows redefining a function name inside another scope and still
